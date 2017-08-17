@@ -23,9 +23,9 @@ cryptoEuroContract.setProvider(global.web3.currentProvider)
 
 let cryptoFiat = await cryptoFiatContract.deployed();
 
-cryptoEuroTokenAddress = await cryptoFiat.cryptoEuroToken();
-cryptoDollarTokenAddress = await cryptoFiat.cryptoDollarToken();
+CEURTokenAddress = await cryptoFiat.cryptoEuroToken();
+CUSDTokenAddress = await cryptoFiat.cryptoDollarToken();
 
-cryptoEuro = cryptoEuroContract.at(cryptoEuroTokenAddress);
-cryptoDollar = cryptoDollarContract.at(cryptoDollarTokenAddress);
+cryptoEuro = cryptoEuroContract.at(CEURTokenAddress);
+cryptoDollar = cryptoDollarContract.at(CUSDTokenAddress);
 
