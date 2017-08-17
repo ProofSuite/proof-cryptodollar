@@ -12,7 +12,7 @@ The CryptoFiat aims at providing an decentralized alternative to this problem. T
 In the event the amount of ether in the smart-contract is insufficient to maintain the pegging of the currencies, the CryptoFiat contract is designed to guarantee crypto-USD and crypto-EUR token holders the amount of ether they initially sent to the smart-contract.
 
 The CUSDToken (crypto-USD token) and CEURToken (crypto-EURO token) are inspired and based on the `StandardToken` and `MintableToken` ERC20 contracts
-and augmented with logic for representing the value of the token in the event the smart contract enters an unpegged state.
+and augmented with logic for representing the value of the token in the event the crypto-fiat system enters an unpegged state.
 
 
 
