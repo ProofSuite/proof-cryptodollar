@@ -1,4 +1,4 @@
-# Proof-Presale-Smart-Contracts
+# Proof Crypto Fiat
 Official Repository for the Proof Crypto Fiat project
 
 
@@ -90,12 +90,12 @@ In the case you want to submit substantial changes, please get in touch with our
 verify those modifications are in line with the general goal of the project and receive early feedback. Otherwise you are welcome to fix, commit and 
 send a pull request for the maintainers to review and merge into the main code base.
 
-Please make sure your contributions adhere to our coding guidelines: 
+Please make sure your contributions adhere to our coding guidelines:
 
-Code must adhere as much as possible to standard conventions (DRY - Separation of concerns - Modular)
-Pull requests need to be based and opened against the master branch
-Commit messages should properly describe the code modified
-Ensure all tests are passing before submitting a pull request
+- Code must adhere as much as possible to standard conventions (DRY - Separation of concerns - Modular)
+- Pull requests need to be based and opened against the master branch
+- Commit messages should properly describe the code modified
+- Ensure all tests are passing before submitting a pull request
 
 ### License
 
