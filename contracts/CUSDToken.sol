@@ -37,7 +37,7 @@ contract CUSDToken is ERC20, Ownable {
   /**
   * @param _to is the token receiver
   * @param _value is the amount of tokens transferred
-  * @returns _success if the transaction is successful
+  * @return _success if the transaction is successful
   */
   function transfer(address _to, uint _value) public returns (bool success) {
 
@@ -55,7 +55,7 @@ contract CUSDToken is ERC20, Ownable {
   * @param _from is the token holder allowing to the token receiver _to
   * @param _to is the token receiver 
   * @param _value is the amount of tokens transferred
-  * @returns _success is the transaction is successful
+  * @return _success is the transaction is successful
   */
   function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
     var _allowance = allowed[_from][msg.sender];
@@ -74,7 +74,7 @@ contract CUSDToken is ERC20, Ownable {
 
   /**
   * @param _owner is the token holder
-  * @returns balance
+  * @return balance
   */
   function balanceOf(address _owner) public constant returns (uint balance) {
     return balances[_owner];
@@ -82,7 +82,7 @@ contract CUSDToken is ERC20, Ownable {
 
   /**
   * @param _owner is the token holder
-  * @returns _value is the guaranteed ether for _owner in the event the contract becomes unpegged
+  * @return _value is the guaranteed ether for _owner in the event the contract becomes unpegged
   */
   function reservedEther(address _owner) public constant returns (uint value) {
     return guaranteedEther[_owner];
@@ -92,7 +92,7 @@ contract CUSDToken is ERC20, Ownable {
   /**
   * @param _spender is allowed a portion of the msg.sender balance
   * @param _value is the amount spendable via the transferFrom function
-  * @returns success if the function call is successful
+  * @return success if the function call is successful
   */
   function approve(address _spender, uint _value) public returns (bool success) {
     allowed[msg.sender][_spender] = _value;
@@ -101,8 +101,8 @@ contract CUSDToken is ERC20, Ownable {
 
   /**
    * @param _owner is the token holder
-   * @param _spender
-   * @returns the amount of tokens allowed by _owner to _spender
+   * @param _spender is the person being allowed tokens
+   * @return the amount of tokens allowed by _owner to _spender
    */
   function allowance(address _owner, address _spender) public constant returns (uint remaining) {
     return allowed[_owner][_spender];

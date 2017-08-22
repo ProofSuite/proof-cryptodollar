@@ -32,7 +32,7 @@ contract CryptoFiat is Pausable {
 
    
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
-  event BuyCUSD(address indexed purchaser, uint256 indexed paymentValue, uint256 indexed tokenAmount);
+  event BuyCUSD(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
   event BuyCEUR(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
   event SellCUSD(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
   event SellCEUR(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
@@ -176,8 +176,8 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice getCEURTokenValue returns the value of tokens depending on current contract state
-  * @param tokenNumber
-  * @returns value of the tokens
+  * @param tokenNumber : Number of tokens to be valued
+  * @return value of the tokens
   */
   function getCEURTokenValue(uint256 tokenNumber) public constant returns (uint256 value) {
 
@@ -195,8 +195,8 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice getCUSDTokenValue returns the value of tokens depending on current contract state
-  * @param tokenNumber
-  * @returns value of the tokens
+  * @param tokenNumber : Number of tokens to be valued
+  * @return value of the tokens
   */
   function getCUSDTokenValue(uint256 tokenNumber) public constant returns (uint256) {
     uint256 tokenBalance = CUSD.balanceOf(msg.sender);
@@ -214,8 +214,7 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice reservedEther returns the CEUR tokens 
-  * @param tokenNumber
-  * @returns value of the tokens
+  * @return value of the tokens
   */
   function reservedEther() public constant returns (uint256) {
     return CUSD.reservedEther(msg.sender) + CEUR.reservedEther(msg.sender);
@@ -225,7 +224,7 @@ contract CryptoFiat is Pausable {
   /**
   * @notice This function is probably not needed
   * @param _owner 
-  * @returns the crypto-USD token balance of _owner
+  * @return the crypto-USD token balance of _owner
   */
   function CUSDBalance(address _owner) public constant returns(uint256) {
     return CUSD.balanceOf(_owner);
@@ -234,7 +233,7 @@ contract CryptoFiat is Pausable {
   /**
   * @notice This function is probably not needed
   * @param _owner 
-  * @returns the crypto-EUR token balance of _owner
+  * @return the crypto-EUR token balance of _owner
   */
   function CEURBalance(address _owner) public constant returns(uint256) {
     return CEUR.balanceOf(_owner);
@@ -242,7 +241,7 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice This function is not needed
-  * @returns total supply of crypto-USD
+  * @return total supply of crypto-USD
   */
   function CUSDTotalSupply() public constant returns(uint256) {
     return CUSD.totalSupply();
@@ -250,7 +249,7 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice This function is not needed
-  * @returns total supply of crypto-EUR
+  * @return total supply of crypto-EUR
   */
   function CEURTotalSupply() public constant returns(uint256) {
     return CEUR.totalSupply();
@@ -259,7 +258,7 @@ contract CryptoFiat is Pausable {
   /**
   * @notice This function is not needed
   * @dev Need to make sure tests do not use this function
-  * @returns total supply of crypto-EUR
+  * @return total supply of crypto-EUR
   */
   function totalBalance() public constant returns (uint256) {
     return this.balance;
@@ -267,17 +266,17 @@ contract CryptoFiat is Pausable {
 
 
   /**
-  * @returns the total value in ether of the crypto-USD and crypto-EUR tokens that have been issued
+  * @return the total value in ether of the crypto-USD and crypto-EUR tokens that have been issued
   */
   function totalCryptoFiatValue() public constant returns(uint256) {
     uint256 CUSDSupply = CUSD.totalSupply();
     uint256 CEURSupply = CEUR.totalSupply();
-    uint256 total = CUSDSupply.div(conversionRate.ETH_USD).mul(1 ether) + CEURSupply.div(conversionRate.ETH_EUR).mul(1 ether);
+    uint256 total = CUSDSupply.mul(1 ether).div(conversionRate.ETH_USD) + CEURSupply.mul(1 ether).div(conversionRate.ETH_EUR);
     return total;
   }
 
   /**
-  * @returns buffer value
+  * @return buffer value
   */
   function buffer() public constant returns (int) {
     int value = int(this.balance - dividends - totalCryptoFiatValue());
@@ -286,7 +285,7 @@ contract CryptoFiat is Pausable {
 
 
   /** 
-  * @returns conversionRate
+  * @return conversionRate
    */
   function conversionRate(string currency) public constant returns (uint256) {
     if (sha3(currency) == sha3("USD")) {
@@ -303,7 +302,7 @@ contract CryptoFiat is Pausable {
   }
 
   /**
-  * @returns State of the contract
+  * @return State of the contract
   */
   function currentState() public constant returns (State) {
     if (buffer() > 0) {
@@ -317,7 +316,7 @@ contract CryptoFiat is Pausable {
   * @dev Need to refactor this function to not use currency
   * @param tokenNumber the number of tokens being sold
   * @param currency which currency token is being sold
-  * @returns State of the contract
+  * @return State of the contract
   */
   function futureState(uint256 tokenNumber, string currency) public constant returns (State) {
     uint256 rate = conversionRate(currency);
