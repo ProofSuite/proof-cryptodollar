@@ -59,9 +59,7 @@ contract CryptoFiat is Pausable {
   /**
   * @notice capitalize contract
   */
-  function capitalize() public payable {
-
-  }
+  function capitalize() public payable {}
 
   /**
   * @notice buyCEURTokens buys pegged crypto-EUR tokens.
@@ -80,7 +78,6 @@ contract CryptoFiat is Pausable {
 
       CEUR.buy(msg.sender, tokenAmount, paymentValue);
       BuyCEUR(msg.sender, value, tokenAmount);
-
   }
 
   /**
@@ -107,9 +104,10 @@ contract CryptoFiat is Pausable {
   * @notice sellCEURTokens sells crypto-EUR tokens for the equivalent EUR value at which they were bought
   * @param tokenNumber is the number of tokens to be sold
   */
-  function sellCEURTokens(uint256 tokenNumber) inState(State.PEGGED) public {
+  function sellCEURTokens(uint256 tokenNumber) public {
       require(tokenNumber >= 0);
       require(tokenNumber <= CEUR.balanceOf(msg.sender));
+      require(currentState(tokenNumber, "EUR") == State.PEGGED);
 
       uint256 paymentValue = tokenNumber.mul(1 ether).div(conversionRate.ETH_EUR);
       msg.sender.transfer(paymentValue);
@@ -123,15 +121,17 @@ contract CryptoFiat is Pausable {
   * @notice sellCUSDTokens sells crypto-USD tokens for the equivalent USD value at which they were bought
   * @param tokenNumber is the number of tokens to be sold
   */
-  function sellCUSDTokens(uint256 tokenNumber) inState(State.PEGGED) public {
+  function sellCUSDTokens(uint256 tokenNumber) public {
       require(tokenNumber >= 0);
       require(tokenNumber <= CUSD.balanceOf(msg.sender));
+      require(currentState(tokenNumber, "USD") == State.PEGGED);
 
       uint256 paymentValue = tokenNumber.mul(1 ether).div(conversionRate.ETH_USD);
       msg.sender.transfer(paymentValue);
 
       CUSD.sell(msg.sender, tokenNumber, paymentValue);
       SellCUSD(msg.sender, paymentValue, tokenNumber);
+
   }
 
 
@@ -143,6 +143,7 @@ contract CryptoFiat is Pausable {
   function sellUnpeggedCEUR(uint256 tokenNumber) inState(State.UNPEGGED) public {
     uint256 tokenBalance = CEUR.balanceOf(msg.sender);
     uint256 guaranteedEther = CEUR.reservedEther(msg.sender);
+    
 
     require(tokenNumber >= 0);
     require(tokenNumber <= tokenBalance);
@@ -152,8 +153,10 @@ contract CryptoFiat is Pausable {
     
     CEUR.sell(msg.sender, tokenNumber, paymentValue);
     SellCEUR(msg.sender, paymentValue, tokenNumber);
+
   }
     
+
   /**
   * @notice sellUnpeggedCUSD sells crypto-USD tokens for the equivalent ether value at which they were bought
   * @dev Need to replace inState by inFutureState to account for the possibility the contract could become unpegged with the current transaction
@@ -162,7 +165,7 @@ contract CryptoFiat is Pausable {
   function sellUnpeggedCUSD(uint256 tokenNumber) inState(State.UNPEGGED) public {
     uint256 tokenBalance = CUSD.balanceOf(msg.sender);
     uint256 guaranteedEther = CUSD.reservedEther(msg.sender);
-    
+
     require(tokenNumber >= 0);
     require(tokenNumber <= tokenBalance);
 
@@ -171,6 +174,7 @@ contract CryptoFiat is Pausable {
 
     CUSD.sell(msg.sender, tokenNumber, paymentValue);
     SellCUSD(msg.sender, paymentValue, tokenNumber);
+
   }
 
 
@@ -191,7 +195,8 @@ contract CryptoFiat is Pausable {
       paymentValue = guaranteedEther.mul(tokenNumber).div(tokenBalance);
     }
     return paymentValue;
-  } 
+  }
+
 
   /**
   * @notice getCUSDTokenValue returns the value of tokens depending on current contract state
@@ -311,16 +316,17 @@ contract CryptoFiat is Pausable {
       return State.UNPEGGED;
     }
   }
-  
+
+
   /**
   * @dev Need to refactor this function to not use currency
   * @param tokenNumber the number of tokens being sold
   * @param currency which currency token is being sold
   * @return State of the contract
   */
-  function futureState(uint256 tokenNumber, string currency) public constant returns (State) {
+  function currentState(uint256 tokenNumber, string currency) public constant returns (State) {
     uint256 rate = conversionRate(currency);
-    if (buffer() < int(tokenNumber.mul(rate))) {
+    if (buffer() > int(tokenNumber.mul(rate))) {
       return State.PEGGED;
     } else {
       return State.UNPEGGED;
