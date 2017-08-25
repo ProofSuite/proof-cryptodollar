@@ -5,6 +5,7 @@ import './SafeMath.sol';
 import './Pausable.sol';
 import './CUSDToken.sol';
 import './CEURToken.sol';
+import './ProofToken.sol';
 
 
 /**
@@ -20,16 +21,20 @@ contract CryptoFiat is Pausable {
 
   CUSDToken public CUSD;
   CEURToken public CEUR;
+  ProofToken public proofToken;
 
   struct ConversionRate {
     uint256 ETH_USD;
     uint256 ETH_EUR;
   }
+
   ConversionRate public conversionRate;
+  
 
   uint256 public dividends;
-  enum State{ PEGGED, UNPEGGED }
+  mapping(address => uint) receivedDividends;
 
+  enum State{ PEGGED, UNPEGGED }
    
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
   event BuyCUSD(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
@@ -46,9 +51,11 @@ contract CryptoFiat is Pausable {
 
     CEUR = new CEURToken();
     CUSD = new CUSDToken();
+    proofToken = new ProofToken();
     conversionRate.ETH_USD = 25000;
     conversionRate.ETH_EUR = 20000;
     dividends = 0;
+    
 
   }
 
@@ -60,6 +67,22 @@ contract CryptoFiat is Pausable {
   * @notice capitalize contract
   */
   function capitalize() public payable {}
+
+
+  function withdrawDividends() public {
+
+    uint tokenSupply = proofToken.totalSupply();
+    uint dividendPerShare = dividends / tokenSupply;
+    uint totalUserDividend = dividendPerShare * proofToken.balanceOf(msg.sender);
+    uint owing = totalUserDividend - receivedDividends[msg.sender];
+
+    if (owing > 0) {
+      dividends = dividends - owing;
+      receivedDividends[msg.sender] = receivedDividends[msg.sender] + owing;
+      // msg.sender.transfer(owing);
+    }
+
+  }
 
   /**
   * @notice buyCEURTokens buys pegged crypto-EUR tokens.
@@ -143,7 +166,6 @@ contract CryptoFiat is Pausable {
   function sellUnpeggedCEUR(uint256 tokenNumber) inState(State.UNPEGGED) public {
     uint256 tokenBalance = CEUR.balanceOf(msg.sender);
     uint256 guaranteedEther = CEUR.reservedEther(msg.sender);
-    
 
     require(tokenNumber >= 0);
     require(tokenNumber <= tokenBalance);
@@ -269,7 +291,6 @@ contract CryptoFiat is Pausable {
     return this.balance;
   }
 
-
   /**
   * @return the total value in ether of the crypto-USD and crypto-EUR tokens that have been issued
   */
@@ -347,8 +368,6 @@ contract CryptoFiat is Pausable {
     conversionRate.ETH_EUR = _value;
   }
 
-
-  
 
 
 }

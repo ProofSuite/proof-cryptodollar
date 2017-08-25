@@ -37,12 +37,27 @@ const waitUntilTransactionsMined = (txn_hashes) => {
 }
 
 const getBalance = (address) => {
-  return web3.fromWei(web3.eth.getBalance(address).toString(), 'ether');
+    let balance = web3.eth.getBalance(address);
+    return balance.toNumber();
 }
 
-const getBalanceInWei = (address) => {
-    return Number(web3.eth.getBalance(address).toString());
+const getBalances = (addresses) => {
+    let balances = [];
+    addresses.map(function(address) { balances.push(getBalance(address)) })
+    return balances;
 }
+
+const getEtherBalance = (address) => {
+    let balance = web3.fromWei('ether', web3.eth.getBalance(address));
+    return balance.toNumber();
+}
+
+const getEtherBalances = (addresses) => {
+    let balances = [];
+    addresses.map(function(address) { balances.push(getEtherBalance(address)) })
+    return balances;
+}
+
 
 const inEther = (amountInWei) => {
   return web3.fromWei(amountInWei, 'ether');
@@ -69,7 +84,9 @@ const inTokenUnits = (tokenBaseUnits) => {
 module.exports = {
   waitUntilTransactionsMined,
   getBalance,
-  getBalanceInWei,
+  getBalances,
+  getEtherBalance,
+  getEtherBalances,
   inEther,
   inWei,
   inBaseUnits,

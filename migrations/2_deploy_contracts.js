@@ -16,7 +16,7 @@ module.exports = function(deployer, network, accounts) {
   // deployer.deploy(Pausable, {gas: 4000000, gasPrice: 1000000000});
   // deployer.deploy(CryptoDollarToken, {gas: 4000000, gasPrice: 1000000000});
   // deployer.deploy(CryptoEuroToken, {gas: 4000000, gasPrice: 1000000000});
-  deployer.deploy(CryptoFiat, {gas: 4000000, gasPrice: 1000000000});
+  deployer.deploy(CryptoFiat, {gas: 4712388, gasPrice: 1000000000});
 };
 
 

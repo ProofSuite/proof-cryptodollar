@@ -1,6 +1,6 @@
 // Allows us to use ES6 in our migrations and tests.
-require('babel-register')
-require('babel-polyfill')
+require('babel-register');
+require('babel-polyfill');
 
 module.exports = {
   networks: {
@@ -8,7 +8,7 @@ module.exports = {
       host: 'localhost',
       port: 8545,
       network_id: '*',
-      gas: 4710000,
+      gas: 4710388,
       from: '0xdf08f82de32b8d460adbe8d72043e3a7e25a3b39'  // testprc main account here
     },
     testnet: {

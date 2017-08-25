@@ -168,6 +168,11 @@ contract('CryptoFiat', (accounts) => {
             Number(buffer).should.be.equal(0);
         });
 
+        it('should have initial dividends equal to 0', async function() {
+            let dividends = await getDividends(cryptoFiat)
+            dividends.should.be.equal(0);
+        });
+
     });
 
 

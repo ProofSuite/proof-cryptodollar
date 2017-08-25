@@ -21,9 +21,26 @@ const getCEURBalance = async (contract, investor1) => {
     return balance.toNumber();
 }
 
-const getBalance = (investor1) => {
-    let balance = web3.eth.getBalance(investor1);
+const getBalance = (address) => {
+    let balance = web3.eth.getBalance(address);
     return Number(balance.toString());
+}
+
+const getBalances = (addresses) => {
+    let balances = [];
+    addresses.map(function(address) { balances.push(getBalance(address)) })
+    return balances;
+}
+
+const getEtherBalance = (address) => {
+    let balance = web3.fromWei('ether', web3.eth.getBalance(address));
+    return balance.toNumber();
+}
+
+const getEtherBalances = (addresses) => {
+    let balances = [];
+    addresses.map(function(address) { balances.push(getEtherBalance(address)) })
+    return balances;
 }
 
 const OrderCUSD = async (contract, txnObj) => {
@@ -57,6 +74,12 @@ const sellUnpeggedOrderCUSD = async(contract, tokenNumber, seller) => {
 const sellUnpeggedOrderCEUR = async(contract, tokenNumber, seller) => {
     let params = {from: seller, gas: gas, gasPrice: gasPrice };
     let txn = await contract.sellUnpeggedCEUR(tokenNumber, params);
+    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+}
+
+const mintToken = async(contract, minter, receiver, amount) => {
+    let params = {from: minter, gas: gas, gasPrice: gasPrice };
+    let txn = await contract.mint(receiver, amount, params);
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
 }
 
@@ -137,7 +160,8 @@ module.exports = {
     getState,
     getBufferFee,
     getFee,
-    applyFee
+    applyFee,
+    mintToken
     }
 
 
