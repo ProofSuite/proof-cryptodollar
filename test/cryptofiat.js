@@ -29,6 +29,8 @@ import { getDividends,
          getBufferFee,
          applyFee } from '../scripts/cryptoFiatHelpers.js';
 
+import { transferOwnership } from '../scripts/ownershipHelpers.js';
+
 
 const h = require('../scripts/helper.js');
 
@@ -50,16 +52,20 @@ const Pausable = artifacts.require('./Pausable.sol');
 const CryptoFiat = artifacts.require('./CryptoFiat.sol');
 const CryptoEuroToken = artifacts.require('./CEURToken.sol');
 const CryptoDollarToken = artifacts.require('./CUSDToken.sol');
+const ProofToken = artifacts.require('./ProofToken.sol');
 
 
 
 contract('CryptoFiat', (accounts) => {
 
     let cryptoFiat;
-    let CEURTokenAddress;
-    let CUSDTokenAddress;
+    let CEURAddress;
+    let CUSDAddress;
+    let PRFTAddress;
+    let cryptoFiatAddress;
     let CEURToken;
     let CUSDToken;
+    let proofToken;
     let txn;
     let txnReceipt;
     let params;
@@ -80,13 +86,23 @@ contract('CryptoFiat', (accounts) => {
     const market = accounts[3];
 
     before(async function() {
-        cryptoFiat = await CryptoFiat.new();
-        CEURTokenAddress = await cryptoFiat.CEUR();
-        CUSDTokenAddress = await cryptoFiat.CUSD();
-        CEURToken = CryptoEuroToken.at(CEURTokenAddress);
-        CUSDToken = CryptoDollarToken.at(CUSDTokenAddress);
 
-    })
+        CEURToken = await CryptoEuroToken.new();
+        CUSDToken = await CryptoDollarToken.new();
+        proofToken = await ProofToken.new();
+
+        CEURAddress = CEURToken.address;
+        CUSDAddress = CUSDToken.address;
+        PRFTAddress = proofToken.address;
+
+        cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
+
+        cryptoFiatAddress = cryptoFiat.address;
+        await transferOwnership(CEURToken, accounts[0], cryptoFiatAddress);
+        await transferOwnership(CUSDToken, accounts[0], cryptoFiatAddress);
+        await transferOwnership(proofToken, accounts[0], cryptoFiatAddress);
+
+    });
     
 
     after(function() {
@@ -118,6 +134,15 @@ contract('CryptoFiat', (accounts) => {
             assert.equal(cryptoFiatAddress, CUSDOwnerAddress)
         });
 
+        it('should have cryptoEuro token address', async function() {
+            let address = await cryptoFiat.CEUR.call();
+            address.should.equal(CEURAddress);
+        })
+
+        it('should have cryptoDollar token address', async function() {
+            let address = await cryptoFiat.CUSD.call();
+            address.should.equal(CUSDAddress);
+        })
 
     });
 
@@ -404,24 +429,24 @@ contract('CryptoFiat', (accounts) => {
 
         it('should payout around 0.39 ether for 10000 token base units (= 100,00 CEUR) ', async function() {
 
-            let initialBalance = h.getBalanceInWei(investor1);
+            let initialBalance = getBalance(investor1);
             let expectedBalanceIncrement = 10000 * ether / ETH_EUR;
 
             await sellOrderCEUR(cryptoFiat, 10000, investor1);
 
-            let balance = h.getBalanceInWei(investor1);
+            let balance = getBalance(investor1);
             expect(h.inEther(balance-initialBalance)).to.almost.equal(h.inEther(expectedBalanceIncrement),3);
         });
 
 
         it('should payout around ether for 10000 token base units (= 100,00 CUSD) ', async function() {
 
-            let initialBalance = h.getBalanceInWei(investor1);
+            let initialBalance = getBalance(investor1);
             let expectedBalanceIncrement = 10000 * ether / ETH_USD;
 
             await sellOrderCUSD(cryptoFiat, 10000, investor1);
 
-            let balance = h.getBalanceInWei(investor1);
+            let balance = getBalance(investor1);
             expect(h.inEther(balance-initialBalance)).to.almost.equal(h.inEther(expectedBalanceIncrement), 3);
         });
             
@@ -461,11 +486,20 @@ contract('CryptoFiat', (accounts) => {
 
         before(async function() {
 
-            cryptoFiat = await CryptoFiat.new();
-            CEURTokenAddress = await cryptoFiat.CEUR();
-            CUSDTokenAddress = await cryptoFiat.CUSD();
-            CUSDToken = CryptoDollarToken.at(CUSDTokenAddress);
-            CEURToken = CryptoEuroToken.at(CEURTokenAddress);
+            CEURToken = await CryptoEuroToken.new();
+            CUSDToken = await CryptoDollarToken.new();
+            proofToken = await ProofToken.new();
+    
+            CEURAddress = CEURToken.address;
+            CUSDAddress = CUSDToken.address;
+            PRFTAddress = proofToken.address;
+    
+            cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
+            cryptoFiatAddress = cryptoFiat.address;
+            
+            await transferOwnership(CEURToken, accounts[0], cryptoFiatAddress);
+            await transferOwnership(CUSDToken, accounts[0], cryptoFiatAddress);
+            await transferOwnership(proofToken, accounts[0], cryptoFiatAddress);
 
             await setUSDConversionRate(cryptoFiat, 20000);
             await setEURConversionRate(cryptoFiat, 20000);
@@ -527,11 +561,20 @@ contract('CryptoFiat', (accounts) => {
 
         beforeEach(async function() {
 
-            cryptoFiat = await CryptoFiat.new();
-            CEURTokenAddress = await cryptoFiat.CEUR();
-            CUSDTokenAddress = await cryptoFiat.CUSD();
-            CUSDToken = CryptoDollarToken.at(CUSDTokenAddress);
-            CEURToken = CryptoEuroToken.at(CEURTokenAddress);
+            CEURToken = await CryptoEuroToken.new();
+            CUSDToken = await CryptoDollarToken.new();
+            proofToken = await ProofToken.new();
+    
+            CEURAddress = CEURToken.address;
+            CUSDAddress = CUSDToken.address;
+            PRFTAddress = proofToken.address;
+    
+            cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
+            cryptoFiatAddress = cryptoFiat.address;
+            
+            await transferOwnership(CEURToken, accounts[0], cryptoFiatAddress);
+            await transferOwnership(CUSDToken, accounts[0], cryptoFiatAddress);
+            await transferOwnership(proofToken, accounts[0], cryptoFiatAddress);
 
             await setUSDConversionRate(cryptoFiat, 20000);
             await setEURConversionRate(cryptoFiat, 20000);

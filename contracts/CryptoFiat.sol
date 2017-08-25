@@ -47,15 +47,14 @@ contract CryptoFiat is Pausable {
 
 
   
-  function CryptoFiat() {
+  function CryptoFiat(address CUSDAddress, address CEURAddress, address PRFTAddress) {
 
-    CEUR = new CEURToken();
-    CUSD = new CUSDToken();
-    proofToken = new ProofToken();
+    CEUR = CEURToken(CEURAddress);
+    CUSD = CUSDToken(CUSDAddress);
+    proofToken = ProofToken(PRFTAddress);
     conversionRate.ETH_USD = 25000;
     conversionRate.ETH_EUR = 20000;
     dividends = 0;
-    
 
   }
 

@@ -1,9 +1,45 @@
-const SafeMath = artifacts.require('./SafeMath.sol')
-const Ownable = artifacts.require('./Ownable.sol')
-const Pausable = artifacts.require('./Pausable.sol')
-const CryptoFiat = artifacts.require('./CryptoFiat.sol')
-const CryptoEuroToken = artifacts.require('./CEURToken.sol')
-const CryptoDollarToken = artifacts.require('./CUSDToken.sol')
+import { gas,
+    gasPrice,
+    ether,
+    investment,
+    defaultUSDConversionRate,
+    defaultEURConversionRate } from '../scripts/testConfig.js';
+
+import { getDividends,
+    getBalance,
+    getBuffer,
+    getTotalCUSDSupply,
+    getTotalCEURSupply,
+    getTotalSupply,
+    getTotalCryptoFiatValue,
+    getReservedEther,
+    getCUSDBalance,
+    getCEURBalance,
+    OrderCEUR,
+    OrderCUSD,
+    sellOrderCEUR,
+    sellOrderCUSD,
+    sellUnpeggedOrderCEUR,
+    sellUnpeggedOrderCUSD,
+    getUSDConversionRate,
+    getEURConversionRate,
+    setUSDConversionRate,
+    setEURConversionRate,
+    getState,
+    getFee,
+    getBufferFee,
+    applyFee } from '../scripts/cryptoFiatHelpers.js';
+
+import { transferOwnership } from '../scripts/ownershipHelpers.js';
+
+const SafeMath = artifacts.require('./SafeMath.sol');
+const Ownable = artifacts.require('./Ownable.sol');
+const Pausable = artifacts.require('./Pausable.sol');
+const CryptoFiat = artifacts.require('./CryptoFiat.sol');
+const CryptoEuroToken = artifacts.require('./CEURToken.sol');
+const CryptoDollarToken = artifacts.require('./CUSDToken.sol');
+const ProofToken = artifacts.require('./ProofToken.sol');
+
 
 const h = require('../scripts/helper.js');
 const BigNumber = web3.BigNumber
@@ -19,164 +55,22 @@ const assert = chai.assert;
 const should = chai.should();
 const expect = chai.expect;
 
-let gas = 3*10**6;
-let gasPrice = 6*10**9;
-
-const getBufferFee = (value) => { return value / 200; }
-const applyFee = (value, fee) => { return value * (1-fee)}
-const getFee = (value, fee) => { return value * fee }
-
-const getTotalSupply = async (token) => { 
-    let tokenSupply = await token.totalSupply.call();
-    return tokenSupply.toNumber();
- }
-
-const getTotalProofTokenHolders = async (contract) => {
-    let balance = await contract.contractBalance.call();
-    return balance[0].toNumber();
-}
-
-const getTotalCryptoTokenHolders = async (contract) => {
-    let balance = await contract.contractBalance.call();
-    return balance[1].toNumber();
-}
-
-const getCUSDBalance = async (contract, investor) => {
-    let balance = await contract.CUSDBalance(investor);
-    return balance.toNumber();
-}
-
-const getCEURBalance = async (contract, investor) => {
-    let balance = await contract.CEURBalance(investor);
-    return balance.toNumber();
-}
-
-const getBalance = (investor) => {
-    let balance = web3.eth.getBalance(investor);
-    return Number(balance.toString());
-}
-
-const OrderCUSD = async (contract, txnObj) => {
-    let txn = await contract.buyCUSDTokens(txnObj);
-    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
-    return txnReceipt;
-}
-
-const OrderCEUR = async (contract, txnObj) => {
-    let txn = await contract.buyCEURTokens(txnObj);
-    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
-    return txnReceipt;
-}
-
-const sellOrderCUSD = async (contract, tokenNumber, seller) => {
-    let params = {from: seller, gas: gas, gasPrice: gasPrice };
-    let txn = await contract.sellCUSDTokens(tokenNumber, params);
-    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
-    return txnReceipt;
-}
-
-const sellOrderCEUR = async (contract, tokenNumber, seller) => {
-    let params = {from: seller, gas: gas, gasPrice: gasPrice };
-    let txn = await contract.sellCEURTokens(tokenNumber, params);
-    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
-    return txnReceipt;
-}
-
-const sellUnpeggedOrderCUSD = async(contract, tokenNumber, seller) => {
-    let params = {from: seller, gas: gas, gasPrice: gasPrice };
-    let txn = await contract.sellUnpeggedCUSD(tokenNumber, params);
-    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
-    return txnReceipt;
-}
-
-const sellUnpeggedOrderCEUR = async(contract, tokenNumber, seller) => {
-    let params = {from: seller, gas: gas, gasPrice: gasPrice };
-    let txn = await contract.sellUnpeggedCEUR(tokenNumber, params);
-    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
-    return txnReceipt;
-}
-
-const getBuffer = async (cryptoFiat) => {
-    let balance = await cryptoFiat.buffer.call();
-    return Number(balance);
-}
-
-const getBigNumberBuffer = async (cryptoFiat) => {
-    await cryptoFiat.buffer.call();
-}
-
-const getDividends = async (cryptoFiat) => {
-    let balance = await cryptoFiat.dividends.call();
-    return Number(balance);
-}
-
-const getTotalCUSDSupply = async(cryptoFiat) => {
-    let supply = await cryptoFiat.CUSDTotalSupply.call();
-    return Number(supply);
-}
-
-const getTotalCEURSupply = async(cryptoFiat) => {
-    let supply = await cryptoFiat.CEURTotalSupply.call();
-    return Number(supply);
-}
-
-const getReservedEther = async(token, investor) => {
-    let reservedEther = await token.reservedEther(investor);
-    return Number(reservedEther);
-}
-
-const getTotalCryptoFiatValue = async(cryptoFiat) => {
-    let balance = await cryptoFiat.totalCryptoFiatValue.call();
-    return balance = balance.toNumber();
-}
-
-const getUSDConversionRate = async(cryptoFiat) => {
-    let conversionRates = await cryptoFiat.conversionRate.call();
-    return Number(conversionRates[0]);
-}
-
-const getEURConversionRate = async(cryptoFiat) => {
-    let conversionRates = await cryptoFiat.conversionRate.call();
-    return Number(conversionRates[1]);
-}
-
-const setUSDConversionRate = async(cryptoFiat, value) => {
-    let txn = await cryptoFiat.setUSDConversionRate(value, {from: web3.eth.accounts[0], gas: gas, gasPrice: gasPrice });
-    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
-}
-
-const setEURConversionRate = async(cryptoFiat, value) => {
-    let txn = await cryptoFiat.setEURConversionRate(value, {from: web3.eth.accounts[0], gas: gas, gasPrice: gasPrice });
-    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
-}
-
-const getState = async(cryptoFiat) => {
-    let currentStateID = await cryptoFiat.currentState.call();
-    if (currentStateID == 1) {
-        return "UNPEGGED";
-    } else {
-        return "PEGGED";
-    }
-}
-
-
-
 
 contract('CryptoFiat', (accounts) => {
     
     let cryptoFiat;
-    let ether = 10 ** 18;
-    let CEURTokenAddress;
-    let CUSDTokenAddress;
+    let CEURAddress;
+    let CUSDAddress;
+    let PRFTAddress;
+    let cryptoFiatAddress;
+
     let CEURToken;
     let CUSDToken;
+    let proofToken;
+
     let txn;
     let txnReceipt;
     let params;
-    let ETH_USD_InCents = 25000;
-    let ETH_EUR_InCents = 20000;
-    let ETH_USD_Rate = ETH_USD_InCents / (10 ** 2);
-    let ETH_EUR_Rate = ETH_USD_InCents / (10 ** 2);
     let ETH_EUR;
     let ETH_USD;
     
@@ -193,31 +87,25 @@ contract('CryptoFiat', (accounts) => {
     const investor2 = accounts[2];
     const market = accounts[3];
 
-    // after(function() {
-    //     events = cryptoFiat.allEvents({fromBlock: 0, toBlock: 'latest'});
-    //     events.get(function(error,result) {
-    //         let i = 0;
-    //         let j = 0;
-    //         result.forEach(function(log) {
-    //             console.log(i++ + ". " + log.event + ": ");
-    //             Object.keys(log.args).forEach(function(key) {
-    //                 console.log(key + ": " + log.args[key].toString());
-    //             });
-    //             console.log("\n");
-    //         });
-    //     });
-    // });
-
     describe('Sell Unpegged Tokens', function() {
 
 
         beforeEach(async function() {
 
-            cryptoFiat = await CryptoFiat.new();
-            CEURTokenAddress = await cryptoFiat.CEUR();
-            CUSDTokenAddress = await cryptoFiat.CUSD();
-            CEURToken = CryptoEuroToken.at(CEURTokenAddress);
-            CUSDToken = CryptoDollarToken.at(CUSDTokenAddress);
+            CEURToken = await CryptoEuroToken.new();
+            CUSDToken = await CryptoDollarToken.new();
+            proofToken = await ProofToken.new();
+    
+            CEURAddress = CEURToken.address;
+            CUSDAddress = CUSDToken.address;
+            PRFTAddress = proofToken.address;
+    
+            cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
+            cryptoFiatAddress = cryptoFiat.address;
+
+            await transferOwnership(CEURToken, accounts[0], cryptoFiatAddress);
+            await transferOwnership(CUSDToken, accounts[0], cryptoFiatAddress);
+            await transferOwnership(proofToken, accounts[0], cryptoFiatAddress);
 
             let conversionRates = await cryptoFiat.conversionRate.call();
             let txnObj, txn, txnReceipt;

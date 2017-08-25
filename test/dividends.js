@@ -39,6 +39,8 @@ const assert = chai.assert;
 const should = chai.should();
 const expect = chai.expect;
 const CryptoFiat = artifacts.require('./CryptoFiat.sol');
+const CryptoEuroToken = artifacts.require('./CEURToken.sol');
+const CryptoDollarToken = artifacts.require('./CUSDToken.sol');
 const ProofToken = artifacts.require('./ProofToken.sol');
 
 contract('CryptoFiat', (accounts) => {
@@ -47,8 +49,16 @@ contract('CryptoFiat', (accounts) => {
     let txn;
     let txnReceipt;
     let defaultOrder;
-    let proofTokenAddress;
+
+    let PRFTAddress;
+    let CEURAddress;
+    let CUSDAddress;
+    let cryptoFiatAddress;
+
     let proofToken;
+    let CEURToken;
+    let CUSDToken;
+
     let ETH_EUR;
     let ETH_USD;
     let logs;
@@ -58,9 +68,22 @@ contract('CryptoFiat', (accounts) => {
     let investors;
 
     before(async function() {
-        cryptoFiat = await CryptoFiat.new();
-        proofTokenAddress = await cryptoFiat.proofToken();
-        proofToken = ProofToken.at(proofTokenAddress);
+
+        CEURToken = await CryptoEuroToken.new();
+        CUSDToken = await CryptoDollarToken.new();
+        proofToken = await ProofToken.new();
+
+        CEURAddress = CEURToken.address;
+        CUSDAddress = CUSDToken.address;
+        PRFTAddress = proofToken.address;
+
+        cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
+        cryptoFiatAddress = cryptoFiat.address;
+        
+        await transferOwnership(CEURToken, accounts[0], cryptoFiatAddress);
+        await transferOwnership(CUSDToken, accounts[0], cryptoFiatAddress);
+        await transferOwnership(proofToken, accounts[0], cryptoFiatAddress);
+
     });
 
     after(function() {
@@ -86,11 +109,6 @@ contract('CryptoFiat', (accounts) => {
             dividends.should.be.equal(0);
         });
 
-        it('token address should be correctly set', async function() {
-            let address = await cryptoFiat.proofToken.call();
-            proofTokenAddress.should.be.equal(address);
-        })
-
     });
 
 
@@ -99,22 +117,19 @@ contract('CryptoFiat', (accounts) => {
         beforeEach(async function() {
 
             cryptoFiat = await CryptoFiat.new();
-            
-            proofTokenAddress = await cryptoFiat.proofToken();
-            proofToken = ProofToken.at(proofTokenAddress);
+            PRFTAddress = await cryptoFiat.proofToken();
+            proofToken = ProofToken.at(PRFTAddress);
             defaultOrder = {from: fund, value: 200 * ether, gas: 200000 };
             txn = {from: fund, gas: 200000};
 
             await OrderCUSD(cryptoFiat, defaultOrder);
 
             let investors = accounts.slice(1,5); //get 4 accounts
-            console.log(investor[0])
-            console.log(investor[1])
             await mintToken(proofToken, fund, investors[0], 100 * tokenUnits);
             await mintToken(proofToken, fund, investors[1], 100 * tokenUnits);
 
             let supply = await proofToken.totalSupply();
-            console.log(supply);
+            let balance = await balance;
 
         });
 
@@ -192,17 +207,7 @@ contract('CryptoFiat', (accounts) => {
 
         });
 
-   
-
-
-
-
-       
-
-
-
-
-    })
+    });
 
 
 });

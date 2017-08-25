@@ -58,7 +58,6 @@ const getEtherBalances = (addresses) => {
     return balances;
 }
 
-
 const inEther = (amountInWei) => {
   return web3.fromWei(amountInWei, 'ether');
 }

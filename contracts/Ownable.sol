@@ -8,6 +8,7 @@ pragma solidity ^0.4.11;
  */
 contract Ownable {
   address public owner;
+  bool public locked;
 
 
   /**
@@ -27,15 +28,27 @@ contract Ownable {
     _;
   }
 
+  /**
+   * @dev Throws if called by after locking ownership.
+   */
+  modifier onlyUnlocked() {
+    assert(locked == false);
+    _;
+  }
+
 
   /**
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
    * @param newOwner The address to transfer ownership to.
    */
-  function transferOwnership(address newOwner) onlyOwner {
+  function transferOwnership(address newOwner) onlyOwner onlyUnlocked {
     if (newOwner != address(0)) {
       owner = newOwner;
     }
+  }
+
+  function lockOwnership() onlyOwner {
+    locked = true;
   }
 
 }

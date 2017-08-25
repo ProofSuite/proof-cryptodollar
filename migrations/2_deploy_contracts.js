@@ -1,22 +1,40 @@
+var Promise = require('bluebird');
+
 var CEURToken = artifacts.require('./CEURToken.sol');
 var CUSDToken = artifacts.require('./CUSDToken.sol');
 var CryptoFiat = artifacts.require('./CryptoFiat.sol');
-var ERC20 = artifacts.require('./ERC20.sol');
-var Ownable = artifacts.require('./Ownable.sol');
-var Pausable = artifacts.require('./Pausable.sol');
+var ProofToken = artifacts.require('./ProofToken.sol')
 var SafeMath = artifacts.require('./SafeMath.sol');
+
+var tokens = [CUSDToken, CEURToken, ProofToken];
+
+let defaultGas = 4712388;
+let defaultGasPrice = 1000000000;
 
 module.exports = function(deployer, network, accounts) {
 
-  // deployer.deploy(SafeMath, {gas: 4000000, gasPrice: 1000000000 });
-  // deployer.link(SafeMath, CryptoFiat);
-  // deployer.link(SafeMath, CryptoDollarToken);
-  // deployer.link(SafeMath, CryptoEuroToken);
-  // deployer.deploy(Ownable, {gas: 4000000, gasPrice: 1000000000});
-  // deployer.deploy(Pausable, {gas: 4000000, gasPrice: 1000000000});
-  // deployer.deploy(CryptoDollarToken, {gas: 4000000, gasPrice: 1000000000});
-  // deployer.deploy(CryptoEuroToken, {gas: 4000000, gasPrice: 1000000000});
-  deployer.deploy(CryptoFiat, {gas: 4712388, gasPrice: 1000000000});
+
+  if (network == "development") {
+
+    deployer.deploy(SafeMath, {gas: defaultGas, gasPrice: defaultGasPrice });
+    deployer.link(SafeMath, CryptoFiat);
+    deployer.link(SafeMath, CUSDToken);
+    deployer.link(SafeMath, CEURToken);
+    deployer.link(SafeMath, ProofToken);
+
+    Promise.map(tokens, function(token) {
+      return deployer.deploy(token);
+    }).then(function() {
+
+      deployer.deploy(CryptoFiat, 
+                      CUSDToken.address, 
+                      CEURToken.address, 
+                      ProofToken.address,
+                      {gas: defaultGas, gasPrice: defaultGasPrice});
+    });
+
+  }
+  
 };
 
 
