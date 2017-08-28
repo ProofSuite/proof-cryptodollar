@@ -1,5 +1,5 @@
 
-const BigNumber = web3.BigNumber
+const BigNumber = web3.BigNumber;
 let chai = require('chai');
 var chaiAsPromised = require('chai-as-promised');
 var chaiStats = require('chai-stats');
@@ -86,7 +86,7 @@ contract('CryptoFiat', (accounts) => {
 
         defaultOrder = {from: fund, value: 200 * ether, gas: 200000 };
         txn = {from: fund, gas: 200000};
-
+        
         await transferOwnerships([CEURToken, CUSDToken, proofToken], accounts[0], cryptoFiatAddress);
 
     });

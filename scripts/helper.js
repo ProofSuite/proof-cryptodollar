@@ -90,7 +90,6 @@ const deployContracts = async (contracts) => {
     });
 
     return results;
-
 }
 
 const getAddresses = async (contracts) => {

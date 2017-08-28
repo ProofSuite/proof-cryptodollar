@@ -54,8 +54,11 @@ contract CryptoFiat is Pausable {
   event Dividends(address purchase, uint256 value);
   event Log(address user, uint256 data);
 
-
-  
+  /**
+  * @param CUSDAddress Address of the Crypto-Dollar token
+  * @param CEURAddress Address of the Crypto-Euro token
+  * @param PRFTAddress Address of the Proof token
+  */
   function CryptoFiat(address CUSDAddress, address CEURAddress, address PRFTAddress) {
 
     CEUR = CEURToken(CEURAddress);
@@ -67,35 +70,46 @@ contract CryptoFiat is Pausable {
 
   }
 
+  /**
+  * @notice Sending ether to the contract will result in an error
+  */
   function () payable {
       revert();
   }
 
   /**
-  * @notice capitalize contract
+  * @notice Capitalize contract
   */
   function capitalize() public payable {}
 
+
+  /**
+  * @notice Allow users
+  */
   function withdrawDividends() public {
     
     uint256 tokenBalance = proofToken.balanceOf(msg.sender);
-    uint256 newDividendPoints = totalDividendPoints - accounts[msg.sender].lastDividendPoints;
-    uint256 owing = (tokenBalance * newDividendPoints) / pointMultiplier;
+    uint256 newDividendPoints = totalDividendPoints.sub(accounts[msg.sender].lastDividendPoints);
+    uint256 owing = (tokenBalance.mul(newDividendPoints)) / pointMultiplier;
 
     if (owing > 0) {
       accounts[msg.sender].lastDividendPoints = totalDividendPoints;
-      dividends = dividends - owing;
+      dividends = dividends.sub(owing);
       msg.sender.transfer(owing);
     }
 
     Dividends(msg.sender, owing);   
   }
 
+  /**
+  * @notice Increase the total balance of dividend points and computes the dividend points owed per token
+  * To reduce float errors during divisions, the total dividends are multiplied by a very large point multiplier value
+  * @param amount Amount of dividends to be added
+  */
   function updateDividends(uint amount) {
     uint256 tokenSupply = proofToken.totalSupply();
     dividends = dividends.add(amount);
-
-    uint256 dividendPoints = (amount * pointMultiplier) / tokenSupply;
+    uint256 dividendPoints = (amount.mul(pointMultiplier)) / tokenSupply;
     totalDividendPoints = totalDividendPoints.add(dividendPoints);
   }
 

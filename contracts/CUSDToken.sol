@@ -29,7 +29,6 @@ contract CUSDToken is ERC20, Ownable {
 
   function CUSDToken() {}
 
-
   function() payable {
     revert();
   }

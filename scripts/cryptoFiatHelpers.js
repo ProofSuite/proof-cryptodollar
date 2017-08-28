@@ -92,7 +92,7 @@ const mintToken = async(contract, minter, amount) => {
 
 const transferToken = async(contract, sender, receiver, amount) => {
     let params = {from: sender, gas: gas, gasPrice: gasPrice };
-    let txn = await contract.transfer(receiver, amount, params)
+    let txn = await contract.transfer(receiver, amount, params);
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
     return txnReceipt;
 }
@@ -100,18 +100,11 @@ const transferToken = async(contract, sender, receiver, amount) => {
 const transferTokens = async(token, sender, receiver, amount) => {
     let params = {from: sender, gas: gas, gasPrice: gasPrice};
 
-    if Array.isArray(token) {
-        let promises = token.map(function(oneToken) { transferTokens(oneToken, sender, receiver, amount) });
-        let txnReceipts = await Promise.all(promises);
-    } else {
-        let txn = await transferTokens(token, sender, receiver, amount);
-        let txnReceipts = await h.waitUntilTransactionsMined(txn.tx);
-    }
+    let promises = token.map(function(oneToken) { transferTokens(oneToken, sender, receiver, amount)});
+    let txnReceipts = await Promise.all(promises);
 
     return txnReceipts;
 }
-
-
 
 const getBuffer = async (cryptoFiat) => {
     let balance = await cryptoFiat.buffer.call();
@@ -149,6 +142,7 @@ const getEURConversionRate = async(cryptoFiat) => {
 }
 
 const setUSDConversionRate = async(cryptoFiat, value) => {
+    console.log(web3.eth.accounts[0]);
     let txn = await cryptoFiat.setUSDConversionRate(value, {from: web3.eth.accounts[0], gas: gas, gasPrice: gasPrice });
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
 }
@@ -161,6 +155,31 @@ const setEURConversionRate = async(cryptoFiat, value) => {
 const getReservedEther = async(token, investor) => {
     let reservedEther = await token.reservedEther(investor);
     return Number(reservedEther);
+}
+
+const setConversionRate = async(contract, currency, value) => {
+
+    if (currency == 'USD') {
+        let txn = await contract.setUSDConversionRate(value, {from: web3.eth.accounts[0], gas: gas, gasPrice: gasPrice });
+        let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    } else if (currency == 'EUR') {
+        let txn = await contract.setEURConversionRate(value, {from: web3.eth.accounts[0], gas: gas, gasPrice: gasPrice });
+        let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    } else {
+        return -1;
+    }
+}
+
+const getConversionRate = async(contract, currency) => {
+
+    let rates = await contract.conversionRate.call();
+
+    if (currency == 'USD') {
+        return Number(rates[0]);
+    } else if (currency == 'EUR') {
+        return Number(rates[1]);
+    }
+
 }
 
 const getState = async(cryptoFiat) => {
@@ -199,7 +218,9 @@ module.exports = {
     applyFee,
     mintToken,
     transferToken,
-    transferTokens
+    transferTokens,
+    getConversionRate,
+    setConversionRate
     }
 
 
