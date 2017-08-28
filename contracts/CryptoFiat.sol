@@ -34,7 +34,6 @@ contract CryptoFiat is Pausable {
   uint256 pointMultiplier = 10 ** 18;
 
   struct Account {
-    uint balance;
     uint lastDividendPoints;
   }
   
@@ -71,6 +70,7 @@ contract CryptoFiat is Pausable {
   }
 
   /**
+  * @dev Check if payable is needed
   * @notice Sending ether to the contract will result in an error
   */
   function () payable {
@@ -147,7 +147,6 @@ contract CryptoFiat is Pausable {
       uint256 paymentValue = value - tokenHoldersFee - bufferFee;
 
       updateDividends(tokenHoldersFee);
-
       uint256 tokenAmount = paymentValue.mul(conversionRate.ETH_USD).div(1 ether);
 
       CUSD.buy(msg.sender, tokenAmount, paymentValue);

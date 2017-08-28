@@ -44,6 +44,7 @@ contract CEURToken is ERC20, Ownable {
     balances[msg.sender] = balances[msg.sender].sub(_value);
     balances[_to] = balances[_to].add(_value);
 
+    //might have to be full parenthesis and account for unpegged state
     uint256 etherValue = guaranteedEther[msg.sender].mul(_value).div(balances[msg.sender]);
     guaranteedEther[msg.sender] = guaranteedEther[msg.sender].sub(etherValue);
     guaranteedEther[_to] = guaranteedEther[_to].add(etherValue);
