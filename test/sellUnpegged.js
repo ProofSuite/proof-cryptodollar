@@ -30,7 +30,8 @@ import { getDividends,
     getBufferFee,
     applyFee } from '../scripts/cryptoFiatHelpers.js';
 
-import { transferOwnership } from '../scripts/ownershipHelpers.js';
+import { transferOwnership,
+         transferOwnerships } from '../scripts/ownershipHelpers.js';
 
 const SafeMath = artifacts.require('./SafeMath.sol');
 const Ownable = artifacts.require('./Ownable.sol');
@@ -103,9 +104,7 @@ contract('CryptoFiat', (accounts) => {
             cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
             cryptoFiatAddress = cryptoFiat.address;
 
-            await transferOwnership(CEURToken, accounts[0], cryptoFiatAddress);
-            await transferOwnership(CUSDToken, accounts[0], cryptoFiatAddress);
-            await transferOwnership(proofToken, accounts[0], cryptoFiatAddress);
+            await transferOwnerships([CEURToken, CUSDToken, proofToken], accounts[0], cryptoFiatAddress)
 
             let conversionRates = await cryptoFiat.conversionRate.call();
             let txnObj, txn, txnReceipt;

@@ -46,42 +46,72 @@ const getEtherBalances = (addresses) => {
 const OrderCUSD = async (contract, txnObj) => {
     let txn = await contract.buyCUSDTokens(txnObj);
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    return txnReceipt;
 }
 
 const OrderCEUR = async (contract, txnObj) => {
     let txn = await contract.buyCEURTokens(txnObj);
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    return txnReceipt;
 }
 
 const sellOrderCUSD = async (contract, tokenNumber, seller) => {
     let params = {from: seller, gas: gas, gasPrice: gasPrice };
     let txn = await contract.sellCUSDTokens(tokenNumber, params);
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    return txnReceipt;
 }
 
 const sellOrderCEUR = async (contract, tokenNumber, seller) => {
     let params = {from: seller, gas: gas, gasPrice: gasPrice };
     let txn = await contract.sellCEURTokens(tokenNumber, params);
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    return txnReceipt;
 }
 
 const sellUnpeggedOrderCUSD = async(contract, tokenNumber, seller) => {
     let params = {from: seller, gas: gas, gasPrice: gasPrice };
     let txn = await contract.sellUnpeggedCUSD(tokenNumber, params);
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    return txnReceipt;
 }
 
 const sellUnpeggedOrderCEUR = async(contract, tokenNumber, seller) => {
     let params = {from: seller, gas: gas, gasPrice: gasPrice };
     let txn = await contract.sellUnpeggedCEUR(tokenNumber, params);
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    return txnReceipt;
 }
 
-const mintToken = async(contract, minter, receiver, amount) => {
+const mintToken = async(contract, minter, amount) => {
     let params = {from: minter, gas: gas, gasPrice: gasPrice };
-    let txn = await contract.mint(receiver, amount, params);
+    let txn = await contract.mint(minter, amount, params);
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    return txnReceipt;
 }
+
+const transferToken = async(contract, sender, receiver, amount) => {
+    let params = {from: sender, gas: gas, gasPrice: gasPrice };
+    let txn = await contract.transfer(receiver, amount, params)
+    let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
+    return txnReceipt;
+}
+
+const transferTokens = async(token, sender, receiver, amount) => {
+    let params = {from: sender, gas: gas, gasPrice: gasPrice};
+
+    if Array.isArray(token) {
+        let promises = token.map(function(oneToken) { transferTokens(oneToken, sender, receiver, amount) });
+        let txnReceipts = await Promise.all(promises);
+    } else {
+        let txn = await transferTokens(token, sender, receiver, amount);
+        let txnReceipts = await h.waitUntilTransactionsMined(txn.tx);
+    }
+
+    return txnReceipts;
+}
+
+
 
 const getBuffer = async (cryptoFiat) => {
     let balance = await cryptoFiat.buffer.call();
@@ -128,6 +158,11 @@ const setEURConversionRate = async(cryptoFiat, value) => {
     let txnReceipt = await h.waitUntilTransactionsMined(txn.tx);
 }
 
+const getReservedEther = async(token, investor) => {
+    let reservedEther = await token.reservedEther(investor);
+    return Number(reservedEther);
+}
+
 const getState = async(cryptoFiat) => {
     let currentStateID = await cryptoFiat.currentState.call();
     if (currentStateID == 1) {
@@ -147,6 +182,7 @@ module.exports = {
     getTotalCryptoFiatValue,
     getCUSDBalance,
     getCEURBalance,
+    getReservedEther,
     OrderCEUR,
     OrderCUSD,
     sellOrderCEUR,
@@ -161,7 +197,9 @@ module.exports = {
     getBufferFee,
     getFee,
     applyFee,
-    mintToken
+    mintToken,
+    transferToken,
+    transferTokens
     }
 
 

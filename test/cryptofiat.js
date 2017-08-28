@@ -29,7 +29,7 @@ import { getDividends,
          getBufferFee,
          applyFee } from '../scripts/cryptoFiatHelpers.js';
 
-import { transferOwnership } from '../scripts/ownershipHelpers.js';
+import { transferOwnership, transferOwnerships } from '../scripts/ownershipHelpers.js';
 
 
 const h = require('../scripts/helper.js');
@@ -96,8 +96,8 @@ contract('CryptoFiat', (accounts) => {
         PRFTAddress = proofToken.address;
 
         cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
-
-        cryptoFiatAddress = cryptoFiat.address;
+        
+        await transferOwnerships([CEURToken, CUSDToken, proofToken], accounts[0], cryptoFiatAddress);
         await transferOwnership(CEURToken, accounts[0], cryptoFiatAddress);
         await transferOwnership(CUSDToken, accounts[0], cryptoFiatAddress);
         await transferOwnership(proofToken, accounts[0], cryptoFiatAddress);
@@ -123,15 +123,15 @@ contract('CryptoFiat', (accounts) => {
     describe('Ownership', function() {
         
         it('should initially own the CryptoEuro token', async function() {
-            let CEUROwnerAddress = await CEURToken.owner.call()
+            let CEUROwnerAddress = await CEURToken.owner.call();
             let cryptoFiatAddress = cryptoFiat.address;
-            assert.equal(cryptoFiatAddress, CEUROwnerAddress)
+            assert.equal(cryptoFiatAddress, CEUROwnerAddress);
         });
 
         it('should initially own the CryptoDollar token', async function() {
-            let CUSDOwnerAddress = await CUSDToken.owner.call()
+            let CUSDOwnerAddress = await CUSDToken.owner.call();
             let cryptoFiatAddress = cryptoFiat.address;
-            assert.equal(cryptoFiatAddress, CUSDOwnerAddress)
+            assert.equal(cryptoFiatAddress, CUSDOwnerAddress);
         });
 
         it('should have cryptoEuro token address', async function() {
@@ -615,6 +615,7 @@ contract('CryptoFiat', (accounts) => {
             cryptoFiatValue.should.be.equal(initialCryptoFiatValue * 2);
 
         });
+        
     });
 
 });

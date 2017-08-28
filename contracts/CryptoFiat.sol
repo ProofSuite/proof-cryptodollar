@@ -29,10 +29,17 @@ contract CryptoFiat is Pausable {
   }
 
   ConversionRate public conversionRate;
-  
-
   uint256 public dividends;
-  mapping(address => uint) receivedDividends;
+  uint256 public totalDividendPoints;
+  uint256 pointMultiplier = 10 ** 18;
+
+  struct Account {
+    uint balance;
+    uint lastDividendPoints;
+  }
+  
+  mapping(address => Account) accounts;
+
 
   enum State{ PEGGED, UNPEGGED }
    
@@ -44,6 +51,8 @@ contract CryptoFiat is Pausable {
   event SellUnpeggedCUSD(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
   event SellUnpeggedCEUR(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
   event BufferValue(uint256 value);
+  event Dividends(address purchase, uint256 value);
+  event Log(address user, uint256 data);
 
 
   
@@ -67,21 +76,29 @@ contract CryptoFiat is Pausable {
   */
   function capitalize() public payable {}
 
-
   function withdrawDividends() public {
-
-    uint tokenSupply = proofToken.totalSupply();
-    uint dividendPerShare = dividends / tokenSupply;
-    uint totalUserDividend = dividendPerShare * proofToken.balanceOf(msg.sender);
-    uint owing = totalUserDividend - receivedDividends[msg.sender];
+    
+    uint256 tokenBalance = proofToken.balanceOf(msg.sender);
+    uint256 newDividendPoints = totalDividendPoints - accounts[msg.sender].lastDividendPoints;
+    uint256 owing = (tokenBalance * newDividendPoints) / pointMultiplier;
 
     if (owing > 0) {
+      accounts[msg.sender].lastDividendPoints = totalDividendPoints;
       dividends = dividends - owing;
-      receivedDividends[msg.sender] = receivedDividends[msg.sender] + owing;
-      // msg.sender.transfer(owing);
+      msg.sender.transfer(owing);
     }
 
+    Dividends(msg.sender, owing);   
   }
+
+  function updateDividends(uint amount) {
+    uint256 tokenSupply = proofToken.totalSupply();
+    dividends = dividends.add(amount);
+
+    uint256 dividendPoints = (amount * pointMultiplier) / tokenSupply;
+    totalDividendPoints = totalDividendPoints.add(dividendPoints);
+  }
+
 
   /**
   * @notice buyCEURTokens buys pegged crypto-EUR tokens.
@@ -95,7 +112,8 @@ contract CryptoFiat is Pausable {
       uint256 bufferFee = value.div(200);
       uint256 paymentValue = value - tokenHoldersFee - bufferFee;
 
-      dividends = dividends.add(tokenHoldersFee);
+      updateDividends(tokenHoldersFee);
+
       uint256 tokenAmount = paymentValue.mul(conversionRate.ETH_EUR).div(1 ether);
 
       CEUR.buy(msg.sender, tokenAmount, paymentValue);
@@ -114,7 +132,8 @@ contract CryptoFiat is Pausable {
       uint256 bufferFee = value.div(200);
       uint256 paymentValue = value - tokenHoldersFee - bufferFee;
 
-      dividends = dividends.add(tokenHoldersFee);
+      updateDividends(tokenHoldersFee);
+
       uint256 tokenAmount = paymentValue.mul(conversionRate.ETH_USD).div(1 ether);
 
       CUSD.buy(msg.sender, tokenAmount, paymentValue);

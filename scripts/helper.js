@@ -1,3 +1,4 @@
+var Promise = require('bluebird');
 let chai = require('chai');
 var chaiAsPromised = require('chai-as-promised');
 const assert = chai.assert;
@@ -48,22 +49,25 @@ const getBalances = (addresses) => {
 }
 
 const getEtherBalance = (address) => {
-    let balance = web3.fromWei('ether', web3.eth.getBalance(address));
+    let balance = web3.fromWei(web3.eth.getBalance(address), 'ether');
     return balance.toNumber();
 }
 
 const getEtherBalances = (addresses) => {
     let balances = [];
-    addresses.map(function(address) { balances.push(getEtherBalance(address)) })
+    addresses.forEach(function(address) { balances.push(getEtherBalance(address)) });
     return balances;
 }
 
 const inEther = (amountInWei) => {
-  return web3.fromWei(amountInWei, 'ether');
+  let amount =  web3.fromWei(amountInWei, 'ether');
+  return Number(amount);
+
 }
 
 const inWei = (amountInEther) => {
-  return web3.toWei(amountInEther, 'ether');
+  let amount = web3.toWei(amountInEther, 'ether');
+  return amount.toNumber();
 }
 
 // in our case the base units are cents
@@ -76,8 +80,27 @@ const inCents = (tokens) => {
 }
 
 const inTokenUnits = (tokenBaseUnits) => {
-  return tokenBaseUnits / (10 ** 18);
+    return tokenBaseUnits / (10 ** 18);
 }
+
+const deployContracts = async (contracts) => {
+
+    let results = await Promise.map(contracts, function(contract) {
+        return contract.new();
+    });
+
+    return results;
+
+}
+
+const getAddresses = async (contracts) => {
+
+    let addresses = contracts.map(function(contract) {
+        return contract.address;
+    });
+    return addresses;
+}
+
 
 
 module.exports = {
@@ -90,6 +113,8 @@ module.exports = {
   inWei,
   inBaseUnits,
   inTokenUnits,
-  inCents
+  inCents,
+  deployContracts,
+  getAddresses
 }
 
