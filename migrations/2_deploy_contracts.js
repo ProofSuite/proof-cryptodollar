@@ -26,15 +26,15 @@ module.exports = function(deployer, network, accounts) {
       return deployer.deploy(token);
     }).then(function() {
 
-      deployer.deploy(CryptoFiat, 
-                      CUSDToken.address, 
-                      CEURToken.address, 
+      deployer.deploy(CryptoFiat,
+                      CUSDToken.address,
+                      CEURToken.address,
                       ProofToken.address,
                       {gas: defaultGas, gasPrice: defaultGasPrice});
     });
 
   }
-  
+
 };
 
 

@@ -51,7 +51,7 @@ import { getTotalSupply,
          getTokenBalance,
          mintToken } from '../scripts/TokenHelpers.js';
 
-import { transferOwnership, 
+import { transferOwnership,
          transferOwnerships } from '../scripts/ownershipHelpers.js';
 
 
@@ -85,7 +85,7 @@ contract('CryptoFiat', (accounts) => {
     let defaultOrder;
     let ETH_EUR;
     let ETH_USD;
-    
+
     let tokenUnits = 10;
     let logs = [];
     let events;
@@ -104,12 +104,12 @@ contract('CryptoFiat', (accounts) => {
 
         cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
         cryptoFiatAddress = cryptoFiat.address;
-        
+
         await transferOwnerships([CEURToken, CUSDToken, proofToken], fund, cryptoFiatAddress);
         await mintToken(proofToken, fund, 100 * tokenUnits);
 
     });
-    
+
 
     after(function() {
         events = cryptoFiat.allEvents({fromBlock: 0, toBlock: 'latest'});
@@ -127,7 +127,7 @@ contract('CryptoFiat', (accounts) => {
     });
 
     describe('Ownership', function() {
-        
+
         it('should initially own the CryptoEuro token', async function() {
             let CEUROwnerAddress = await CEURToken.owner.call();
             let cryptoFiatAddress = cryptoFiat.address;
@@ -161,7 +161,7 @@ contract('CryptoFiat', (accounts) => {
 
             ETH_USD.should.be.equal(25000);
             ETH_EUR.should.be.equal(20000);
-            
+
         });
 
 
@@ -171,11 +171,11 @@ contract('CryptoFiat', (accounts) => {
 
             totalCEUR.should.be.equal(0)
             totalCUSD.should.be.equal(0);
-            
+
         });
 
         it('investors should initially have an empty token balance', async function() {
-            
+
             let CUSDBalance = await getTokenBalance(CUSDToken, investor1);
             CUSDBalance.should.be.equal(0);
 
@@ -193,7 +193,7 @@ contract('CryptoFiat', (accounts) => {
 
             balance = await getReservedEther(CEURToken, investor1);
             balance.should.be.equal(0);
-                        
+
         });
 
         it('should have an initial buffer value equal to 0', async function() {
@@ -218,7 +218,7 @@ contract('CryptoFiat', (accounts) => {
             ETH_EUR = conversionRates[1].toNumber();
 
         });
-        
+
         it('should be able to buy CEUR tokens', async function() {
             console.log(investment)
             txn = await cryptoFiat.buyCEURTokens(defaultOrder).should.be.fulfilled;
@@ -229,14 +229,14 @@ contract('CryptoFiat', (accounts) => {
         });
 
         it('should increase the contract balance by 100% of investment value', async function() {
-            
+
             let initialEtherSupply = web3.eth.getBalance(cryptoFiat.address);
 
             await OrderCUSD(cryptoFiat, defaultOrder);
 
             let etherSupply = web3.eth.getBalance(cryptoFiat.address);
             (etherSupply-initialEtherSupply).should.be.bignumber.equal(investment);
-            
+
         });
 
         it('should increase the buffer by 0.5% of investment value', async function() {
@@ -246,7 +246,7 @@ contract('CryptoFiat', (accounts) => {
 
             await OrderCUSD(cryptoFiat, defaultOrder);
 
-            let bufferValue = await cryptoFiat.buffer.call();            
+            let bufferValue = await cryptoFiat.buffer.call();
             (bufferValue-initialBufferValue).should.be.equal(bufferFee);
 
         });
@@ -256,12 +256,12 @@ contract('CryptoFiat', (accounts) => {
 
             let initialDividends = await getDividends(cryptoFiat);
             let expectedDividends = initialDividends + getFee(investment, 0.005);
-            
+
 
             await OrderCUSD(cryptoFiat, defaultOrder);
             let dividends = await getDividends(cryptoFiat);
             dividends.should.be.bignumber.equal(expectedDividends);
-            
+
         });
 
 
@@ -280,10 +280,10 @@ contract('CryptoFiat', (accounts) => {
 
 
         it('should increase total dollar token supply by 99% of invested value', async function() {
-            
+
             let initialTokenSupply = await getTotalSupply(CUSDToken);
             let amount = applyFee(investment, 0.01);
-            
+
             await OrderCUSD(cryptoFiat, defaultOrder);
 
             let tokenSupply = await getTotalSupply(CUSDToken);
@@ -296,7 +296,7 @@ contract('CryptoFiat', (accounts) => {
 
             let initialCryptoFiatValue = await getTotalCryptoFiatValue(cryptoFiat);
             let expectedCryptoFiatIncrement = applyFee(investment, 0.01);
-            
+
             await OrderCUSD(cryptoFiat, defaultOrder);
 
             let cryptoFiatValue = await getTotalCryptoFiatValue(cryptoFiat);
@@ -309,7 +309,7 @@ contract('CryptoFiat', (accounts) => {
 
             let initialCryptoFiatValue = await getTotalCryptoFiatValue(cryptoFiat);
             let expectedCryptoFiatIncrement = applyFee(1 * ether, 0.01);
-            
+
             await OrderCEUR(cryptoFiat, defaultOrder);
 
             let cryptoFiatValue = await getTotalCryptoFiatValue(cryptoFiat);
@@ -338,7 +338,7 @@ contract('CryptoFiat', (accounts) => {
             let amount = applyFee(investment, 0.01)
             let initialBalance = await getCEURBalance(cryptoFiat, investor1);
             let expectedBalance = Math.floor(initialBalance + ETH_EUR * inEther(amount));
-            
+
             await OrderCEUR(cryptoFiat, defaultOrder);
 
             let balance = await getCEURBalance(cryptoFiat, investor1);
@@ -379,17 +379,17 @@ contract('CryptoFiat', (accounts) => {
         });
 
         it('10 CEUR tokens should decrease the total CEUR token balance by 10', async function() {
-            
+
             let initialSupply = await getTotalCEURSupply(cryptoFiat);
             await sellOrderCEUR(cryptoFiat, 10, investor1);
             let supply = await getTotalCEURSupply(cryptoFiat);
 
             supply.should.be.equal(initialSupply - 10);
-            
+
         });
-        
+
         it('10(,00) CUSD Tokens should decrease investor CUSD token balance by 10', async function() {
-            
+
             let initialBalance = await getCUSDBalance(cryptoFiat, investor1);
             await sellOrderCUSD(cryptoFiat, 10, investor1);
             let balance = await getCUSDBalance(cryptoFiat, investor1);
@@ -431,7 +431,7 @@ contract('CryptoFiat', (accounts) => {
             let balance = getBalance(investor1);
             let increment = inEther(balance - initialBalance);
             expect(increment).to.almost.equal(expectedIncrement, 1);
-            
+
 
         });
 
@@ -458,14 +458,14 @@ contract('CryptoFiat', (accounts) => {
             let balance = getBalance(investor1);
             expect(inEther(balance-initialBalance)).to.almost.equal(inEther(expectedBalanceIncrement), 3);
         });
-            
+
     });
 
 
     describe('Change conversion rates', function() {
 
         it('shoud be able to change USD conversion rate', async function() {
-        
+
             await setConversionRate(cryptoFiat, "USD", 20000);
             let ETH_USD = await getConversionRate(cryptoFiat, "USD");
             ETH_USD.should.be.equal(20000);
@@ -473,7 +473,7 @@ contract('CryptoFiat', (accounts) => {
         });
 
         it('should be able to change EUR conversion rate', async function() {
-            
+
             await setConversionRate(cryptoFiat, "EUR", 20000);
             let ETH_EUR = await getConversionRate(cryptoFiat, "EUR");
             ETH_EUR.should.be.equal(20000);
@@ -492,17 +492,17 @@ contract('CryptoFiat', (accounts) => {
             [CUSDToken, CEURToken, proofToken] = deployedTokens;
             const tokenAddresses = await getAddresses(deployedTokens);
             [CUSDAddress, CEURAddress, PRFTAddress] = tokenAddresses;
-    
+
             cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
             cryptoFiatAddress = cryptoFiat.address;
-            
+
             await transferOwnerships([CEURToken, CUSDToken, proofToken], fund, cryptoFiatAddress);
             await mintToken(proofToken, fund, 100 * tokenUnits);
-            
+
             await setConversionRate(cryptoFiat, "EUR", 20000);
             await setConversionRate(cryptoFiat, "USD", 20000);
             await OrderCUSD(cryptoFiat, defaultOrder);
-            
+
         });
 
         it('should be increased by 200% for a 200% ETH-USD conversion rate increase', async function() {
@@ -512,7 +512,7 @@ contract('CryptoFiat', (accounts) => {
 
             await setConversionRate(cryptoFiat, "USD", 10000);
             let buffer = await getBuffer(cryptoFiat);
-            
+
             buffer.should.be.equal(initialBuffer * 2);
 
         });
@@ -530,7 +530,7 @@ contract('CryptoFiat', (accounts) => {
         });
 
         it('should be increase by 0.5% of investment value', async function() {
-            
+
             let initialBuffer = await getBuffer(cryptoFiat);
             let bufferFee = getFee(1 * ether, 0.005);
 
@@ -538,7 +538,7 @@ contract('CryptoFiat', (accounts) => {
 
             let buffer = await getBuffer(cryptoFiat);
             (buffer-initialBuffer).should.be.equal(bufferFee);
-            
+
         });
 
         it('should be increased by 0.5% of investment value', async function() {
@@ -563,24 +563,24 @@ contract('CryptoFiat', (accounts) => {
             [CUSDToken, CEURToken, proofToken] = deployedTokens;
             const tokenAddresses = await getAddresses(deployedTokens);
             [CUSDAddress, CEURAddress, PRFTAddress] = tokenAddresses;
-    
+
             cryptoFiat = await CryptoFiat.new(CUSDAddress, CEURAddress, PRFTAddress);
             cryptoFiatAddress = cryptoFiat.address;
-            
+
             await transferOwnerships([CEURToken, CUSDToken, proofToken], fund, cryptoFiatAddress);
             await mintToken(proofToken, fund, 100 * tokenUnits);
 
             await setConversionRate(cryptoFiat, "USD", 20000);
             await setConversionRate(cryptoFiat, "EUR", 20000);
-            
+
 
         });
 
 
         it('should be multiplied by two if the USD conversion rate is divided by two (CEUR = 0)', async function() {
-            
+
             let order = {from: investor1, value: 1 * ether, gas: 200000};
-            
+
             await OrderCUSD(cryptoFiat, order);
 
             let rate = await getConversionRate(cryptoFiat, "USD");
@@ -591,7 +591,7 @@ contract('CryptoFiat', (accounts) => {
 
             let cryptoFiatValue = await getTotalCryptoFiatValue(cryptoFiat);
             cryptoFiatValue.should.be.equal(initialCryptoFiatValue * 2);
-            
+
         });
 
         it('should be multiplied by two if the EUR conversion rate is multiplied by two (CUSD = 0)', async function() {
@@ -610,7 +610,7 @@ contract('CryptoFiat', (accounts) => {
             cryptoFiatValue.should.be.equal(initialCryptoFiatValue * 2);
 
         });
-        
+
     });
 
 });

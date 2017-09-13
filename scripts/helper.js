@@ -24,14 +24,14 @@ const waitUntilTransactionsMined = (txn_hashes) => {
             reject(e);
         }
     };
-    
+
     if (Array.isArray(txn_hashes)) {
         var promises = [];
         txn_hashes.forEach(function (tx_hash) {
             promises.push(waitUntilTransactionsMined(tx_hash));
         });
         return Promise.all(promises);
-    } 
+    }
     else {
         return new Promise(function (resolve, reject) {transactionReceiptAsync(txn_hashes, resolve, reject);});
     }

@@ -28,20 +28,22 @@ contract CryptoFiat is Pausable {
     uint256 ETH_EUR;
   }
 
+  struct Account {
+    uint lastDividendPoints;
+  }
+
   ConversionRate public conversionRate;
   uint256 public dividends;
   uint256 public totalDividendPoints;
   uint256 pointMultiplier = 10 ** 18;
 
-  struct Account {
-    uint lastDividendPoints;
-  }
-  
+
+
   mapping(address => Account) accounts;
 
 
   enum State{ PEGGED, UNPEGGED }
-   
+
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
   event BuyCUSD(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
   event BuyCEUR(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
@@ -87,7 +89,7 @@ contract CryptoFiat is Pausable {
   * @notice Allow users
   */
   function withdrawDividends() public {
-    
+
     uint256 tokenBalance = proofToken.balanceOf(msg.sender);
     uint256 newDividendPoints = totalDividendPoints.sub(accounts[msg.sender].lastDividendPoints);
     uint256 owing = (tokenBalance.mul(newDividendPoints)) / pointMultiplier;
@@ -98,7 +100,7 @@ contract CryptoFiat is Pausable {
       msg.sender.transfer(owing);
     }
 
-    Dividends(msg.sender, owing);   
+    Dividends(msg.sender, owing);
   }
 
   /**
@@ -203,12 +205,12 @@ contract CryptoFiat is Pausable {
 
     uint256 paymentValue = guaranteedEther.div(tokenBalance).mul(tokenNumber);
     msg.sender.transfer(paymentValue);
-    
+
     CEUR.sell(msg.sender, tokenNumber, paymentValue);
     SellCEUR(msg.sender, paymentValue, tokenNumber);
 
   }
-    
+
 
   /**
   * @notice sellUnpeggedCUSD sells crypto-USD tokens for the equivalent ether value at which they were bought
@@ -260,8 +262,8 @@ contract CryptoFiat is Pausable {
     uint256 tokenBalance = CUSD.balanceOf(msg.sender);
     uint256 guaranteedEther = CUSD.reservedEther(msg.sender);
     uint256 paymentValue;
-    
-    
+
+
     if (currentState() == State.PEGGED) {
       paymentValue = tokenNumber.mul(1 ether).div(conversionRate.ETH_USD);
     } else {
@@ -271,7 +273,7 @@ contract CryptoFiat is Pausable {
   }
 
   /**
-  * @notice reservedEther returns the CEUR tokens 
+  * @notice reservedEther returns the CEUR tokens
   * @return value of the tokens
   */
   function reservedEther() public constant returns (uint256) {
@@ -281,7 +283,7 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice This function is probably not needed
-  * @param _owner 
+  * @param _owner
   * @return the crypto-USD token balance of _owner
   */
   function CUSDBalance(address _owner) public constant returns(uint256) {
@@ -290,7 +292,7 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice This function is probably not needed
-  * @param _owner 
+  * @param _owner
   * @return the crypto-EUR token balance of _owner
   */
   function CEURBalance(address _owner) public constant returns(uint256) {
@@ -341,7 +343,7 @@ contract CryptoFiat is Pausable {
   }
 
 
-  /** 
+  /**
   * @return conversionRate
    */
   function conversionRate(string currency) public constant returns (uint256) {
