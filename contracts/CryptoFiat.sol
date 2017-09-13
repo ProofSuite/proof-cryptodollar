@@ -1,6 +1,5 @@
 pragma solidity ^0.4.11;
 
-
 import './SafeMath.sol';
 import './Pausable.sol';
 import './CUSDToken.sol';
@@ -53,6 +52,9 @@ contract CryptoFiat is Pausable {
   event SellUnpeggedCEUR(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
   event BufferValue(uint256 value);
   event Dividends(address purchase, uint256 value);
+  event LogInt(string data, uint256 value);
+  event LogString(string data, string value);
+  event LogAddress(string data, address value);
   event Log(address user, uint256 data);
 
   /**
@@ -86,9 +88,11 @@ contract CryptoFiat is Pausable {
 
 
   /**
-  * @notice Allow users
+  * @dev Tests seem to be working. Need to make successful tests is not due to rounding the result
+  * @notice Sends dividends to the function caller. Accounts for previously retrieved dividends
   */
   function withdrawDividends() public {
+
 
     uint256 tokenBalance = proofToken.balanceOf(msg.sender);
     uint256 newDividendPoints = totalDividendPoints.sub(accounts[msg.sender].lastDividendPoints);
@@ -105,7 +109,7 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice Increase the total balance of dividend points and computes the dividend points owed per token
-  * To reduce float errors during divisions, the total dividends are multiplied by a very large point multiplier value
+  * @dev To reduce float errors during divisions, the total dividends are multiplied by a very large point multiplier value
   * @param amount Amount of dividends to be added
   */
   function updateDividends(uint amount) {
@@ -158,35 +162,35 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice sellCEURTokens sells crypto-EUR tokens for the equivalent EUR value at which they were bought
-  * @param tokenNumber is the number of tokens to be sold
+  * @param _tokenNumber Number of crypto-EUR tokens to be sold against ether
   */
-  function sellCEURTokens(uint256 tokenNumber) public {
-      require(tokenNumber >= 0);
-      require(tokenNumber <= CEUR.balanceOf(msg.sender));
-      require(currentState(tokenNumber, "EUR") == State.PEGGED);
+  function sellCEURTokens(uint256 _tokenNumber) public {
+      require(_tokenNumber >= 0);
+      require(_tokenNumber <= CEUR.balanceOf(msg.sender));
+      require(currentState(_tokenNumber, "EUR") == State.PEGGED);
 
-      uint256 paymentValue = tokenNumber.mul(1 ether).div(conversionRate.ETH_EUR);
+      uint256 paymentValue = _tokenNumber.mul(1 ether).div(conversionRate.ETH_EUR);
       msg.sender.transfer(paymentValue);
 
-      CEUR.sell(msg.sender, tokenNumber, paymentValue);
-      SellCEUR(msg.sender, paymentValue, tokenNumber);
+      CEUR.sell(msg.sender, _tokenNumber, paymentValue);
+      SellCEUR(msg.sender, paymentValue, _tokenNumber);
   }
 
 
   /**
   * @notice sellCUSDTokens sells crypto-USD tokens for the equivalent USD value at which they were bought
-  * @param tokenNumber is the number of tokens to be sold
+  * @param _tokenNumber Number of crypto-USD tokens to be sold against ether
   */
-  function sellCUSDTokens(uint256 tokenNumber) public {
-      require(tokenNumber >= 0);
-      require(tokenNumber <= CUSD.balanceOf(msg.sender));
-      require(currentState(tokenNumber, "USD") == State.PEGGED);
+  function sellCUSDTokens(uint256 _tokenNumber) public {
+      require(_tokenNumber >= 0);
+      require(_tokenNumber <= CUSD.balanceOf(msg.sender));
+      require(currentState(_tokenNumber, "USD") == State.PEGGED);
 
-      uint256 paymentValue = tokenNumber.mul(1 ether).div(conversionRate.ETH_USD);
+      uint256 paymentValue = _tokenNumber.mul(1 ether).div(conversionRate.ETH_USD);
       msg.sender.transfer(paymentValue);
 
-      CUSD.sell(msg.sender, tokenNumber, paymentValue);
-      SellCUSD(msg.sender, paymentValue, tokenNumber);
+      CUSD.sell(msg.sender, _tokenNumber, paymentValue);
+      SellCUSD(msg.sender, paymentValue, _tokenNumber);
 
   }
 
@@ -194,20 +198,20 @@ contract CryptoFiat is Pausable {
   /**
   * @notice sellUnpeggedCEUR sells crypto-EUR tokens for the equivalent ether value at which they were bought
   * @dev Need to replace inState by inFutureState to account for the possibility the contract could become unpegged with the current transaction
-  * @param tokenNumber is the number of tokens to be sold
+  * @param _tokenNumber Number of crypto-EUR tokens to be sold against ether
   */
-  function sellUnpeggedCEUR(uint256 tokenNumber) inState(State.UNPEGGED) public {
+  function sellUnpeggedCEUR(uint256 _tokenNumber) inState(State.UNPEGGED) public {
     uint256 tokenBalance = CEUR.balanceOf(msg.sender);
     uint256 guaranteedEther = CEUR.reservedEther(msg.sender);
 
-    require(tokenNumber >= 0);
-    require(tokenNumber <= tokenBalance);
+    require(_tokenNumber >= 0);
+    require(_tokenNumber <= tokenBalance);
 
-    uint256 paymentValue = guaranteedEther.div(tokenBalance).mul(tokenNumber);
+    uint256 paymentValue = guaranteedEther.div(tokenBalance).mul(_tokenNumber);
     msg.sender.transfer(paymentValue);
 
-    CEUR.sell(msg.sender, tokenNumber, paymentValue);
-    SellCEUR(msg.sender, paymentValue, tokenNumber);
+    CEUR.sell(msg.sender, _tokenNumber, paymentValue);
+    SellCEUR(msg.sender, paymentValue, _tokenNumber);
 
   }
 
@@ -215,39 +219,39 @@ contract CryptoFiat is Pausable {
   /**
   * @notice sellUnpeggedCUSD sells crypto-USD tokens for the equivalent ether value at which they were bought
   * @dev Need to replace inState by inFutureState to account for the possibility the contract could become unpegged with the current transaction
-  * @param tokenNumber is the number of tokens to be sold
+  * @param _tokenNumber Number of crypto-USD tokens to be sold against ether
   */
-  function sellUnpeggedCUSD(uint256 tokenNumber) inState(State.UNPEGGED) public {
+  function sellUnpeggedCUSD(uint256 _tokenNumber) inState(State.UNPEGGED) public {
     uint256 tokenBalance = CUSD.balanceOf(msg.sender);
     uint256 guaranteedEther = CUSD.reservedEther(msg.sender);
 
-    require(tokenNumber >= 0);
-    require(tokenNumber <= tokenBalance);
+    require(_tokenNumber >= 0);
+    require(_tokenNumber <= tokenBalance);
 
-    uint256 paymentValue = guaranteedEther.div(tokenBalance).mul(tokenNumber);
+    uint256 paymentValue = guaranteedEther.div(tokenBalance).mul(_tokenNumber);
     msg.sender.transfer(paymentValue);
 
-    CUSD.sell(msg.sender, tokenNumber, paymentValue);
-    SellCUSD(msg.sender, paymentValue, tokenNumber);
+    CUSD.sell(msg.sender, _tokenNumber, paymentValue);
+    SellCUSD(msg.sender, paymentValue, _tokenNumber);
 
   }
 
 
   /**
   * @notice getCEURTokenValue returns the value of tokens depending on current contract state
-  * @param tokenNumber : Number of tokens to be valued
-  * @return value of the tokens
+  * @param _tokenNumber : Number of tokens to be valued
+  * @return Value of the crypto-EUR tokens in ether in the current contract state
   */
-  function getCEURTokenValue(uint256 tokenNumber) public constant returns (uint256 value) {
+  function getCEURTokenValue(uint256 _tokenNumber) public constant returns (uint256 value) {
 
     uint256 tokenBalance = CEUR.balanceOf(msg.sender);
     uint256 guaranteedEther = CEUR.reservedEther(msg.sender);
     uint256 paymentValue;
 
     if (currentState() == State.PEGGED) {
-      paymentValue = tokenNumber.mul(1 ether).div(conversionRate.ETH_EUR);
+      paymentValue = _tokenNumber.mul(1 ether).div(conversionRate.ETH_EUR);
     } else {
-      paymentValue = guaranteedEther.mul(tokenNumber).div(tokenBalance);
+      paymentValue = guaranteedEther.mul(_tokenNumber).div(tokenBalance);
     }
     return paymentValue;
   }
@@ -255,19 +259,19 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice getCUSDTokenValue returns the value of tokens depending on current contract state
-  * @param tokenNumber : Number of tokens to be valued
-  * @return value of the tokens
+  * @param _tokenNumber : Number of tokens to be valued
+  * @return Value of the crypto-USD tokens in ether in the current contract state
   */
-  function getCUSDTokenValue(uint256 tokenNumber) public constant returns (uint256) {
+  function getCUSDTokenValue(uint256 _tokenNumber) public constant returns (uint256) {
     uint256 tokenBalance = CUSD.balanceOf(msg.sender);
     uint256 guaranteedEther = CUSD.reservedEther(msg.sender);
     uint256 paymentValue;
 
 
     if (currentState() == State.PEGGED) {
-      paymentValue = tokenNumber.mul(1 ether).div(conversionRate.ETH_USD);
+      paymentValue = _tokenNumber.mul(1 ether).div(conversionRate.ETH_USD);
     } else {
-      paymentValue = guaranteedEther.mul(tokenNumber).div(tokenBalance);
+      paymentValue = guaranteedEther.mul(_tokenNumber).div(tokenBalance);
     }
     return paymentValue;
   }
@@ -283,49 +287,48 @@ contract CryptoFiat is Pausable {
 
   /**
   * @notice This function is probably not needed
-  * @param _owner
-  * @return the crypto-USD token balance of _owner
+  * @param _holder crypto-USD token holder balance
+  * @return the crypto-USD token balance of _holder
   */
-  function CUSDBalance(address _owner) public constant returns(uint256) {
-    return CUSD.balanceOf(_owner);
+  function CUSDBalance(address _holder) public constant returns (uint256) {
+    return CUSD.balanceOf(_holder);
   }
 
   /**
   * @notice This function is probably not needed
-  * @param _owner
-  * @return the crypto-EUR token balance of _owner
+  * @param _holder crypto-EUR token holder balance
+  * @return the crypto-EUR token balance of _holder
   */
-  function CEURBalance(address _owner) public constant returns(uint256) {
-    return CEUR.balanceOf(_owner);
+  function CEURBalance(address _holder) public constant returns (uint256) {
+    return CEUR.balanceOf(_holder);
   }
 
   /**
   * @notice This function is not needed
-  * @return total supply of crypto-USD
+  * @return Total supply of crypto-USD
   */
-  function CUSDTotalSupply() public constant returns(uint256) {
+  function CUSDTotalSupply() public constant returns (uint256) {
     return CUSD.totalSupply();
   }
 
   /**
   * @notice This function is not needed
-  * @return total supply of crypto-EUR
+  * @return Total supply of crypto-EUR
   */
-  function CEURTotalSupply() public constant returns(uint256) {
+  function CEURTotalSupply() public constant returns (uint256) {
     return CEUR.totalSupply();
   }
 
   /**
-  * @notice This function is not needed
-  * @dev Need to make sure tests do not use this function
-  * @return total supply of crypto-EUR
+  * @dev This function is not needed. Check if this function is used in the tests and remove.
+  * @return Total supply of crypto-EUR
   */
   function totalBalance() public constant returns (uint256) {
     return this.balance;
   }
 
   /**
-  * @return the total value in ether of the crypto-USD and crypto-EUR tokens that have been issued
+  * @return Total value in ether of the crypto-USD and crypto-EUR tokens that have been issued
   */
   function totalCryptoFiatValue() public constant returns(uint256) {
     uint256 CUSDSupply = CUSD.totalSupply();
@@ -335,7 +338,7 @@ contract CryptoFiat is Pausable {
   }
 
   /**
-  * @return buffer value
+  * @return Cryptofiat buffer value
   */
   function buffer() public constant returns (int) {
     int value = int(this.balance - dividends - totalCryptoFiatValue());
@@ -344,7 +347,8 @@ contract CryptoFiat is Pausable {
 
 
   /**
-  * @return conversionRate
+   * @param currency {String} - "USD" or "EUR"
+   * @return Conversion rate corresponding to input currency
    */
   function conversionRate(string currency) public constant returns (uint256) {
     if (sha3(currency) == sha3("USD")) {
@@ -361,7 +365,7 @@ contract CryptoFiat is Pausable {
   }
 
   /**
-  * @return State of the contract
+  * @return Current state of the contract
   */
   function currentState() public constant returns (State) {
     if (buffer() > 0) {
@@ -374,9 +378,10 @@ contract CryptoFiat is Pausable {
 
   /**
   * @dev Need to refactor this function to not use currency
+  * @notice Overloaded currentState function. Checks the state of the contract after current token purchase
   * @param tokenNumber the number of tokens being sold
   * @param currency which currency token is being sold
-  * @return State of the contract
+  * @return Current state of the contract
   */
   function currentState(uint256 tokenNumber, string currency) public constant returns (State) {
     uint256 rate = conversionRate(currency);
@@ -388,6 +393,7 @@ contract CryptoFiat is Pausable {
   }
 
   /**
+  * @dev Temporary mock function. Will be removed when adding interactions with oracles
   * @param _value of the new ETH/USD conversion rate in cents
   */
   function setUSDConversionRate(uint256 _value) public {
@@ -395,6 +401,7 @@ contract CryptoFiat is Pausable {
   }
 
   /**
+  * @dev Temporary mock function. Will be removed when adding interactions with oracles
   * @param _value of the new ETH/EUR conversion rate in cents
   */
   function setEURConversionRate(uint256 _value) public {

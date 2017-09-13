@@ -5,7 +5,7 @@ import './ERC20.sol';
 import './Ownable.sol';
 
 /**
- * @title ProofToken (PROOFP) 
+ * @title ProofToken (PROOFP)
  * Standard Mintable ERC20 Token
  * https://github.com/ethereum/EIPs/issues/20
  * Based on code by FirstBlood:
@@ -38,7 +38,7 @@ contract ProofToken is ERC20, Ownable {
   function balanceOf(address _owner) constant returns (uint256) {
     return balances[_owner];
   }
-    
+
   function transfer(address _to, uint _value) returns (bool) {
 
     balances[msg.sender] = balances[msg.sender].sub(_value);
@@ -68,20 +68,13 @@ contract ProofToken is ERC20, Ownable {
   function allowance(address _owner, address _spender) constant returns (uint256) {
     return allowed[_owner][_spender];
   }
-    
-    
+
+
   modifier canMint() {
     require(!mintingFinished);
     _;
   }
 
-  /**
-   * Function to mint tokens
-   * @dev minting is not protected - just for testing conveniently
-   * @param _to The address that will recieve the minted tokens.
-   * @param _amount The amount of tokens to mint.
-   * @return A boolean that indicates if the operation was successful.
-   */
   function mint(address _to, uint256 _amount) canMint returns (bool) {
     totalSupply = totalSupply.add(_amount);
     balances[_to] = balances[_to].add(_amount);
@@ -89,16 +82,12 @@ contract ProofToken is ERC20, Ownable {
     return true;
   }
 
-  /**
-   * Function to stop minting new tokens.
-   * @return True if the operation was successful.
-   */
   function finishMinting() onlyOwner returns (bool) {
     mintingFinished = true;
     MintFinished();
     return true;
   }
 
-  
-  
+
+
 }
