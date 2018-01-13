@@ -113,7 +113,7 @@ contract CryptoFiat is Pausable {
   * @param amount Amount of dividends to be added
   */
   function updateDividends(uint amount) {
-    uint256 tokenSupply = proofToken.totalSupply();
+    uint256 tokenSupply = totalSupply();
     dividends = dividends.add(amount);
     uint256 dividendPoints = (amount.mul(pointMultiplier)) / tokenSupply;
     totalDividendPoints = totalDividendPoints.add(dividendPoints);
