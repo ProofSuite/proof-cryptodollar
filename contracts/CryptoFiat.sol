@@ -6,6 +6,8 @@ import './CUSDToken.sol';
 import './CEURToken.sol';
 import './ProofToken.sol';
 
+import "github.com/oraclize/ethereum-api/oraclizeAPI.sol";
+
 
 /**
  * @title CryptoFiat
@@ -52,6 +54,7 @@ contract CryptoFiat is Pausable {
   event SellUnpeggedCEUR(address indexed purchaser, uint256 paymentValue, uint256 tokenAmount);
   event BufferValue(uint256 value);
   event Dividends(address purchase, uint256 value);
+  event UpdatedPrice(string price);
   event LogInt(string data, uint256 value);
   event LogString(string data, string value);
   event LogAddress(string data, address value);
@@ -62,7 +65,7 @@ contract CryptoFiat is Pausable {
   * @param CEURAddress Address of the Crypto-Euro token
   * @param PRFTAddress Address of the Proof token
   */
-  function CryptoFiat(address CUSDAddress, address CEURAddress, address PRFTAddress) {
+  function CryptoFiat(address CUSDAddress, address CEURAddress, address PRFTAddress) is usingOraclize {
 
     CEUR = CEURToken(CEURAddress);
     CUSD = CUSDToken(CUSDAddress);
@@ -79,6 +82,21 @@ contract CryptoFiat is Pausable {
   */
   function () payable {
       revert();
+  }
+
+  function updateConversionRate() payable {
+    if (oraclize_getPrice("URL") > this.balance) {
+      newOraclizeQuery("Oraclize query was not sent, please add some ETH to cover for the query fee");
+    } else {
+      newOraclizeQuery("Oraclize query was sent, standing by for the answer..");
+      oraclize_query("URL", "json(http://api.fixer.io/latest?symbols=USD,GBP).rates.GBP");
+    }
+  }
+
+  function __callback(bytes32 myid, string result) {
+    if (msg.sender != oraclize_cbAddress()) throw;
+    conversionRate.ETH_USD = result;
+
   }
 
   /**
