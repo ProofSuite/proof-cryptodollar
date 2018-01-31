@@ -24,7 +24,7 @@ contract Store is Ownable {
     */
 
     modifier onlyStoreInterface() {
-      require(msg.sender == owner);
+      // require(msg.sender == owner);
       _;
     }
 
