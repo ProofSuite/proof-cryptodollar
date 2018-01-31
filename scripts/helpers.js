@@ -54,7 +54,6 @@ const getEtherBalances = (addresses) => {
 const inEther = (amountInWei) => {
   let amount = web3.fromWei(amountInWei, 'ether')
   return Number(amount)
-
 }
 
 const inWei = (amountInEther) => {
