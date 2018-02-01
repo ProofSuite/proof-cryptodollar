@@ -20,7 +20,7 @@ library DividendProxyLib {
   }
 
   function getCurrentEpoch(address _store) public view returns(uint256) {
-    return StoreInterface(_store).getUint(keccak256("dividends.currentPoolEpoch"));
+    return StoreInterface(_store).getUint(keccak256("dividends.currentEpoch"));
   }
 
   function getCurrentPoolBalance(address _store) public view returns(uint256) {
@@ -36,7 +36,7 @@ library DividendProxyLib {
   }
 
   function getAccountLastWithdrawal(address _store, address _account) public view returns(uint256) {
-    return StoreInterface(_store).getUint(keccak256("dividends.account.lastWithdrawal", _account));
+      return StoreInterface(_store).getUint(keccak256("dividends.accounts.lastWithdrawal", _account));
   }
 
 
@@ -46,8 +46,8 @@ library DividendProxyLib {
     StoreInterface(_store).setUint(keccak256("dividends.currentPoolIndex"), _value);
   }
 
-  function setCurrentPoolEpoch(address _store, uint256 _value) public onlyAuthorized {
-    StoreInterface(_store).setUint(keccak256("dividends.currentPoolEpoch"), _value);
+  function setCurrentEpoch(address _store, uint256 _value) public onlyAuthorized {
+    StoreInterface(_store).setUint(keccak256("dividends.currentEpoch"), _value);
   }
 
   function setCurrentPoolBalance(address _store, uint256 _value) public onlyAuthorized {
@@ -63,7 +63,7 @@ library DividendProxyLib {
   }
 
   function setAccountLastWithdrawal(address _store, address _account, uint256 _value) public onlyAuthorized {
-    StoreInterface(_store).setUint(keccak256("dividends.accounts.withdrawal", _account), _value);
+    StoreInterface(_store).setUint(keccak256("dividends.accounts.lastWithdrawal", _account), _value);
   }
 
 
