@@ -2,10 +2,15 @@
   "name": "Cryptofiat",
   "version": "0.0.2",
   "description": "Cryptofiat",
+  "watch": {
+    "test": "{test}/*.js"
+  },
   "scripts": {
     "lint": "eslint ./",
     "build": "webpack",
-    "dev": "webpack-dev-server"
+    "dev": "webpack-dev-server",
+    "test": "truffle test",
+    "watch": "npm-watch"
   },
   "author": "Proofsuite",
   "license": "MIT",
@@ -39,6 +44,7 @@
     "bignumber.js": "~6.0.0",
     "chai-bignumber": "~2.0.2",
     "js-sha3": "~0.7.0",
+    "npm-watch": "~0.3.0",
     "web3": "~0.20.4"
   }
 }
