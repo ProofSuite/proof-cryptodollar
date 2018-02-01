@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 import "../interfaces/StoreInterface.sol";
 
 
-library DividendProxyLib {
+library DividendStorageProxy {
 
   /**
   * @notice Dividends functions can only be called through the proof network

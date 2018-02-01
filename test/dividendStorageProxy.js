@@ -6,24 +6,24 @@ chai.use(require('chai-bignumber')())
 chai.should()
 
 const Store = artifacts.require('./Store.sol')
-const DividendProxyLib = artifacts.require('./DividendProxyLib.sol')
+const DividendStorageProxy = artifacts.require('./DividendStorageProxy.sol')
 
-contract('Store', (accounts) => {
+contract('DividendStorageProxy', (accounts) => {
   let store
-  let dividendProxyLib
+  let dividendStorageProxy
 
   describe('Pool index', async () => {
     beforeEach(async () => {
       store = await Store.new()
-      dividendProxyLib = await DividendProxyLib.new()
+      dividendStorageProxy = await DividendStorageProxy.new()
     })
 
     it('should set and get current pool index', async () => {
       let poolIndex
       let expectedPoolIndex = 1
 
-      await dividendProxyLib.setCurrentPoolIndex(store.address, 1)
-      poolIndex = await dividendProxyLib.getCurrentPoolIndex(store.address)
+      await dividendStorageProxy.setCurrentPoolIndex(store.address, 1)
+      poolIndex = await dividendStorageProxy.getCurrentPoolIndex(store.address)
 
       poolIndex.toNumber().should.be.equal(expectedPoolIndex)
     })
@@ -32,8 +32,8 @@ contract('Store', (accounts) => {
       let poolIndex
       let increment = 10
 
-      await dividendProxyLib.incrementCurrentPoolIndex(store.address, increment)
-      poolIndex = await dividendProxyLib.getCurrentPoolIndex(store.address)
+      await dividendStorageProxy.incrementCurrentPoolIndex(store.address, increment)
+      poolIndex = await dividendStorageProxy.getCurrentPoolIndex(store.address)
 
       poolIndex.toNumber().should.be.equal(increment)
     })
@@ -42,15 +42,15 @@ contract('Store', (accounts) => {
   describe('Current Epoch', async () => {
     beforeEach(async () => {
       store = await Store.new()
-      dividendProxyLib = await DividendProxyLib.new()
+      dividendStorageProxy = await DividendStorageProxy.new()
     })
 
     it('should set and get current epoch', async () => {
       let epoch
       let expectedEpoch = 1
 
-      await dividendProxyLib.setCurrentEpoch(store.address, 1)
-      epoch = await dividendProxyLib.getCurrentEpoch(store.address)
+      await dividendStorageProxy.setCurrentEpoch(store.address, 1)
+      epoch = await dividendStorageProxy.getCurrentEpoch(store.address)
 
       epoch.toNumber().should.be.equal(expectedEpoch)
     })
@@ -59,8 +59,8 @@ contract('Store', (accounts) => {
       let epoch
       let increment = 10
 
-      await dividendProxyLib.incrementCurrentEpoch(store.address, increment)
-      epoch = await dividendProxyLib.getCurrentEpoch(store.address)
+      await dividendStorageProxy.incrementCurrentEpoch(store.address, increment)
+      epoch = await dividendStorageProxy.getCurrentEpoch(store.address)
 
       epoch.toNumber().should.be.equal(increment)
     })
@@ -69,15 +69,15 @@ contract('Store', (accounts) => {
   describe('Current Pool Balance', async () => {
     beforeEach(async () => {
       store = await Store.new()
-      dividendProxyLib = await DividendProxyLib.new()
+      dividendStorageProxy = await DividendStorageProxy.new()
     })
 
     it('should set and get current pool balance', async () => {
       let poolBalance
       let expectedPoolBalance = 1
 
-      await dividendProxyLib.setCurrentPoolBalance(store.address, 1)
-      poolBalance = await dividendProxyLib.getCurrentPoolBalance(store.address)
+      await dividendStorageProxy.setCurrentPoolBalance(store.address, 1)
+      poolBalance = await dividendStorageProxy.getCurrentPoolBalance(store.address)
 
       poolBalance.toNumber().should.be.equal(expectedPoolBalance)
     })
@@ -86,8 +86,8 @@ contract('Store', (accounts) => {
       let poolBalance
       let increment = 10
 
-      await dividendProxyLib.incrementCurrentPoolBalance(store.address, increment)
-      poolBalance = await dividendProxyLib.getCurrentPoolBalance(store.address)
+      await dividendStorageProxy.incrementCurrentPoolBalance(store.address, increment)
+      poolBalance = await dividendStorageProxy.getCurrentPoolBalance(store.address)
 
       poolBalance.toNumber().should.be.equal(increment)
     })
@@ -97,7 +97,7 @@ contract('Store', (accounts) => {
   describe('Nth pool dividends', async() => {
     beforeEach(async () => {
       store = await Store.new()
-      dividendProxyLib = await DividendProxyLib.new()
+      dividendStorageProxy = await DividendStorageProxy.new()
     })
 
     it('should set and get Nth pool dividends', async () => {
@@ -105,8 +105,8 @@ contract('Store', (accounts) => {
       let poolIndex = 1
       let expectedDividends = 1 * 10 ** 18
 
-      await dividendProxyLib.setNthPoolDividends(store.address, poolIndex, expectedDividends)
-      dividends = await dividendProxyLib.getNthPoolDividends(store.address, poolIndex)
+      await dividendStorageProxy.setNthPoolDividends(store.address, poolIndex, expectedDividends)
+      dividends = await dividendStorageProxy.getNthPoolDividends(store.address, poolIndex)
 
       dividends.toNumber().should.be.equal(expectedDividends)
     })
@@ -116,8 +116,8 @@ contract('Store', (accounts) => {
       let poolIndex = 1
       let expectedValue = 1 * 10 ** 18
 
-      await dividendProxyLib.setNthPoolRemainingDividends(store.address, poolIndex, expectedValue)
-      storedValue = await dividendProxyLib.getNthPoolRemainingDividends(store.address, poolIndex)
+      await dividendStorageProxy.setNthPoolRemainingDividends(store.address, poolIndex, expectedValue)
+      storedValue = await dividendStorageProxy.getNthPoolRemainingDividends(store.address, poolIndex)
 
       storedValue.toNumber().should.be.equal(expectedValue)
     })
@@ -126,7 +126,7 @@ contract('Store', (accounts) => {
   describe('Account Last withdrawal', async() => {
     beforeEach(async() => {
       store = await Store.new()
-      dividendProxyLib = await DividendProxyLib.new()
+      dividendStorageProxy = await DividendStorageProxy.new()
     })
 
     it('should set and get the last account withdrawal', async() => {
@@ -134,8 +134,8 @@ contract('Store', (accounts) => {
       let storedValue = 10
       let expectedValue = 1 * 10 ** 18
 
-      await dividendProxyLib.setAccountLastWithdrawal(store.address, account, expectedValue)
-      storedValue = await await dividendProxyLib.getAccountLastWithdrawal(store.address, account)
+      await dividendStorageProxy.setAccountLastWithdrawal(store.address, account, expectedValue)
+      storedValue = await await dividendStorageProxy.getAccountLastWithdrawal(store.address, account)
 
       storedValue.toNumber().should.be.equal(expectedValue)
     })
