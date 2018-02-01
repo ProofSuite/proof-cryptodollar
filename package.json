@@ -3,7 +3,11 @@
   "version": "0.0.2",
   "description": "Cryptofiat",
   "watch": {
-    "test": "{test}/*.js"
+    "test": {
+      "patterns": ["contracts", "test"],
+      "quiet": true,
+      "delay": 2500
+    }
   },
   "scripts": {
     "lint": "eslint ./",
