@@ -6,7 +6,6 @@ import "./utils/Ownable.sol";
 contract Store is Ownable {
 
     /**** Storage Types *******/
-
     mapping(bytes32 => uint256)    private uintStorage;
     mapping(bytes32 => string)     private stringStorage;
     mapping(bytes32 => address)    private addressStorage;
@@ -24,8 +23,8 @@ contract Store is Ownable {
     */
 
     modifier onlyStoreInterface() {
-      // require(msg.sender == owner);
-      _;
+        // require(msg.sender == owner);
+        _;
     }
 
     /**** Get Methods ***********/
