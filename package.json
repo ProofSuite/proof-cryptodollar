@@ -4,7 +4,10 @@
   "description": "Cryptofiat",
   "watch": {
     "test": {
-      "patterns": ["contracts", "test"],
+      "patterns": [
+        "contracts",
+        "test"
+      ],
       "quiet": true,
       "delay": 2500
     }
@@ -45,6 +48,8 @@
   },
   "dependencies": {
     "@digix/truffle-lightwallet-provider": "~0.1.4",
+    "babel-polyfill": "~6.26.0",
+    "babel-register": "~6.26.0",
     "bignumber.js": "~6.0.0",
     "chai-bignumber": "~2.0.2",
     "js-sha3": "~0.7.0",

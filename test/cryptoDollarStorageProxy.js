@@ -1,6 +1,4 @@
-const BigNumber = require('bignumber.js')
-const chai = require('chai')
-const should = chai.should
+import chai from 'chai'
 
 chai.use(require('chai-bignumber')())
 chai.should()
@@ -20,7 +18,7 @@ contract('CryptoDollarStorageProxy', (accounts) => {
 
     it('should set and get start timestamp', async () => {
       let storedValue
-      let account = "0x3712501089ae5b863c4ff8fc32d4193fd52519e4"
+      let account = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
       let expectedValue = 10 * 10 ** 18
 
       await cryptoDollarStorageProxy.setBalance(store.address, account, expectedValue)
@@ -31,7 +29,7 @@ contract('CryptoDollarStorageProxy', (accounts) => {
 
     it('should increment and decrement balance', async () => {
       let storedValue
-      let account = "0x3712501089ae5b863c4ff8fc32d4193fd52519e4"
+      let account = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
       let increment = 2 * 10 ** 18
       let decrement = 1 * 10 ** 18
 
@@ -55,7 +53,7 @@ contract('CryptoDollarStorageProxy', (accounts) => {
 
     it('should set and get start guaranteed ether', async () => {
       let storedValue
-      let account = "0x3712501089ae5b863c4ff8fc32d4193fd52519e4"
+      let account = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
       let expectedValue = 10 * 10 ** 18
 
       await cryptoDollarStorageProxy.setGuaranteedEther(store.address, account, expectedValue)
@@ -66,7 +64,7 @@ contract('CryptoDollarStorageProxy', (accounts) => {
 
     it('should increment and decrement guaranteed ether', async () => {
       let storedValue
-      let account = "0x3712501089ae5b863c4ff8fc32d4193fd52519e4"
+      let account = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
       let increment = 2 * 10 ** 18
       let decrement = 1 * 10 ** 18
 
@@ -81,7 +79,6 @@ contract('CryptoDollarStorageProxy', (accounts) => {
       storedValue.toNumber().should.be.equal(increment - decrement)
     })
   })
-
 
   describe('Total Supply', async () => {
     beforeEach(async () => {
@@ -116,7 +113,6 @@ contract('CryptoDollarStorageProxy', (accounts) => {
     })
   })
 
-
   describe('Allowance', async () => {
     beforeEach(async () => {
       store = await Store.new()
@@ -124,11 +120,10 @@ contract('CryptoDollarStorageProxy', (accounts) => {
     })
 
     it('should set and get allowance', async () => {
-      let sender = "0x3712501089ae5b863c4ff8fc32d4193fd52519e4"
-      let receiver = "0x6fd88996458fd01546c060973b6578ca27bbbe59"
+      let sender = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
+      let receiver = '0x6fd88996458fd01546c060973b6578ca27bbbe59'
       let storedValue
       let expectedValue = 10 * 10 ** 18
-
 
       await cryptoDollarStorageProxy.setAllowance(store.address, sender, receiver, expectedValue)
       storedValue = await cryptoDollarStorageProxy.getAllowance(store.address, sender, receiver)
@@ -138,8 +133,8 @@ contract('CryptoDollarStorageProxy', (accounts) => {
 
     it('should increment and decrement allowance', async () => {
       let storedValue
-      let sender = "0x3712501089ae5b863c4ff8fc32d4193fd52519e4"
-      let receiver = "0x6fd88996458fd01546c060973b6578ca27bbbe59"
+      let sender = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
+      let receiver = '0x6fd88996458fd01546c060973b6578ca27bbbe59'
       let increment = 2 * 10 ** 18
       let decrement = 1 * 10 ** 18
 

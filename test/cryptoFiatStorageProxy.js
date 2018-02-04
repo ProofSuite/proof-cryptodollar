@@ -1,6 +1,4 @@
-const BigNumber = require('bignumber.js')
-const chai = require('chai')
-const should = chai.should
+import chai from 'chai'
 
 chai.use(require('chai-bignumber')())
 chai.should()
