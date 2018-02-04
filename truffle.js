@@ -14,6 +14,7 @@ module.exports = {
       port: 8545,
       network_id: '*',
       gas: config.constants.MAX_GAS,
+      gasPrice: config.constants.DEFAULT_GAS_PRICE,
       from: '0xdf08f82de32b8d460adbe8d72043e3a7e25a3b39'  // testprc main account here
     },
     ethereum: {

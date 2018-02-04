@@ -14,8 +14,6 @@ let config = {
     TOKENS_ALLOCATED_TO_PROOF: 1181031 * (10 ** 18),
     DECIMALS_POINTS: 10 ** 18,
     TOKEN_UNITS: 10 ** 18,
-    START_TIMESTAMP: 1509541200,
-    END_TIMESTAMP: 1512133200,
     ETHER: 10 ** 18
   },
   addresses: {
