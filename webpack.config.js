@@ -2,6 +2,7 @@ const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
+  devtool: 'source-map',
   entry: './app/javascripts/app.js',
   output: {
     path: path.resolve(__dirname, 'build'),
