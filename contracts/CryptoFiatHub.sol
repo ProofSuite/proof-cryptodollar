@@ -23,14 +23,60 @@ contract CryptoFiatHub {
   uint256 public exchangeRate;
 
 
-  function CryptoFiatHub(address _cryptoDollarAddress, address _storeAddress, address _proofTokenAddress) public {
+  function CryptoFiatHub(address _cryptoDollarAddress, address _storeAddress, address _proofTokenAddress, address _proofRewardsAddress) public {
     cryptoDollar = CryptoDollarInterface(_cryptoDollarAddress);
     proofToken = ProofTokenInterface(_proofTokenAddress);
+    proofRewards = ProofRewardsInterface(_proofRewardsAddress);
     store = _storeAddress;
-    exchangeRate = 25000;
-
+    exchangeRate = 10000;
     uint256 initialBlockNumber = block.number;
     store.setCreationBlockNumber(initialBlockNumber);
   }
 
+
+  /**
+  * @dev Is payable needed ?
+  * @notice Sending ether to the contract will result in an error
+  */
+  function () payable {
+    revert();
+  }
+
+  /**
+  * @notice Capitalize contract
+  */
+  function capitalize() public payable {}
+
+
+  /**
+  * @notice buyCUSDtokens buys pegged crypto-USD tokens.
+  */
+  function buyCryptoDollar() public payable {
+      require(msg.sender != 0x0);
+      require(msg.value > 0);
+
+      uint256 value = msg.value;
+      uint256 tokenHoldersFee = value.div(200);
+      uint256 bufferFee = value.div(200);
+      uint256 paymentValue = value - tokenHoldersFee - bufferFee;
+
+      proofRewards.receiveDividends.value(tokenHoldersFee)();
+      uint256 tokenAmount = paymentValue.mul(exchangeRate).div(1 ether);
+
+      cryptoDollar.buy(msg.sender, tokenAmount, paymentValue);
+  }
+
+  /**
+  * @notice sellCUSDTokens sells crypto-USD tokens for the equivalent USD value at which they were bought
+  * @param _tokenNumber Number of crypto-USD tokens to be sold against ether
+  */
+  function sellCryptoDollar(uint256 _tokenNumber) public {
+      require(_tokenNumber >= 0);
+      require(_tokenNumber <= cryptoDollar.balanceOf(msg.sender));
+
+      uint256 paymentValue = _tokenNumber.mul(1 ether).div(exchangeRate);
+
+      cryptoDollar.sell(msg.sender, _tokenNumber, paymentValue);
+      msg.sender.transfer(paymentValue);
+  }
 }
