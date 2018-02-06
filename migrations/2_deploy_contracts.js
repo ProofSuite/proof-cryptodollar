@@ -5,21 +5,20 @@ var SafeMath = artifacts.require('./libraries/SafeMath.sol')
 var CryptoDollar = artifacts.require('./CryptoDollar.sol')
 var Store = artifacts.require("./Store.sol");
 
-module.exports = async (deployer) => {
+module.exports = function(deployer) {
 
-  await deployer.deploy(Store)
-  await deployer.deploy(SafeMath)
-  await deployer.deploy(DividendStorageProxy)
-  await deployer.deploy(CryptoFiatStorageProxy)
-  await deployer.deploy(CryptoDollarStorageProxy)
-  await deployer.deploy(CryptoDollar)
+  deployer.deploy(SafeMath)
+  deployer.deploy(DividendStorageProxy)
+  deployer.deploy(CryptoFiatStorageProxy)
+  deployer.deploy(CryptoDollarStorageProxy)
 
   //link libraries to deployed contracts
-  deployer.link(DividendStorageProxy, Store);
-  deployer.link(CryptoFiatStorageProxy, Store);
-  deployer.link(CryptoDollarStorageProxy, Store);
-  deployer.link(DividendStorageProxy, CryptoDollar)
-  deployer.link(CryptoFiatStorageProxy, CryptoDollar)
-  deployer.link(CryptoDollarStorageProxy, CryptoDollar)
-  deployer.link(SafeMath, CryptoDollar)
+  deployer.link(DividendStorageProxy, CryptoDollar);
+  deployer.link(CryptoFiatStorageProxy, CryptoDollar);
+  deployer.link(CryptoDollarStorageProxy, CryptoDollar);
+  deployer.link(SafeMath, CryptoDollar);
+
+  deployer.deploy(Store).then(() => {
+    return deployer.deploy(CryptoDollar, Store.address)
+  })
 };
