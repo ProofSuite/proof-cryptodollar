@@ -16,7 +16,7 @@
     "lint": "eslint ./",
     "build": "webpack",
     "dev": "webpack-dev-server",
-    "test": "truffle test",
+    "test": "truffle migrate --reset && truffle test",
     "watch": "npm-watch"
   },
   "author": "Proofsuite",
@@ -52,6 +52,7 @@
     "babel-register": "~6.26.0",
     "bignumber.js": "~6.0.0",
     "chai-bignumber": "~2.0.2",
+    "chai-stats": "~0.3.0",
     "js-sha3": "~0.7.0",
     "moment": "~2.20.1",
     "npm-watch": "~0.3.0",
