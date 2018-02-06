@@ -1,9 +1,12 @@
 pragma solidity ^0.4.18;
 
 import "../interfaces/StoreInterface.sol";
+import "./SafeMath.sol";
 
 
 library DividendStorageProxy {
+
+    using SafeMath for uint256;
 
     /**
     * @notice Dividends functions can only be called through the proof network
@@ -69,17 +72,17 @@ library DividendStorageProxy {
 
     //helpers
     function incrementCurrentPoolIndex(address _store, uint256 _amount) public onlyAuthorized {
-        uint256 newValue = StoreInterface(_store).getUint(keccak256("dividends.currentPoolIndex")) + _amount;
+        uint256 newValue = StoreInterface(_store).getUint(keccak256("dividends.currentPoolIndex")).add(_amount);
         StoreInterface(_store).setUint(keccak256("dividends.currentPoolIndex"), newValue);
     }
 
     function incrementCurrentEpoch(address _store, uint256 _amount) public onlyAuthorized {
-        uint256 newValue = StoreInterface(_store).getUint(keccak256("dividends.currentEpoch")) + _amount;
+        uint256 newValue = StoreInterface(_store).getUint(keccak256("dividends.currentEpoch")).add(_amount);
         StoreInterface(_store).setUint(keccak256("dividends.currentEpoch"), newValue);
     }
 
     function incrementCurrentPoolBalance(address _store, uint256 _amount) public {
-        uint256 newValue = StoreInterface(_store).getUint(keccak256("dividends.currentPoolBalance")) + _amount;
+        uint256 newValue = StoreInterface(_store).getUint(keccak256("dividends.currentPoolBalance")).add(_amount);
         StoreInterface(_store).setUint(keccak256("dividends.currentPoolBalance"), newValue);
     }
 }
