@@ -50,7 +50,7 @@ const waitUntilTransactionsMined = (txnHashes) => {
  * @param address {String} - Ethereum address
  * @returns wallet balance {Number}
  */
-const getBalance = (address) => {
+const getWeiBalance = (address) => {
   let balance = web3.eth.getBalance(address)
   return balance.toNumber()
 }
@@ -60,7 +60,7 @@ const getBalance = (address) => {
  * @param addresses {String[]} - Array of ethereum addresses
  * @returns wallet balances (in wei) {Number[]}
  */
-const getBalances = (addresses) => {
+const getWeiBalances = (addresses) => {
   let balances = []
   addresses.map(function (address) { balances.push(getBalance(address)) })
   return balances
@@ -314,8 +314,8 @@ const getTxnReceiptTopics = (txnReceipt) => {
 
 module.exports = {
   waitUntilTransactionsMined,
-  getBalance,
-  getBalances,
+  getWeiBalance,
+  getWeiBalances,
   getEtherBalance,
   getEtherBalances,
   inEther,
