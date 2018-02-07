@@ -67,16 +67,20 @@ contract CryptoFiatHub {
   }
 
   /**
-  * @notice sellCUSDTokens sells crypto-USD tokens for the equivalent USD value at which they were bought
-  * @param _tokenNumber Number of crypto-USD tokens to be sold against ether
+  * @notice sellCryptoDollar sells CryptoDollar tokens for the equivalent USD value at which they were bought
+  * @param _tokenNumber Number of CryptoDollar tokens to be sold against ether
   */
   function sellCryptoDollar(uint256 _tokenNumber) public {
+      uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
+      uint256 reservedEther = cryptoDollar.guaranteedEther(msg.sender);
+
       require(_tokenNumber >= 0);
-      require(_tokenNumber <= cryptoDollar.balanceOf(msg.sender));
+      require(_tokenNumber <= tokenBalance);
 
       uint256 paymentValue = _tokenNumber.mul(1 ether).div(exchangeRate);
+      uint256 etherValue = _tokenNumber.mul(reservedEther).div(tokenBalance);
 
-      cryptoDollar.sell(msg.sender, _tokenNumber, paymentValue);
+      cryptoDollar.sell(msg.sender, _tokenNumber, etherValue);
       msg.sender.transfer(paymentValue);
   }
 }
