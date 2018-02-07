@@ -49,7 +49,7 @@ contract CryptoFiatHub {
 
 
   /**
-  * @notice buyCUSDtokens buys pegged crypto-USD tokens.
+  * @notice buyCryptoDollar buys CryptoDollar tokens for a price of 1 CryptoDollar Token = 1 USD
   */
   function buyCryptoDollar() public payable {
       require(msg.sender != 0x0);
