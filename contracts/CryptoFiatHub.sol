@@ -83,4 +83,23 @@ contract CryptoFiatHub {
       cryptoDollar.sell(msg.sender, _tokenNumber, etherValue);
       msg.sender.transfer(paymentValue);
   }
+
+
+  /**
+  * @notice sellUnpeggedCryptoDollar sells CryptoDollar tokens for the equivalent ether value at which they were bought
+  * @dev Need to replace inState by inFutureState to account for the possibility the contract could become unpegged with the current transaction
+  * @param _tokenNumber Number of CryptoDollar tokens to be sold against ether
+  */
+  function sellUnpeggedCryptoDollar(uint256 _tokenNumber) public {
+    uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
+    uint256 reservedEther = cryptoDollar.guaranteedEther(msg.sender);
+
+    require(_tokenNumber >= 0);
+    require(_tokenNumber <= tokenBalance);
+
+    uint256 etherValue = _tokenNumber.mul(reservedEther).div(tokenBalance);
+
+    cryptoDollar.sell(msg.sender, _tokenNumber, etherValue);
+    msg.sender.transfer(etherValue);
+  }
 }
