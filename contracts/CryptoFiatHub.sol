@@ -102,4 +102,42 @@ contract CryptoFiatHub {
     cryptoDollar.sell(msg.sender, _tokenNumber, etherValue);
     msg.sender.transfer(etherValue);
   }
+
+
+  /**
+  * @notice Proxies _holder CryptoDollar token balance from the CryptoDollar contract
+  * @param _holder cryptoDollar token holder balance
+  * @return the cryptoDollar token balance of _holder
+  */
+  function cryptoDollarBalance(address _holder) public constant returns(uint256) {
+    return cryptoDollar.balanceOf(_holder);
+  }
+
+  /**
+  * @notice Proxies the total supply of CryptoDollar tokens from the CryptoDollar contract
+  * @return Total supply of cryptoDollar
+  */
+  function cryptoDollarTotalSupply() public constant returns (uint256) {
+    return cryptoDollar.totalSupply();
+  }
+
+  /**
+  * @notice The totalOutstanding() function returns the amount of ether that is owed to all cryptoDollar token holders for a pegged contract state
+  * @return Total value in ether of the cryptoDollar tokens that have been issued
+  */
+  function totalOutstanding() public constant returns(uint256) {
+    uint256 supply = cryptoDollar.totalSupply();
+    return supply.mul(1 ether).div(exchangeRate);
+  }
+
+  /**
+  * @notice The buffer function computes the difference between the current contract balance and the amount of outstanding tokens.
+  * @return Buffer Value
+  */
+  function buffer() public constant returns (uint256) {
+    uint256 value = uint256(this.balance - totalOutstanding());
+    return value;
+  }
+
+
 }
