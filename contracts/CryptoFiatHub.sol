@@ -22,6 +22,8 @@ contract CryptoFiatHub {
   address public store;
   uint256 public exchangeRate;
 
+  enum State{ PEGGED, UNPEGGED }
+
 
   function CryptoFiatHub(address _cryptoDollarAddress, address _storeAddress, address _proofTokenAddress, address _proofRewardsAddress) public {
     cryptoDollar = CryptoDollarInterface(_cryptoDollarAddress);
@@ -49,7 +51,7 @@ contract CryptoFiatHub {
 
 
   /**
-  * @notice buyCryptoDollar buys CryptoDollar tokens for a price of 1 CryptoDollar Token = 1 USD
+  * @notice buyCryptoDollar() buys CryptoDollar tokens for a price of 1 CryptoDollar Token = 1 USD (paid in ether)
   */
   function buyCryptoDollar() public payable {
       require(msg.sender != 0x0);
@@ -67,10 +69,10 @@ contract CryptoFiatHub {
   }
 
   /**
-  * @notice sellCryptoDollar sells CryptoDollar tokens for the equivalent USD value at which they were bought
+  * @notice sellCryptoDollar() sells CryptoDollar tokens for the equivalent USD value at which they were bought
   * @param _tokenNumber Number of CryptoDollar tokens to be sold against ether
   */
-  function sellCryptoDollar(uint256 _tokenNumber) public {
+  function sellCryptoDollar(uint256 _tokenNumber) inState(State.PEGGED) public {
       uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
       uint256 reservedEther = cryptoDollar.guaranteedEther(msg.sender);
 
@@ -90,13 +92,14 @@ contract CryptoFiatHub {
   * @dev Need to replace inState by inFutureState to account for the possibility the contract could become unpegged with the current transaction
   * @param _tokenNumber Number of CryptoDollar tokens to be sold against ether
   */
-  function sellUnpeggedCryptoDollar(uint256 _tokenNumber) public {
+  function sellUnpeggedCryptoDollar(uint256 _tokenNumber) inState(State.UNPEGGED) public {
     uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
     uint256 reservedEther = cryptoDollar.guaranteedEther(msg.sender);
 
     require(_tokenNumber >= 0);
     require(_tokenNumber <= tokenBalance);
 
+    // uint256 etherValue  = reservedEther;
     uint256 etherValue = _tokenNumber.mul(reservedEther).div(tokenBalance);
 
     cryptoDollar.sell(msg.sender, _tokenNumber, etherValue);
@@ -134,9 +137,43 @@ contract CryptoFiatHub {
   * @notice The buffer function computes the difference between the current contract balance and the amount of outstanding tokens.
   * @return Buffer Value
   */
-  function buffer() public constant returns (uint256) {
-    uint256 value = uint256(this.balance - totalOutstanding());
+  function buffer() public constant returns (int256) {
+    int256 value = int256(this.balance - totalOutstanding());
     return value;
+  }
+
+
+  function contractBalance() public constant returns (uint256) {
+    return this.balance;
+  }
+
+  /**
+  * @return Current state of the contract
+  */
+  function currentState() public constant returns (State) {
+    if (buffer() > 0) {
+      return State.PEGGED;
+    } else {
+      return State.UNPEGGED;
+    }
+  }
+
+
+  /**
+  * @notice Computes the state of the contract whenever included in function header
+  * @param state Potential contract state (either PEGGED or UNPEGGED)
+  */
+  modifier inState(State state) {
+    assert(state == currentState());
+    _;
+  }
+
+  /**
+  * @dev Temporary mock function. Will be removed when adding interactions with oracles
+  * @param _value of the new ETH/USD conversion rate in cents
+  */
+  function setExchangeRate(uint256 _value) public {
+    exchangeRate = _value;
   }
 
 

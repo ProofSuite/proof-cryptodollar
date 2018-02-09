@@ -22,8 +22,6 @@ contract('Cryptofiat Hub', (accounts) => {
   let cryptoFiatHub
   let proofRewards
   let wallet1 = accounts[0]
-  let wallet2 = accounts[1]
-  let amount = 1 * 10 ** 18
 
   beforeEach(async () => {
     store = await Store.deployed()
@@ -129,7 +127,7 @@ contract('Cryptofiat Hub', (accounts) => {
     })
   })
 
-  describe('Selling Tokens', async () => {
+  describe('Selling Cryptodollar tokens', async() => {
     let params
     let exchangeRate
     let tokens
@@ -141,73 +139,7 @@ contract('Cryptofiat Hub', (accounts) => {
     })
 
     it('should be able to sell CryptoDollar tokens', async() => {
-      await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, params).should.be.fulfilled
-    })
-
-    it('should decrease the total supply of cryptodollars', async() => {
-      let initialSupply = await cryptoDollar.totalSupply()
-
-      await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, params)
-
-      let supply = await cryptoDollar.totalSupply()
-      let increment = supply.minus(initialSupply)
-      increment.should.be.bignumber.equal(-tokens)
-    })
-
-    it('should decrease the cryptodollar balance', async() => {
-      let initialSupply = await cryptoDollar.balanceOf(wallet1)
-
-      await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, params)
-
-      let supply = await cryptoDollar.balanceOf(wallet1)
-      let increment = supply.minus(initialSupply)
-      increment.should.be.bignumber.equal(-tokens)
-    })
-
-    it('should correctly increase the seller account ether balance', async() => {
-      let initialTokenBalance = await cryptoDollar.balanceOf(wallet1)
-      let initialReservedEther = await cryptoDollar.guaranteedEther(wallet1)
-      let initialBalance = web3.eth.getBalance(wallet1)
-      let txn = await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, params)
-
-
-      let balance = web3.eth.getBalance(wallet1)
-      let txFee = params.gasPrice * txn.receipt.gasUsed
-      let etherValue = initialReservedEther.times(tokens).div(initialTokenBalance)
-      let expectedPayment = etherValue.minus(txFee)
-
-      let payment = balance.minus(initialBalance)
-      payment.should.be.bignumber.equal(expectedPayment)
-    })
-
-    it('should correctly decrease the seller reserved ether balance', async () => {
-      let initialReservedEther = await cryptoDollar.guaranteedEther(wallet1)
-      let initialTokenBalance = await cryptoDollar.balanceOf(wallet1)
-
-      let txn = await cryptoFiatHub.sellCryptoDollar(tokens, params)
-      let reservedEther = await cryptoDollar.guaranteedEther(wallet1)
-
-      let expectedVariation = initialReservedEther.mul(tokens).div(initialTokenBalance).negated().toNumber()
-      let variation = reservedEther.minus(initialReservedEther)
-
-      variation.should.be.bignumber.equal(expectedVariation)
-    })
-  })
-
-
-  describe('Selling Unpegged Tokens', async() => {
-    let params
-    let exchangeRate
-    let tokens
-
-    before(async () => {
-      params = { from: wallet1, gasPrice: 10 * 10 ** 9 }
-      exchangeRate = await cryptoFiatHub.exchangeRate.call()
-      tokens = 100
-    })
-
-    it('should be able to sell CryptoDollar tokens', async() => {
-      await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, params).should.be.fulfilled
+      await cryptoFiatHub.sellCryptoDollar(tokens, params).should.be.fulfilled
     })
 
     it('should decrease the total supply of cryptodollars', async() => {
@@ -256,7 +188,6 @@ contract('Cryptofiat Hub', (accounts) => {
       variation.should.be.bignumber.equal(expectedVariation)
     })
   })
-
 
   describe('Proxy CryptoDollar State and Balances', async() => {
     let defaultOrder
