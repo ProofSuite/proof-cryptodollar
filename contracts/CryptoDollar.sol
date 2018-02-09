@@ -26,6 +26,10 @@ contract CryptoDollar {
     revert();
   }
 
+  function capitalize() payable {
+
+  }
+
 
 
   function transfer(address _to, uint _amount) public returns (bool success) {
