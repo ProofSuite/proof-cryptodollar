@@ -44,6 +44,7 @@ contract CryptoDollar {
     store.incrementBalance(_to, _amount);
     store.decrementGuaranteedEther(msg.sender, etherValue);
     store.incrementGuaranteedEther(_to, etherValue);
+    return true;
   }
 
 
@@ -59,6 +60,7 @@ contract CryptoDollar {
     store.decrementGuaranteedEther(_from, etherValue);
     store.incrementGuaranteedEther(_to, etherValue);
     store.decrementAllowance(_from, _to, _amount);
+    return true;
   }
 
 

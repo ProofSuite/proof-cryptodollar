@@ -30,15 +30,15 @@ contract ProofToken is ERC20, Ownable {
   function ProofToken() {}
 
 
-  function() payable {
+  function() public payable {
     revert();
   }
 
-  function balanceOf(address _owner) constant returns (uint256) {
+  function balanceOf(address _owner) public constant returns (uint256) {
     return balances[_owner];
   }
 
-  function transfer(address _to, uint _value) returns (bool) {
+  function transfer(address _to, uint _value) public returns (bool) {
 
     balances[msg.sender] = balances[msg.sender].sub(_value);
     balances[_to] = balances[_to].add(_value);
@@ -47,7 +47,7 @@ contract ProofToken is ERC20, Ownable {
     return true;
   }
 
-  function transferFrom(address _from, address _to, uint _value) returns (bool) {
+  function transferFrom(address _from, address _to, uint _value) public returns (bool) {
     var _allowance = allowed[_from][msg.sender];
 
     balances[_to] = balances[_to].add(_value);
@@ -58,13 +58,13 @@ contract ProofToken is ERC20, Ownable {
     return true;
   }
 
-  function approve(address _spender, uint _value) returns (bool) {
+  function approve(address _spender, uint _value) public returns (bool) {
     allowed[msg.sender][_spender] = _value;
     Approval(msg.sender, _spender, _value);
     return true;
   }
 
-  function allowance(address _owner, address _spender) constant returns (uint256) {
+  function allowance(address _owner, address _spender) public constant returns (uint256) {
     return allowed[_owner][_spender];
   }
 
@@ -74,7 +74,7 @@ contract ProofToken is ERC20, Ownable {
     _;
   }
 
-  function mint(address _to, uint256 _amount) canMint returns (bool) {
+  function mint(address _to, uint256 _amount) public canMint returns (bool) {
     totalSupply = totalSupply.add(_amount);
     balances[_to] = balances[_to].add(_amount);
     Mint(_to, _amount);
@@ -86,7 +86,5 @@ contract ProofToken is ERC20, Ownable {
     MintFinished();
     return true;
   }
-
-
 
 }
