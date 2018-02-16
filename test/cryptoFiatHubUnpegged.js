@@ -80,7 +80,7 @@ contract('Cryptofiat Hub', (accounts) => {
 
     it('should sell unpegged cryptodollar tokens', async () => {
       let accountBalance = web3.eth.getBalance(wallet1)
-      let reservedEther = await cryptoDollar.guaranteedEther(wallet1)
+      let reservedEther = await cryptoDollar.reservedEther(wallet1)
       let params = { from: wallet1, gasPrice: 10 * 10 ** 9 }
 
       txn = await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, params).should.be.fulfilled
@@ -88,7 +88,7 @@ contract('Cryptofiat Hub', (accounts) => {
       let sellTxnFee = txn.receipt.gasUsed * params.gasPrice
 
       let finalAccountBalance = web3.eth.getBalance(wallet1)
-      let finalReservedEther = await cryptoDollar.guaranteedEther(wallet1)
+      let finalReservedEther = await cryptoDollar.reservedEther(wallet1)
 
       let reservedEtherVariation = finalReservedEther.minus(reservedEther)
       let accountBalanceVariation = finalAccountBalance.minus(accountBalance)

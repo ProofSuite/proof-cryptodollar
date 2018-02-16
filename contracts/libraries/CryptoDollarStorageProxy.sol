@@ -18,8 +18,8 @@ library CryptoDollarStorageProxy {
         return StoreInterface(_store).getUint(keccak256("cryptoDollar.balances", _owner));
     }
 
-    function getGuaranteedEther(address _store, address _owner) public view returns(uint256) {
-        return StoreInterface(_store).getUint(keccak256("cryptoDollar.guaranteedEther", _owner));
+    function getReservedEther(address _store, address _owner) public view returns(uint256) {
+        return StoreInterface(_store).getUint(keccak256("cryptoDollar.reservedEther", _owner));
     }
 
     function getAllowance(address _store, address _from, address _to) public view returns(uint256) {
@@ -37,8 +37,8 @@ library CryptoDollarStorageProxy {
         return StoreInterface(_store).setUint(keccak256("cryptoDollar.balances", _owner), _value);
     }
 
-    function setGuaranteedEther(address _store, address _owner, uint _value) public onlyContractManager {
-        return StoreInterface(_store).setUint(keccak256("cryptoDollar.guaranteedEther", _owner), _value);
+    function setReservedEther(address _store, address _owner, uint _value) public onlyContractManager {
+        return StoreInterface(_store).setUint(keccak256("cryptoDollar.reservedEther", _owner), _value);
     }
 
     function setAllowance(address _store, address _from, address _to, uint _value) public onlyContractManager {
@@ -72,14 +72,14 @@ library CryptoDollarStorageProxy {
         StoreInterface(_store).setUint(keccak256("cryptoDollar.totalSupply"), balance.sub(_value));
     }
 
-    function incrementGuaranteedEther(address _store, address _owner, uint _value) public {
-        uint256 balance = StoreInterface(_store).getUint(keccak256("cryptoDollar.guaranteedEther", _owner));
-        StoreInterface(_store).setUint(keccak256("cryptoDollar.guaranteedEther", _owner), balance.add(_value));
+    function incrementReservedEther(address _store, address _owner, uint _value) public {
+        uint256 balance = StoreInterface(_store).getUint(keccak256("cryptoDollar.reservedEther", _owner));
+        StoreInterface(_store).setUint(keccak256("cryptoDollar.reservedEther", _owner), balance.add(_value));
     }
 
-    function decrementGuaranteedEther(address _store, address _owner, uint _value) public {
-        uint256 balance = StoreInterface(_store).getUint(keccak256("cryptoDollar.guaranteedEther", _owner));
-        StoreInterface(_store).setUint(keccak256("cryptoDollar.guaranteedEther", _owner), balance.sub(_value));
+    function decrementReservedEther(address _store, address _owner, uint _value) public {
+        uint256 balance = StoreInterface(_store).getUint(keccak256("cryptoDollar.reservedEther", _owner));
+        StoreInterface(_store).setUint(keccak256("cryptoDollar.reservedEther", _owner), balance.sub(_value));
     }
 
     function incrementAllowance(address _store, address _from, address _to, uint _value) public {

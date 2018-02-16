@@ -116,12 +116,12 @@ contract('Cryptofiat Hub', (accounts) => {
     })
 
     it('should increment the buyer reserved ether balance by 99% of invested value', async () => {
-      let initialReservedEther = await cryptoDollar.guaranteedEther(wallet1)
+      let initialReservedEther = await cryptoDollar.reservedEther(wallet1)
       let expectedIncrement = await getOrderWeiValue(defaultOrder.value)
 
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
 
-      let reservedEther = await cryptoDollar.guaranteedEther(wallet1)
+      let reservedEther = await cryptoDollar.reservedEther(wallet1)
       let increment = reservedEther.minus(initialReservedEther)
       increment.should.be.bignumber.equal(expectedIncrement)
     })
@@ -176,11 +176,11 @@ contract('Cryptofiat Hub', (accounts) => {
     })
 
     it('should correctly decrease the seller reserved ether balance', async () => {
-      let initialReservedEther = await cryptoDollar.guaranteedEther(wallet1)
+      let initialReservedEther = await cryptoDollar.reservedEther(wallet1)
       let initialTokenBalance = await cryptoDollar.balanceOf(wallet1)
 
       let txn = await cryptoFiatHub.sellCryptoDollar(tokens, params)
-      let reservedEther = await cryptoDollar.guaranteedEther(wallet1)
+      let reservedEther = await cryptoDollar.reservedEther(wallet1)
 
       let expectedVariation = initialReservedEther.mul(tokens).div(initialTokenBalance).negated().toNumber()
       let variation = reservedEther.minus(initialReservedEther)

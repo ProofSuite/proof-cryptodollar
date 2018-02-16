@@ -80,7 +80,7 @@ contract('CryptoDollar', (accounts) => {
 
     it('should return reserved ether', async() => {
       await cryptoDollar.buy(receiver, 1, 1 * 10 ** 18)
-      let reservedEther = await cryptoDollar.guaranteedEther(receiver)
+      let reservedEther = await cryptoDollar.reservedEther(receiver)
       reservedEther.should.be.bignumber.equal(1 * 10 ** 18)
 
       //reset contract state
@@ -92,39 +92,39 @@ contract('CryptoDollar', (accounts) => {
     it('should buy tokens for receiver', async () => {
       let initialSupply = await cryptoDollar.totalSupply()
       let initialBalance = await cryptoDollar.balanceOf(receiver)
-      let initialGuaranteedEther = await cryptoDollar.guaranteedEther(receiver)
+      let initialReservedEther = await cryptoDollar.reservedEther(receiver)
       await cryptoDollar.buy(receiver, 1, 1)
 
       let supply = await cryptoDollar.totalSupply()
       let balance = await cryptoDollar.balanceOf(receiver)
-      let guaranteedEther = await cryptoDollar.guaranteedEther(receiver)
+      let reservedEther = await cryptoDollar.reservedEther(receiver)
 
       let supplyIncrement = supply.minus(initialSupply)
       let balanceIncrement = balance.minus(initialBalance)
-      let guaranteedEtherIncrement = guaranteedEther.minus(initialGuaranteedEther)
+      let reservedEtherIncrement = reservedEther.minus(initialReservedEther)
 
       supplyIncrement.should.be.bignumber.equal(1)
       balanceIncrement.should.be.bignumber.equal(1)
-      guaranteedEtherIncrement.should.be.bignumber.equal(1)
+      reservedEtherIncrement.should.be.bignumber.equal(1)
     })
 
     it('should sell tokens for receiver', async () => {
       let initialSupply = await cryptoDollar.totalSupply()
       let initialBalance = await cryptoDollar.balanceOf(receiver)
-      let initialGuaranteedEther = await cryptoDollar.guaranteedEther(receiver)
+      let initialReservedEther = await cryptoDollar.reservedEther(receiver)
       await cryptoDollar.sell(receiver, 1, 1)
 
       let supply = await cryptoDollar.totalSupply()
       let balance = await cryptoDollar.balanceOf(receiver)
-      let guaranteedEther = await cryptoDollar.guaranteedEther(receiver)
+      let reservedEther = await cryptoDollar.reservedEther(receiver)
 
       let supplyDecrement = initialSupply.minus(supply)
       let balanceDecrement = initialBalance.minus(balance)
-      let guaranteedEtherDecrement = initialGuaranteedEther.minus(guaranteedEther)
+      let reservedEtherDecrement = initialReservedEther.minus(reservedEther)
 
       supplyDecrement.should.be.bignumber.equal(1)
       balanceDecrement.should.be.bignumber.equal(1)
-      guaranteedEtherDecrement.should.be.bignumber.equal(1)
+      reservedEtherDecrement.should.be.bignumber.equal(1)
     })
   })
 
@@ -153,27 +153,27 @@ contract('CryptoDollar', (accounts) => {
     it('should transfer reserved ether from sender to receiver', async() => {
       await cryptoDollar.buy(sender, 100, 1 * 10 ** 18)
 
-      let initialSenderGuaranteedEther = await cryptoDollar.guaranteedEther(sender)
+      let initialSenderReservedEther = await cryptoDollar.reservedEther(sender)
       let initialSenderBalance = await cryptoDollar.balanceOf(sender)
-      let initialReceiverGuaranteedEther = await cryptoDollar.guaranteedEther(receiver)
+      let initialReceiverReservedEther = await cryptoDollar.reservedEther(receiver)
 
       let txn = await cryptoDollar.transfer(receiver, 50, { from: sender })
       await waitUntilTransactionsMined(txn.tx)
 
-      let senderGuaranteedEther = await cryptoDollar.guaranteedEther(sender)
-      let receiverGuaranteedEther = await cryptoDollar.guaranteedEther(receiver)
+      let senderReservedEther = await cryptoDollar.reservedEther(sender)
+      let receiverReservedEther = await cryptoDollar.reservedEther(receiver)
 
-      let expectedVariation = initialSenderGuaranteedEther.mul(50).div(initialSenderBalance)
+      let expectedVariation = initialSenderReservedEther.mul(50).div(initialSenderBalance)
 
-      let senderGuaranteedEtherVariation = senderGuaranteedEther.minus(initialSenderGuaranteedEther)
-      let receiverGuaranteedEtherVariation = receiverGuaranteedEther.minus(initialReceiverGuaranteedEther)
+      let senderReservedEtherVariation = senderReservedEther.minus(initialSenderReservedEther)
+      let receiverReservedEtherVariation = receiverReservedEther.minus(initialReceiverReservedEther)
 
-      senderGuaranteedEtherVariation.should.be.bignumber.equal(-expectedVariation)
-      receiverGuaranteedEtherVariation.should.be.bignumber.equal(expectedVariation)
+      senderReservedEtherVariation.should.be.bignumber.equal(-expectedVariation)
+      receiverReservedEtherVariation.should.be.bignumber.equal(expectedVariation)
 
       //reset contract state
-      await cryptoDollar.sell(receiver, 50, senderGuaranteedEther)
-      await cryptoDollar.sell(sender, 50, receiverGuaranteedEther)
+      await cryptoDollar.sell(receiver, 50, senderReservedEther)
+      await cryptoDollar.sell(sender, 50, receiverReservedEther)
     })
   })
 
@@ -219,14 +219,14 @@ contract('CryptoDollar', (accounts) => {
       await cryptoDollar.sell(receiver, receiverBalance, 0)
     })
 
-    it('should transfer guaranteed ether', async() => {
+    it('should transfer reserved ether', async() => {
       let amount = 50
       let txn
       txn = await cryptoDollar.buy(sender, 100, 1 * 10 ** 18)
       await waitUntilTransactionsMined(txn.tx)
 
-      let initialReceiverReservedEther = await cryptoDollar.guaranteedEther(receiver)
-      let initialSenderReservedEther = await cryptoDollar.guaranteedEther(sender)
+      let initialReceiverReservedEther = await cryptoDollar.reservedEther(receiver)
+      let initialSenderReservedEther = await cryptoDollar.reservedEther(sender)
       let initialSenderBalance = await cryptoDollar.balanceOf(sender)
 
       txn = await cryptoDollar.approve(receiver, amount, { from: sender  })
@@ -236,8 +236,8 @@ contract('CryptoDollar', (accounts) => {
 
       let etherValue = initialSenderReservedEther.mul(amount).div(initialSenderBalance)
 
-      let receiverReservedEther = await cryptoDollar.guaranteedEther(receiver)
-      let senderReservedEther = await cryptoDollar.guaranteedEther(sender)
+      let receiverReservedEther = await cryptoDollar.reservedEther(receiver)
+      let senderReservedEther = await cryptoDollar.reservedEther(sender)
 
       let receiverReservedEtherVariation = receiverReservedEther.minus(initialReceiverReservedEther)
       let senderReservedEtherVariation = senderReservedEther.minus(initialSenderReservedEther)

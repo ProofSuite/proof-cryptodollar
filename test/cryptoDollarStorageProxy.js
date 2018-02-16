@@ -45,36 +45,36 @@ contract('CryptoDollarStorageProxy', (accounts) => {
     })
   })
 
-  describe('GuaranteedEther', async () => {
+  describe('Reserved Ether', async () => {
     beforeEach(async () => {
       store = await Store.new()
       cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
     })
 
-    it('should set and get start guaranteed ether', async () => {
+    it('should set and get reserved ether', async () => {
       let storedValue
       let account = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
       let expectedValue = 10 * 10 ** 18
 
-      await cryptoDollarStorageProxy.setGuaranteedEther(store.address, account, expectedValue)
-      storedValue = await cryptoDollarStorageProxy.getGuaranteedEther(store.address, account)
+      await cryptoDollarStorageProxy.setReservedEther(store.address, account, expectedValue)
+      storedValue = await cryptoDollarStorageProxy.getReservedEther(store.address, account)
 
       storedValue.toNumber().should.be.equal(expectedValue)
     })
 
-    it('should increment and decrement guaranteed ether', async () => {
+    it('should increment and decrement reserved ether', async () => {
       let storedValue
       let account = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
       let increment = 2 * 10 ** 18
       let decrement = 1 * 10 ** 18
 
-      await cryptoDollarStorageProxy.incrementGuaranteedEther(store.address, account, increment)
-      storedValue = await cryptoDollarStorageProxy.getGuaranteedEther(store.address, account)
+      await cryptoDollarStorageProxy.incrementReservedEther(store.address, account, increment)
+      storedValue = await cryptoDollarStorageProxy.getReservedEther(store.address, account)
 
       storedValue.toNumber().should.be.equal(increment)
 
-      await cryptoDollarStorageProxy.decrementGuaranteedEther(store.address, account, decrement)
-      storedValue = await cryptoDollarStorageProxy.getGuaranteedEther(store.address, account)
+      await cryptoDollarStorageProxy.decrementReservedEther(store.address, account, decrement)
+      storedValue = await cryptoDollarStorageProxy.getReservedEther(store.address, account)
 
       storedValue.toNumber().should.be.equal(increment - decrement)
     })

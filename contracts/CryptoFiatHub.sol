@@ -74,7 +74,7 @@ contract CryptoFiatHub {
   */
   function sellCryptoDollar(uint256 _tokenNumber) inState(State.PEGGED) public {
       uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
-      uint256 reservedEther = cryptoDollar.guaranteedEther(msg.sender);
+      uint256 reservedEther = cryptoDollar.reservedEther(msg.sender);
 
       require(_tokenNumber >= 0);
       require(_tokenNumber <= tokenBalance);
@@ -94,7 +94,7 @@ contract CryptoFiatHub {
   */
   function sellUnpeggedCryptoDollar(uint256 _tokenNumber) inState(State.UNPEGGED) public {
     uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
-    uint256 reservedEther = cryptoDollar.guaranteedEther(msg.sender);
+    uint256 reservedEther = cryptoDollar.reservedEther(msg.sender);
 
     require(_tokenNumber >= 0);
     require(_tokenNumber <= tokenBalance);

@@ -26,39 +26,33 @@ contract CryptoDollar {
     revert();
   }
 
-  function capitalize() payable {
-
-  }
-
-
-
   function transfer(address _to, uint _amount) public returns (bool success) {
-    uint256 senderGuaranteedEther = store.getGuaranteedEther(msg.sender);
+    uint256 senderReservedEther = store.getReservedEther(msg.sender);
     uint256 senderBalance = store.getBalance(msg.sender);
     //TODO validate this is the appropriate and desired formula
-    uint256 etherValue = senderGuaranteedEther.mul(_amount).div(senderBalance);
+    uint256 etherValue = senderReservedEther.mul(_amount).div(senderBalance);
 
     require(senderBalance >= _amount);
 
     store.decrementBalance(msg.sender, _amount);
     store.incrementBalance(_to, _amount);
-    store.decrementGuaranteedEther(msg.sender, etherValue);
-    store.incrementGuaranteedEther(_to, etherValue);
+    store.decrementReservedEther(msg.sender, etherValue);
+    store.incrementReservedEther(_to, etherValue);
     return true;
   }
 
 
   function transferFrom(address _from, address _to, uint _amount) public returns (bool success) {
-    uint256 senderGuaranteedEther = store.getGuaranteedEther(_from);
+    uint256 senderReservedEther = store.getReservedEther(_from);
     uint256 senderBalance = store.getBalance(_from);
-    uint256 etherValue = senderGuaranteedEther.mul(_amount).div(senderBalance);
+    uint256 etherValue = senderReservedEther.mul(_amount).div(senderBalance);
 
     require(senderBalance >= _amount);
 
     store.incrementBalance(_to, _amount);
     store.decrementBalance(_from, _amount);
-    store.decrementGuaranteedEther(_from, etherValue);
-    store.incrementGuaranteedEther(_to, etherValue);
+    store.decrementReservedEther(_from, etherValue);
+    store.incrementReservedEther(_to, etherValue);
     store.decrementAllowance(_from, _to, _amount);
     return true;
   }
@@ -84,7 +78,7 @@ contract CryptoDollar {
   function buy(address _to, uint256 _amount, uint256 _etherValue) public returns (bool) {
     store.incrementTotalSupply(_amount);
     store.incrementBalance(_to, _amount);
-    store.incrementGuaranteedEther(_to, _etherValue);
+    store.incrementReservedEther(_to, _etherValue);
     return true;
   }
 
@@ -98,7 +92,7 @@ contract CryptoDollar {
   function sell(address _to, uint256 _amount, uint256 _etherValue) public returns (bool) {
     store.decrementTotalSupply(_amount);
     store.decrementBalance(_to, _amount);
-    store.decrementGuaranteedEther(_to, _etherValue);
+    store.decrementReservedEther(_to, _etherValue);
     return true;
   }
 
@@ -124,8 +118,8 @@ contract CryptoDollar {
   @param _owner Address of CryptoDollar token owner
   @return Ether value reserved for _owner
    */
-  function guaranteedEther(address _owner) public constant returns(uint value) {
-    return store.getGuaranteedEther(_owner);
+  function reservedEther(address _owner) public constant returns(uint value) {
+    return store.getReservedEther(_owner);
   }
 
 }
