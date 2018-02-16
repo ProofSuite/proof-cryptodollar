@@ -12,7 +12,7 @@ const should = chai.should()
 const CryptoDollar = artifacts.require('CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('CryptoFiatHub.sol')
 const CryptoFiatStorageProxy = artifacts.require('CryptoFiatStorageProxy.sol')
-const ProofRewards = artifacts.require('./ProofRewards.sol')
+const Rewards = artifacts.require('./Rewards.sol')
 const Store = artifacts.require('./Store.sol')
 
 contract('Cryptofiat Hub', (accounts) => {
@@ -20,14 +20,14 @@ contract('Cryptofiat Hub', (accounts) => {
   let cryptoDollar
   let cryptoFiatStorageProxy
   let cryptoFiatHub
-  let proofRewards
+  let rewards
   let wallet1 = accounts[0]
 
   beforeEach(async () => {
     store = await Store.deployed()
     cryptoDollar = await CryptoDollar.deployed()
     cryptoFiatHub = await CryptoFiatHub.deployed()
-    proofRewards = await ProofRewards.deployed()
+    rewards = await Rewards.deployed()
     cryptoFiatStorageProxy = await CryptoFiatStorageProxy.deployed()
   })
 
@@ -70,24 +70,24 @@ contract('Cryptofiat Hub', (accounts) => {
     })
 
     it('should increase the rewards contract balance by 0.5% of investment value', async () => {
-      let initialBalance = await getWeiBalance(ProofRewards.address)
+      let initialBalance = await getWeiBalance(Rewards.address)
       let fee = getFee(defaultOrder.value, 0.005)
       let expectedPoolBalance = initialBalance + fee
 
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
 
-      let balance = await getWeiBalance(ProofRewards.address)
+      let balance = await getWeiBalance(Rewards.address)
       balance.should.be.bignumber.equal(expectedPoolBalance)
     })
 
     it('should increase the rewards current pool balance by 0.5% of investment value', async () => {
-      let initialBalance = await proofRewards.currentPoolBalance()
+      let initialBalance = await rewards.getCurrentPoolBalance()
       let fee = getFee(defaultOrder.value, 0.005)
       let expectedPoolBalance = initialBalance.plus(fee)
 
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
 
-      let balance = await proofRewards.currentPoolBalance()
+      let balance = await rewards.getCurrentPoolBalance()
       balance.should.be.bignumber.equal(expectedPoolBalance)
     })
 
@@ -231,79 +231,4 @@ contract('Cryptofiat Hub', (accounts) => {
       expectedBuffer.should.be.bignumber.equal(buffer)
     })
   })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // it('should increase the rewards contract balance by 0.5% of investment value', async () => {
-    //   let initialBalance = await getWeiBalance(ProofRewards.address)
-    //   let fee = getFee(defaultOrder.value, 0.005)
-    //   let expectedPoolBalance = initialBalance + fee
-
-    //   await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-
-    //   let balance = await getWeiBalance(ProofRewards.address)
-    //   balance.should.be.bignumber.equal(expectedPoolBalance)
-    // })
-
-    // it('should increase the rewards current pool balance by 0.5% of investment value', async () => {
-    //   let initialBalance = await proofRewards.currentPoolBalance()
-    //   let fee = getFee(defaultOrder.value, 0.005)
-    //   let expectedPoolBalance = initialBalance.plus(fee)
-
-    //   await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-
-    //   let balance = await proofRewards.currentPoolBalance()
-    //   balance.should.be.bignumber.equal(expectedPoolBalance)
-    // })
-
-    // it('should increase the total cryptodollar supply by 99% of invested value', async () => {
-    //   let initialSupply = await cryptoDollar.totalSupply()
-    //   let etherValue = await getOrderEtherValue(defaultOrder.value) //get the ether value of the order after fee
-    //   let expectedIncrement = exchangeRate.times(etherValue)
-
-    //   await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-
-    //   let supply = await cryptoDollar.totalSupply()
-    //   let increment = supply.minus(initialSupply)
-    //   increment.should.be.bignumber.equal(expectedIncrement)
-    // })
-
-    // it('should increment the buyer cryptoDollar token balance by 99% of invested value', async () => {
-    //   let initialBalance = await cryptoDollar.balanceOf(wallet1)
-    //   let etherValue = await getOrderEtherValue(defaultOrder.value)
-    //   let expectedIncrement = exchangeRate.times(etherValue)
-
-    //   await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-
-    //   let balance = await cryptoDollar.balanceOf(wallet1)
-    //   let increment = balance.minus(initialBalance)
-    //   increment.should.be.bignumber.equal(expectedIncrement)
-    // })
-
-    // it('should increment the buyer reserved ether balance by 99% of invested value', async () => {
-    //   let initialReservedEther = await cryptoDollar.guaranteedEther(wallet1)
-    //   let expectedIncrement = await getOrderWeiValue(defaultOrder.value)
-
-    //   await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-
-    //   let reservedEther = await cryptoDollar.guaranteedEther(wallet1)
-    //   let increment = reservedEther.minus(initialReservedEther)
-    //   increment.should.be.bignumber.equal(expectedIncrement)
-    // })
 })
