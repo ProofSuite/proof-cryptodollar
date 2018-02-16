@@ -256,10 +256,30 @@ const advanceToBlock = async(number) => {
   }
 }
 
+const advanceNBlocks = async(number) => {
+  let initialBlockNumber = web3.eth.blockNumber
+  if (number < 0) {
+    throw Error(`number should be a strictly positive number`)
+  }
+  while(web3.eth.blockNumber < initialBlockNumber + number) {
+    await advanceBlock()
+  }
+}
+
+
+/**
+ * @description Returns timestamp corresponding to latest block
+ * @returns {Number} Latest timestamp
+ */
 const latestTime = function() {
   return moment.unix(web3.eth.getBlock('latest').timestamp)
 }
 
+/**
+ * @description Advance EVM by a certain amount of time
+ * @param {Number} duration
+ * @returns {Promise}
+ */
 const increaseTime = function(duration) {
   const id = Date.now()
 
@@ -342,6 +362,7 @@ module.exports = {
   getTxnReceiptData,
   getTxnReceiptTopics,
   latestTime,
-  increaseTime
+  increaseTime,
+  advanceNBlocks
 }
 
