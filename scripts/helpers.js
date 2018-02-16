@@ -13,8 +13,8 @@ chai.use(chaiAsPromised)
 
 /**
  * @description Returns a promise that is resolve when transactions corresponding to input hashes are resolved
- * @param txnHashes {String[]}
- * @returns Promise resolved upon mining of all input transaction {Promise}
+ * @param {String[]} txnHashes - Array (or simple String) of transaction hashes
+ * @returns {Promise} resolved upon mining of all input transaction {Promise}
  */
 const waitUntilTransactionsMined = (txnHashes) => {
   var transactionReceiptAsync
@@ -48,7 +48,7 @@ const waitUntilTransactionsMined = (txnHashes) => {
 /**
  * @description Returns the balance of an ethereum wallet
  * @param address {String} - Ethereum address
- * @returns wallet balance {Number}
+ * @returns {Number} Wallet balance
  */
 const getWeiBalance = (address) => {
   let balance = web3.eth.getBalance(address)
@@ -58,7 +58,7 @@ const getWeiBalance = (address) => {
 /**
  * @description Returns the balance of several ethereum wallets (in wei)
  * @param addresses {String[]} - Array of ethereum addresses
- * @returns wallet balances (in wei) {Number[]}
+ * @returns {Number[]} wallet balances (in wei)
  */
 const getWeiBalances = (addresses) => {
   let balances = []
@@ -69,7 +69,7 @@ const getWeiBalances = (addresses) => {
 /**
  * @description Returns the balance of an ethereum wallet (in ether)
  * @param address {String} - Ethereum address
- * @returns wallet balance (in ether) {Number}
+ * @returns {Number} wallet balance (in ether)
  */
 const getEtherBalance = (address) => {
   let balance = web3.fromWei(web3.eth.getBalance(address), 'ether')
@@ -78,8 +78,8 @@ const getEtherBalance = (address) => {
 
 /**
  * @description Returns the balance of several ethereum wallets (in ether)
- * @param addresses {String[]}
- * @returns wallet balances (in ether) {Number[]}
+ * @param {String[]} addresses
+ * @returns {Number[]} wallet balances (in ether)
  */
 const getEtherBalances = (addresses) => {
   let balances = []
@@ -90,7 +90,7 @@ const getEtherBalances = (addresses) => {
 /**
  * @description Converts wei to ether
  * @param valueInWei {Number}
- * @returns valueInEther {Number}
+ * @returns {Number} Converted value in ether
  */
 const inEther = (valueInWei) => {
   let amount = web3.fromWei(valueInWei, 'ether')
@@ -99,8 +99,8 @@ const inEther = (valueInWei) => {
 
 /**
  * @description Converts ether to wei
- * @param valueInEther {Number}
- * @returns valueInWei {Number}
+ * @param {Number} valueInEther - Ether value to be converted
+ * @returns {Number} - Converted wei value
  */
 const inWei = (valueInEther) => {
   let amount = web3.toWei(valueInEther, 'ether')
@@ -110,8 +110,8 @@ const inWei = (valueInEther) => {
 // in our case the base units are cents
 /**
  * @description Convert tokens cents to token units
- * @param tokenCents {Number}
- * @returns token base units {Number}
+ * @param {Number} tokenCents - Value in token cents
+ * @returns {Number} token base units
  */
 const inBaseUnits = (tokenCents) => {
   return tokenCents / (10 ** 2)
@@ -119,8 +119,8 @@ const inBaseUnits = (tokenCents) => {
 
 /**
  * @description Converts token units to token cents
- * @param tokenBaseUnits {Number}
- * @returns token cents {Number}
+ * @param {Number} tokenBaseUnits
+ * @returns {Number} token cents
  */
 const inCents = (tokenBaseUnits) => {
   return tokenBaseUnits * (10 ** 2)
@@ -128,8 +128,8 @@ const inCents = (tokenBaseUnits) => {
 
 /**
  * @description Converts token base units (ERC20 units) to token units
- * @param tokenBaseUnits {Number}
- * @returns token units {Number}
+ * @param {Number} tokenBaseUnits
+ * @returns {Number} token units
  */
 const inTokenUnits = (tokenBaseUnits) => {
   return tokenBaseUnits / (10 ** 18)
@@ -147,7 +147,7 @@ const getAddress = async (contract) => {
 
 /**
  * @description Returns the addresses corresponding to an array of contracts
- * @param contracts {Object} Array of truffle contract objects
+ * @param contracts {Object} - Array of truffle contract objects
  * @returns address[] {String[]}
  */
 const getAddresses = async (contracts) => {
@@ -245,7 +245,7 @@ const advanceBlock = () => {
 
 /**
  * @description Advance to input block
- * @param number
+ * @param {Number} number
  */
 const advanceToBlock = async(number) => {
   if (web3.eth.blockNumber > number) {
@@ -283,6 +283,9 @@ const increaseTime = function(duration) {
   })
 }
 
+/**
+ * @description Not sure what this function does
+ */
 const getTxnReceiptData = (txnReceipt) => {
   let logs = txnReceipt.logs
   let dataArray = []
@@ -298,6 +301,11 @@ const getTxnReceiptData = (txnReceipt) => {
   return dataArray
 }
 
+/**
+ * @description Takes a transaction receipt as argument and returns a log of topics corresponding to this transaction
+ * @param {Object} txnReceipt
+ * @returns {Array} - Array of topics associated to the transaction receipt
+ */
 const getTxnReceiptTopics = (txnReceipt) => {
   let logs = txnReceipt.logs
 
