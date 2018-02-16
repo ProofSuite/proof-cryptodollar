@@ -5,7 +5,7 @@ import './libraries/CryptoDollarStorageProxy.sol';
 import './libraries/CryptoFiatStorageProxy.sol';
 import './interfaces/ProofTokenInterface.sol';
 import './interfaces/StoreInterface.sol';
-import './interfaces/ProofRewardsInterface.sol';
+import './interfaces/RewardsInterface.sol';
 import './interfaces/CryptoDollarInterface.sol';
 
 
@@ -17,7 +17,7 @@ contract CryptoFiatHub {
 
   CryptoDollarInterface public cryptoDollar;
   ProofTokenInterface public proofToken;
-  ProofRewardsInterface public proofRewards;
+  RewardsInterface public proofRewards;
   uint256 pointMultiplier = 10 ** 18;
   address public store;
   uint256 public exchangeRate;
@@ -28,7 +28,7 @@ contract CryptoFiatHub {
   function CryptoFiatHub(address _cryptoDollarAddress, address _storeAddress, address _proofTokenAddress, address _proofRewardsAddress) public {
     cryptoDollar = CryptoDollarInterface(_cryptoDollarAddress);
     proofToken = ProofTokenInterface(_proofTokenAddress);
-    proofRewards = ProofRewardsInterface(_proofRewardsAddress);
+    proofRewards = RewardsInterface(_proofRewardsAddress);
     store = _storeAddress;
     exchangeRate = 10000;
     uint256 initialBlockNumber = block.number;
@@ -62,7 +62,7 @@ contract CryptoFiatHub {
       uint256 bufferFee = value.div(200);
       uint256 paymentValue = value - tokenHoldersFee - bufferFee;
 
-      proofRewards.receiveDividends.value(tokenHoldersFee)();
+      proofRewards.receiveRewards.value(tokenHoldersFee)();
       uint256 tokenAmount = paymentValue.mul(exchangeRate).div(1 ether);
 
       cryptoDollar.buy(msg.sender, tokenAmount, paymentValue);

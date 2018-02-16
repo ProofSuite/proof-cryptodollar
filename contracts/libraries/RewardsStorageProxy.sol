@@ -30,7 +30,7 @@ library RewardsStorageProxy {
         return StoreInterface(_store).getUint(keccak256("dividends.currentPoolBalance"));
     }
 
-    function getNthPoolDividends(address _store, uint256 _index) public view returns(uint256) {
+    function getNthPoolBalance(address _store, uint256 _index) public view returns(uint256) {
         return StoreInterface(_store).getUint(keccak256("dividends.nthPoolBalance", _index));
     }
 
@@ -40,6 +40,10 @@ library RewardsStorageProxy {
 
     function getAccountLastWithdrawal(address _store, address _account) public view returns(uint256) {
         return StoreInterface(_store).getUint(keccak256("dividends.accounts.lastWithdrawal", _account));
+    }
+
+    function getBlocksPerEpoch(address _store) public view returns(uint256) {
+        return StoreInterface(_store).getUint(keccak256("dividends.blocksPerEpoch"));
     }
 
 
@@ -57,7 +61,7 @@ library RewardsStorageProxy {
         StoreInterface(_store).setUint(keccak256("dividends.currentPoolBalance"), _value);
     }
 
-    function setNthPoolDividends(address _store, uint256 _index, uint256 _value) public onlyAuthorized {
+    function setNthPoolBalance(address _store, uint256 _index, uint256 _value) public onlyAuthorized {
         StoreInterface(_store).setUint(keccak256("dividends.nthPoolBalance", _index), _value);
     }
 
@@ -67,6 +71,10 @@ library RewardsStorageProxy {
 
     function setAccountLastWithdrawal(address _store, address _account, uint256 _value) public onlyAuthorized {
         StoreInterface(_store).setUint(keccak256("dividends.accounts.lastWithdrawal", _account), _value);
+    }
+
+    function setBlocksPerEpoch(address _store, uint256 _value) public onlyAuthorized {
+        StoreInterface(_store).setUint(keccak256("dividends.blocksPerEpoch"), _value);
     }
 
 
