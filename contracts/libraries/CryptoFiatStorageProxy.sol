@@ -22,7 +22,6 @@ library CryptoFiatStorageProxy {
     }
 
 
-
     function setCreationTimestamp(address _store, uint256 _value) public onlyAuthorized {
         StoreInterface(_store).setUint(keccak256("cryptofiat.creationTimestamp"), _value);
     }

@@ -40,7 +40,7 @@ contract CryptoFiatHub {
   * @dev Is payable needed ?
   * @notice Sending ether to the contract will result in an error
   */
-  function () payable {
+  function () public payable {
     revert();
   }
 
