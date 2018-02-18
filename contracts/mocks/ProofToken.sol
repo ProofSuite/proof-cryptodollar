@@ -1,12 +1,12 @@
 pragma solidity ^0.4.15;
 
 import '../libraries/SafeMath.sol';
-import '../utils/Controllable.sol';
+import '../utils/Controlled.sol';
 import '../utils/ApproveAndCallReceiver.sol';
 import '../interfaces/ProofTokenInterface.sol';
 
 
-contract ProofToken is Controllable {
+contract ProofToken is Controlled {
 
   using SafeMath for uint256;
   ProofTokenInterface public parentToken;
