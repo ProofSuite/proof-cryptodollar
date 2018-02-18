@@ -27,6 +27,13 @@ contract CryptoDollar is Secured {
     revert();
   }
 
+
+  /**
+  * Standard ERC20 transfer tokens function
+  * @param _to {address}
+  * @param _amount {uint}
+  * @return success {bool}
+  */
   function transfer(address _to, uint _amount) public returns (bool success) {
     uint256 senderReservedEther = store.getReservedEther(msg.sender);
     uint256 senderBalance = store.getBalance(msg.sender);
@@ -42,7 +49,13 @@ contract CryptoDollar is Secured {
     return true;
   }
 
-
+  /**
+  * Standard ERC20 transferFrom function
+  * @param _from {address}
+  * @param _to {address}
+  * @param _amount {uint256}
+  * @return success {bool}
+  */
   function transferFrom(address _from, address _to, uint _amount) public returns (bool success) {
     uint256 senderReservedEther = store.getReservedEther(_from);
     uint256 senderBalance = store.getBalance(_from);
@@ -58,12 +71,23 @@ contract CryptoDollar is Secured {
     return true;
   }
 
-
+  /**
+  * Standard ERC20 approve function
+  * @param _spender {address}
+  * @param _amount {uint256}
+  * @return success {bool}
+  */
   function approve(address _spender, uint _value) public returns (bool success) {
     store.setAllowance(msg.sender, _spender, _value);
     return true;
   }
 
+  /**
+  * Standard ERC20 allowance function
+  * @param _owner {address}
+  * @param _spender {address}
+  * @return remaining {uint256}
+  */
   function allowance(address _owner, address _spender) public constant returns (uint256) {
     return store.getAllowance(_owner, _spender);
   }
