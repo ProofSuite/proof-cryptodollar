@@ -27,7 +27,14 @@ contract CryptoDollar is Secured {
     revert();
   }
 
-  function transfer(address _to, uint _amount) public returns (bool success) {
+
+  /**
+  * Standard ERC20 transfer tokens function
+  * @param _to {address}
+  * @param _amount {uint256}
+  * @return success {bool}
+  */
+  function transfer(address _to, uint256 _amount) public returns (bool success) {
     uint256 senderReservedEther = store.getReservedEther(msg.sender);
     uint256 senderBalance = store.getBalance(msg.sender);
     //TODO validate this is the appropriate and desired formula
@@ -42,8 +49,14 @@ contract CryptoDollar is Secured {
     return true;
   }
 
-
-  function transferFrom(address _from, address _to, uint _amount) public returns (bool success) {
+  /**
+  * Standard ERC20 transferFrom function
+  * @param _from {address}
+  * @param _to {address}
+  * @param _amount {uint256}
+  * @return success {bool}
+  */
+  function transferFrom(address _from, address _to, uint256 _amount) public returns (bool success) {
     uint256 senderReservedEther = store.getReservedEther(_from);
     uint256 senderBalance = store.getBalance(_from);
     uint256 etherValue = senderReservedEther.mul(_amount).div(senderBalance);
@@ -58,12 +71,23 @@ contract CryptoDollar is Secured {
     return true;
   }
 
-
-  function approve(address _spender, uint _value) public returns (bool success) {
-    store.setAllowance(msg.sender, _spender, _value);
+  /**
+  * Standard ERC20 approve function
+  * @param _spender {address}
+  * @param _amount {uint256}
+  * @return success {bool}
+  */
+  function approve(address _spender, uint256 _amount) public returns (bool success) {
+    store.setAllowance(msg.sender, _spender, _amount);
     return true;
   }
 
+  /**
+  * Standard ERC20 allowance function
+  * @param _owner {address}
+  * @param _spender {address}
+  * @return remaining {uint256}
+  */
   function allowance(address _owner, address _spender) public constant returns (uint256) {
     return store.getAllowance(_owner, _spender);
   }
@@ -71,10 +95,10 @@ contract CryptoDollar is Secured {
 
   /**
    @notice mints _amount tokens for _to and reserves _etherValue of ether
-   @param _to Address receiving CryptoDollar tokens
-   @param _amount Amount of minted CryptoDollar tokens
-   @param _etherValue Amount of ether that will be added to the receiver's reserved ether
-   @return True if the transaction is completed successfully
+   @param _to {address} - Address receiving CryptoDollar tokens
+   @param _amount {uint256} - Amount of minted CryptoDollar tokens
+   @param _etherValue {uint256} - Amount of ether that will be added to the receiver's reserved ether
+   @return {bool} - True if the transaction is completed successfully
    */
   function buy(address _to, uint256 _amount, uint256 _etherValue) public onlyAuthorized returns (bool) {
     store.incrementTotalSupply(_amount);
@@ -85,9 +109,9 @@ contract CryptoDollar is Secured {
 
   /**
    @notice burns _amount tokens and removes _etherValue of ether for _to
-   @param _to Address receiving CryptoDollar tokens
-   @param _amount Amount of minted CryptoDollar tokens
-   @param _etherValue Amount of ether that will be removed from the receiver's reserved ether
+   @param _to {address} - Address receiving CryptoDollar tokens
+   @param _amount {uint256} - Amount of minted CryptoDollar tokens
+   @param _etherValue {uint256} - Amount of ether that will be removed from the receiver's reserved ether
    @return True if the transaction is completed successfully
    */
   function sell(address _to, uint256 _amount, uint256 _etherValue) public onlyAuthorized returns (bool) {
@@ -99,7 +123,7 @@ contract CryptoDollar is Secured {
 
   /**
    @notice Returns the cryptodollar total supply via the storage contract
-   @return CryptoDollar total supply
+   @return CryptoDollar {uint256} - Total supply
    */
   function totalSupply() public view returns (uint256) {
     return store.getTotalSupply();
@@ -107,19 +131,19 @@ contract CryptoDollar is Secured {
 
   /**
   @notice Returns _owner CryptoDollar token balance via the storage contract
-  @param _owner Address of CryptoDollar token owner
-  @return CryptoDollar tokens balance of _owner
+  @param _owner {address} - Address of CryptoDollar token owner
+  @return CryptoDollar {uint256} tokens balance of _owner
    */
-  function balanceOf(address _owner) public constant returns(uint balance) {
+  function balanceOf(address _owner) public constant returns(uint256 balance) {
     return store.getBalance(_owner);
   }
 
   /**
   @notice Returns _owner Reserved ether balance by calling the storage contract
-  @param _owner Address of CryptoDollar token owner
-  @return Ether value reserved for _owner
+  @param _owner {address} - Address of CryptoDollar token owner
+  @return {uint256} - Ether value reserved for _owner
    */
-  function reservedEther(address _owner) public constant returns(uint value) {
+  function reservedEther(address _owner) public constant returns(uint256 value) {
     return store.getReservedEther(_owner);
   }
 
