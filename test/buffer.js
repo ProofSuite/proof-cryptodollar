@@ -1,21 +1,30 @@
+/* global  artifacts:true, web3: true, contract: true */
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
-import { getWeiBalance, waitUntilTransactionsMined } from '../scripts/helpers'
-import { getState } from '../scripts/cryptofiatHelpers'
+import { waitUntilTransactionsMined } from '../scripts/helpers'
 
 chai.use(chaiAsPromised)
     .use(require('chai-bignumber')(web3.BigNumber))
     .should()
 
 const should = chai.should()
-const CryptoFiatHub = artifacts.require('CryptoFiatHub.sol')
+
+const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
+const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
+const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
+const SafeMath = artifacts.require('./libraries/SafeMath.sol')
+const CryptoDollar = artifacts.require('./CryptoDollar.sol')
+const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
+const ProofToken = artifacts.require('./mocks/ProofToken.sol')
+const Store = artifacts.require("./Store.sol")
+const Rewards = artifacts.require("./Rewards.sol")
 
 contract('Buffer', (accounts) => {
-  let cryptoFiatHub
+  let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath
+  let store, proofToken, cryptoDollar, rewards, cryptoFiatHub
   let fund = accounts[0]
   let wallet1 = accounts[1]
-  let wallet2 = accounts[2]
   let initialExchangeRate
   let updatedExchangeRate
   let funding
@@ -35,8 +44,36 @@ contract('Buffer', (accounts) => {
 
   buffer = contractbalance - outstanding = 11 ether - 1000 cryptodollar tokens = 11 ether - 100 ether = - 89 ether
   **/
-  before(async () => {
-    cryptoFiatHub = await CryptoFiatHub.deployed()
+  beforeEach(async() => {
+    // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+    // state for each test so we redeploy all libraries an other contracts every time.
+    rewardsStorageProxy = await RewardsStorageProxy.new()
+    cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
+    cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
+    safeMath = await SafeMath.new()
+
+    // Linking libraries
+    await ProofToken.link(SafeMath, safeMath.address)
+    await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
+    await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
+    await CryptoDollar.link(SafeMath, safeMath.address)
+    await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
+    await CryptoFiatHub.link(SafeMath, safeMath.address)
+    await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
+    await Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address)
+    await Rewards.link(SafeMath, safeMath.address)
+
+    store = await Store.new()
+    proofToken = await ProofToken.new()
+    cryptoDollar = await CryptoDollar.new(store.address)
+    rewards = await Rewards.new(store.address, proofToken.address)
+    cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
+
+    await store.authorizeAccess(cryptoFiatHub.address)
+    await store.authorizeAccess(cryptoDollar.address)
+    await store.authorizeAccess(rewards.address)
+    await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
+
     initialExchangeRate = await cryptoFiatHub.exchangeRate.call()
     updatedExchangeRate = initialExchangeRate / 10
     funding = 1 * ether
@@ -44,7 +81,11 @@ contract('Buffer', (accounts) => {
     rewardsFee = 0.005 * payment
     bufferFee = 0.005 * payment
 
-    let txn = await cryptoFiatHub.capitalize({ from: fund, value: funding })
+    let txn
+    let blocksPerEpoch = 20
+    txn = await cryptoFiatHub.initialize(blocksPerEpoch)
+    await waitUntilTransactionsMined(txn.tx)
+    txn = await cryptoFiatHub.capitalize({ from: fund, value: funding })
     await waitUntilTransactionsMined(txn.tx)
   })
 
@@ -65,10 +106,8 @@ contract('Buffer', (accounts) => {
     })
   })
 
-
   describe('Buffer state', async () => {
-
-    before(async() => {
+    beforeEach(async() => {
       let txn = await cryptoFiatHub.buyCryptoDollar({ from: wallet1, value: 1 * ether })
       await waitUntilTransactionsMined(txn.tx)
     })
@@ -88,15 +127,16 @@ contract('Buffer', (accounts) => {
     it('buffer should be equal to initial buffer + buffer fee', async () => {
       let buffer = await cryptoFiatHub.buffer()
       let expectedBuffer = funding + bufferFee
-
       buffer.should.be.bignumber.equal(expectedBuffer)
     })
   })
 
-
   describe('Buffer (Unpegged) state', async () => {
-    before(async() => {
-      let txn = await cryptoFiatHub.setExchangeRate(updatedExchangeRate)
+    beforeEach(async() => {
+      let txn
+      txn = await cryptoFiatHub.buyCryptoDollar({ from: wallet1, value: 1 * ether })
+      await waitUntilTransactionsMined(txn.tx)
+      txn = await cryptoFiatHub.setExchangeRate(updatedExchangeRate)
       await waitUntilTransactionsMined(txn.tx)
     })
 

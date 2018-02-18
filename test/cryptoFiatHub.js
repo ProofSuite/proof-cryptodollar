@@ -1,6 +1,6 @@
+/* global  artifacts:true, web3: true, contract: true */
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
-import { BigNumber } from 'bignumber.js'
 import { getFee, getOrderEtherValue, getOrderWeiValue } from '../scripts/cryptoFiatHelpers'
 import { getWeiBalance } from '../scripts/helpers'
 
@@ -9,26 +9,60 @@ chai.use(chaiAsPromised)
     .should()
 
 const should = chai.should()
-const CryptoDollar = artifacts.require('CryptoDollar.sol')
-const CryptoFiatHub = artifacts.require('CryptoFiatHub.sol')
-const CryptoFiatStorageProxy = artifacts.require('CryptoFiatStorageProxy.sol')
-const Rewards = artifacts.require('./Rewards.sol')
-const Store = artifacts.require('./Store.sol')
+const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
+const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
+const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
+const SafeMath = artifacts.require('./libraries/SafeMath.sol')
+const CryptoDollar = artifacts.require('./CryptoDollar.sol')
+const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
+const ProofToken = artifacts.require('./mocks/ProofToken.sol')
+const Store = artifacts.require("./Store.sol")
+const Rewards = artifacts.require("./Rewards.sol")
 
 contract('Cryptofiat Hub', (accounts) => {
-  let store
-  let cryptoDollar
-  let cryptoFiatStorageProxy
-  let cryptoFiatHub
-  let rewards
+  let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath
+  let store, proofToken, cryptoDollar, rewards, cryptoFiatHub
   let wallet1 = accounts[0]
 
   beforeEach(async () => {
-    store = await Store.deployed()
-    cryptoDollar = await CryptoDollar.deployed()
-    cryptoFiatHub = await CryptoFiatHub.deployed()
-    rewards = await Rewards.deployed()
-    cryptoFiatStorageProxy = await CryptoFiatStorageProxy.deployed()
+    // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+    // state for each test so we redeploy all libraries an other contracts every time.
+    rewardsStorageProxy = await RewardsStorageProxy.new()
+    cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
+    cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
+    safeMath = await SafeMath.new()
+
+    // Link Libraries
+    await ProofToken.link(SafeMath, safeMath.address)
+    await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
+    await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
+    await CryptoDollar.link(SafeMath, safeMath.address)
+    await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
+    await CryptoFiatHub.link(SafeMath, safeMath.address)
+    await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
+    await Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address)
+    await Rewards.link(SafeMath, safeMath.address)
+
+    // Contracts are deployed with a blank state for each test
+    store = await Store.new()
+    proofToken = await ProofToken.new()
+    cryptoDollar = await CryptoDollar.new(store.address)
+    rewards = await Rewards.new(store.address, proofToken.address)
+    cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
+
+    /**
+     * allow store access and initialize the cryptofiat system and initialize the CryptoFiatHub
+     * with a 20 blocks epoch.
+     * The number of blocks per epoch should be increased to reflect the production behavior.
+     * The choice of 20 blocks has been made solely for testing purposes as mining the test EVM
+     * requires a significant amount of time (40 blocks ~ 5-10 seconds). Final tests should be run
+     * with bigger epochs.
+     */
+    await store.authorizeAccess(cryptoFiatHub.address)
+    await store.authorizeAccess(cryptoDollar.address)
+    await store.authorizeAccess(rewards.address)
+    await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
+    await cryptoFiatHub.initialize(20)
   })
 
   describe('State variables', async () => {
@@ -53,14 +87,11 @@ contract('Cryptofiat Hub', (accounts) => {
     })
   })
 
-
-
-
   describe('Buying Tokens', async () => {
     let defaultOrder
     let exchangeRate
 
-    before(async () => {
+    beforeEach(async () => {
       defaultOrder = { from: wallet1, value: 1 * 10 ** 18 }
       exchangeRate = await cryptoFiatHub.exchangeRate.call()
     })
@@ -70,13 +101,13 @@ contract('Cryptofiat Hub', (accounts) => {
     })
 
     it('should increase the rewards contract balance by 0.5% of investment value', async () => {
-      let initialBalance = await getWeiBalance(Rewards.address)
+      let initialBalance = await getWeiBalance(rewards.address)
       let fee = getFee(defaultOrder.value, 0.005)
       let expectedPoolBalance = initialBalance + fee
 
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
 
-      let balance = await getWeiBalance(Rewards.address)
+      let balance = await getWeiBalance(rewards.address)
       balance.should.be.bignumber.equal(expectedPoolBalance)
     })
 
@@ -131,8 +162,12 @@ contract('Cryptofiat Hub', (accounts) => {
     let params
     let exchangeRate
     let tokens
+    let defaultOrder
 
-    before(async () => {
+    beforeEach(async () => {
+      defaultOrder = { from: wallet1, value: 1 * 10 ** 18 }
+      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
+
       params = { from: wallet1, gasPrice: 10 * 10 ** 9 }
       exchangeRate = await cryptoFiatHub.exchangeRate.call()
       tokens = 100

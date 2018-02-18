@@ -1,3 +1,4 @@
+/* global  artifacts:true, contract: true */
 import chai from 'chai'
 
 chai.use(require('chai-bignumber')())
@@ -10,12 +11,13 @@ contract('RewardsStorageProxy', (accounts) => {
   let store
   let rewardsStorageProxy
 
-  describe('Pool index', async () => {
-    beforeEach(async () => {
-      store = await Store.new()
-      rewardsStorageProxy = await RewardsStorageProxy.new()
-    })
+  beforeEach(async() => {
+    store = await Store.new()
+    rewardsStorageProxy = await RewardsStorageProxy.new()
+    await store.authorizeAccess(rewardsStorageProxy.address)
+  })
 
+  describe('Pool index', async () => {
     it('should set and get current pool index', async () => {
       let poolIndex
       let expectedPoolIndex = 1
@@ -36,11 +38,6 @@ contract('RewardsStorageProxy', (accounts) => {
   })
 
   describe('Current Epoch', async () => {
-    beforeEach(async () => {
-      store = await Store.new()
-      rewardsStorageProxy = await RewardsStorageProxy.new()
-    })
-
     it('should set and get current epoch', async () => {
       let epoch
       let expectedEpoch = 1
@@ -61,11 +58,6 @@ contract('RewardsStorageProxy', (accounts) => {
   })
 
   describe('Current Pool Balance', async () => {
-    beforeEach(async () => {
-      store = await Store.new()
-      rewardsStorageProxy = await RewardsStorageProxy.new()
-    })
-
     it('should set and get current pool balance', async () => {
       let poolBalance
       let expectedPoolBalance = 1
@@ -85,13 +77,7 @@ contract('RewardsStorageProxy', (accounts) => {
     })
   })
 
-
   describe('Nth pool dividends', async() => {
-    beforeEach(async () => {
-      store = await Store.new()
-      rewardsStorageProxy = await RewardsStorageProxy.new()
-    })
-
     it('should set and get Nth pool dividends', async () => {
       let dividends
       let poolIndex = 1
@@ -114,11 +100,6 @@ contract('RewardsStorageProxy', (accounts) => {
   })
 
   describe('Account Last withdrawal', async() => {
-    beforeEach(async() => {
-      store = await Store.new()
-      rewardsStorageProxy = await RewardsStorageProxy.new()
-    })
-
     it('should set and get the last account withdrawal', async() => {
       let account = "0x3712501089ae5b863c4ff8fc32d4193fd52519e4"
       let storedValue = 10

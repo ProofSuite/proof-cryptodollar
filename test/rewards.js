@@ -1,3 +1,4 @@
+/* global  artifacts:true, web3: true, contract: true */
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants.js'
@@ -38,7 +39,6 @@ contract('Rewards', (accounts) => {
   let creationBlockNumber, epoch1, epoch2
 
   beforeEach(async() => {
-
     blocksPerEpoch = 20
 
     // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
@@ -68,11 +68,17 @@ contract('Rewards', (accounts) => {
 
     // We deploy the rest of the contracts. The Proof tokens are already allocated before the first epoch
     store = await Store.new()
-    rewards = await Rewards.new(store.address, proofToken.address, blocksPerEpoch)
+    rewards = await Rewards.new(store.address, proofToken.address)
     cryptoDollar = await CryptoDollar.new(store.address)
     cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
 
-    // Testing
+    await store.authorizeAccess(cryptoFiatHub.address)
+    await store.authorizeAccess(cryptoDollar.address)
+    await store.authorizeAccess(rewards.address)
+    await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
+
+    await cryptoFiatHub.initialize(blocksPerEpoch)
+
     creationBlockNumber = await cryptoFiatStorageProxy.getCreationBlockNumber(store.address)
     epoch1 = creationBlockNumber.plus(blocksPerEpoch).toNumber()
     epoch2 = creationBlockNumber.plus(2 * blocksPerEpoch).toNumber()

@@ -1,3 +1,4 @@
+/* global  artifacts:true, web3: true, contract: true */
 import chai from 'chai'
 
 chai.use(require('chai-bignumber')())
@@ -10,36 +11,30 @@ contract('CryptoFiatStorageProxy', (accounts) => {
   let store
   let cryptofiatStorageProxy
 
-  describe('Creation timestamp', async () => {
-    beforeEach(async () => {
-      store = await Store.new()
-      cryptofiatStorageProxy = await CryptofiatStorageProxy.new()
-    })
+  beforeEach(async () => {
+    store = await Store.new()
+    cryptofiatStorageProxy = await CryptofiatStorageProxy.new()
+    await store.authorizeAccess(cryptofiatStorageProxy.address)
+  })
 
+  describe('Creation timestamp', async () => {
     it('should set and get start timestamp', async () => {
       let storedValue
       let expectedValue = 1517486489
 
       await cryptofiatStorageProxy.setCreationTimestamp(store.address, expectedValue)
       storedValue = await cryptofiatStorageProxy.getCreationTimestamp(store.address)
-
       storedValue.toNumber().should.be.equal(expectedValue)
     })
   })
 
   describe('Creation Block Number', async () => {
-    beforeEach(async () => {
-      store = await Store.new()
-      cryptofiatStorageProxy = await CryptofiatStorageProxy.new()
-    })
-
     it('should set and get the initial block number', async () => {
       let storedValue
       let expectedValue = 5011402
 
       await cryptofiatStorageProxy.setCreationBlockNumber(store.address, expectedValue)
       storedValue = await cryptofiatStorageProxy.getCreationBlockNumber(store.address)
-
       storedValue.toNumber().should.be.equal(expectedValue)
     })
   })

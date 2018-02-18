@@ -1,8 +1,8 @@
+/* global  artifacts:true, web3: true, contract: true */
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
-import { BigNumber } from 'bignumber.js'
 import { ether } from '../scripts/constants'
-import { getWeiBalance, waitUntilTransactionsMined, expectInvalidOpcode } from '../scripts/helpers'
+import { waitUntilTransactionsMined, expectInvalidOpcode } from '../scripts/helpers'
 import { getState } from '../scripts/cryptofiatHelpers'
 
 chai.use(chaiAsPromised)
@@ -36,17 +36,17 @@ contract('Cryptofiat Hub', (accounts) => {
   Thus buffer = contractbalance - outstanding = 11 ether - 1000 cryptodollar tokens = 11 ether - 100 ether = - 89 ether
   **/
   before(async () => {
-    //we use the already deployed cryptofiathub contract
+    // we use the already deployed cryptofiathub contract
     cryptoFiatHub = await CryptoFiatHub.deployed()
     cryptoDollar = await CryptoDollar.deployed()
 
-    //Standard scenario with an initial funding of 1 ether and payment (buy value) of 1 ether.
+    // Standard scenario with an initial funding of 1 ether and payment (buy value) of 1 ether.
     funding = 1 * ether
     payment = 1 * ether
 
-    //In this scenario, the initial exchange rate is 1 ETH = 100 USD (exchangeRate = 10000)
-    //The updated exchange rate is 1 ETH = 10 USD (exchangeRate 1000)
-    //The exchange rate is actually representing ethers to cents
+    // In this scenario, the initial exchange rate is 1 ETH = 100 USD (exchangeRate = 10000)
+    // The updated exchange rate is 1 ETH = 10 USD (exchangeRate 1000)
+    // The exchange rate is actually representing ethers to cents
     initialExchangeRate = await cryptoFiatHub.exchangeRate.call()
     updatedExchangeRate = initialExchangeRate / 10
 

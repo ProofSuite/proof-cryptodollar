@@ -3,12 +3,13 @@ pragma solidity ^0.4.18;
 import './interfaces/ERC20.sol';
 import './libraries/SafeMath.sol';
 import './utils/Ownable.sol';
+import './utils/Secured.sol';
 
 import './libraries/CryptoDollarStorageProxy.sol';
 import './libraries/CryptoFiatStorageProxy.sol';
 
 
-contract CryptoDollar {
+contract CryptoDollar is Secured {
   using SafeMath for uint256;
   using CryptoDollarStorageProxy for address;
   using CryptoFiatStorageProxy for address;
@@ -75,7 +76,7 @@ contract CryptoDollar {
    @param _etherValue Amount of ether that will be added to the receiver's reserved ether
    @return True if the transaction is completed successfully
    */
-  function buy(address _to, uint256 _amount, uint256 _etherValue) public returns (bool) {
+  function buy(address _to, uint256 _amount, uint256 _etherValue) public onlyAuthorized returns (bool) {
     store.incrementTotalSupply(_amount);
     store.incrementBalance(_to, _amount);
     store.incrementReservedEther(_to, _etherValue);
@@ -89,7 +90,7 @@ contract CryptoDollar {
    @param _etherValue Amount of ether that will be removed from the receiver's reserved ether
    @return True if the transaction is completed successfully
    */
-  function sell(address _to, uint256 _amount, uint256 _etherValue) public returns (bool) {
+  function sell(address _to, uint256 _amount, uint256 _etherValue) public onlyAuthorized returns (bool) {
     store.decrementTotalSupply(_amount);
     store.decrementBalance(_to, _amount);
     store.decrementReservedEther(_to, _etherValue);
