@@ -25,12 +25,10 @@ contract Rewards {
    *
    * @param _storeAddress {address} - Address of the Proof storage contract
    * @param _PRFTAddress {address} - Address of the Proof token address
-   * @param _blocksPerEpoch {uint256} - Number of blocks per epoch
    */
-  function Rewards(address _storeAddress, address _PRFTAddress, uint256 _blocksPerEpoch) public {
+  function Rewards(address _storeAddress, address _PRFTAddress) public {
     store = _storeAddress;
     proofToken = ProofTokenInterface(_PRFTAddress);
-    store.setBlocksPerEpoch(_blocksPerEpoch);
   }
 
   /**
