@@ -3,6 +3,7 @@ pragma solidity ^0.4.18;
 import './libraries/SafeMath.sol';
 import './libraries/CryptoDollarStorageProxy.sol';
 import './libraries/CryptoFiatStorageProxy.sol';
+import './libraries/RewardsStorageProxy.sol';
 import './interfaces/ProofTokenInterface.sol';
 import './interfaces/StoreInterface.sol';
 import './interfaces/RewardsInterface.sol';
@@ -13,6 +14,7 @@ import './interfaces/CryptoDollarInterface.sol';
 contract CryptoFiatHub {
   using SafeMath for uint256;
   using CryptoFiatStorageProxy for address;
+  using RewardsStorageProxy for address;
 
 
   CryptoDollarInterface public cryptoDollar;
@@ -31,8 +33,16 @@ contract CryptoFiatHub {
     proofRewards = RewardsInterface(_proofRewardsAddress);
     store = _storeAddress;
     exchangeRate = 10000;
-    uint256 initialBlockNumber = block.number;
-    store.setCreationBlockNumber(initialBlockNumber);
+  }
+
+
+  /**
+   * @notice initialize() initialize the CryptoFiat smart contract system (CryptoFiat/CryptoDollar/Rewards)
+   * @param {uint256} _blocksPerEpoch - Number of blocks per reward epoch.
+   */
+  function initialize(uint256 _blocksPerEpoch) public {
+    store.setCreationBlockNumber(block.number);
+    store.setBlocksPerEpoch(_blocksPerEpoch);
   }
 
 
