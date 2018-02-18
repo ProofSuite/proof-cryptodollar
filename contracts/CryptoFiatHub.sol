@@ -38,7 +38,7 @@ contract CryptoFiatHub {
 
   /**
    * @notice initialize() initialize the CryptoFiat smart contract system (CryptoFiat/CryptoDollar/Rewards)
-   * @param {uint256} _blocksPerEpoch - Number of blocks per reward epoch.
+   * @param _blocksPerEpoch {uint256} - Number of blocks per reward epoch.
    */
   function initialize(uint256 _blocksPerEpoch) public {
     store.setCreationBlockNumber(block.number);
