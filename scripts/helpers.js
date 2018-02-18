@@ -1,9 +1,9 @@
+/* global web3: true */
 import moment from 'moment'
 
 /**
  * @module Helpers
  */
-
 var Promise = require('bluebird')
 let chai = require('chai')
 var chaiAsPromised = require('chai-as-promised')
@@ -62,7 +62,7 @@ const getWeiBalance = (address) => {
  */
 const getWeiBalances = (addresses) => {
   let balances = []
-  addresses.map(function (address) { balances.push(getBalance(address)) })
+  addresses.map(function (address) { balances.push(getWeiBalance(address)) })
   return balances
 }
 
