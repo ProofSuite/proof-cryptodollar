@@ -11,7 +11,7 @@ contract SecureContract is Secured {
 
   }
 
-  function get() public returns (bool) {
+  function get() public view returns (bool) {
     return a;
   }
 

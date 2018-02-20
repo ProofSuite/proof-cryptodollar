@@ -297,7 +297,7 @@ contract ProofToken is Controlled {
   }
 
 
-  function min(uint256 a, uint256 b) internal constant returns (uint) {
+  function min(uint256 a, uint256 b) internal pure returns (uint) {
       return a < b ? a : b;
   }
 }
