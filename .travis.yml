@@ -26,5 +26,5 @@ install:
 
 
 script:
-  - testrpc &
+  - testrpc & ./start_rpc.sh
   - truffle test
