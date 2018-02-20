@@ -130,16 +130,16 @@ contract('Secured', (accounts) => {
       authorized.wallet2 = await securedContract.isAuthorized(wallet2)
       authorized.wallet3 = await securedContract.isAuthorized(wallet3)
 
-      authorized.wallet2.should.be.equal.true
-      authorized.wallet3.should.be.equal.false
+      authorized.wallet2.should.be.true
+      authorized.wallet3.should.be.false
 
       await expectInvalidOpcode(securedContract.replaceAccess(wallet2, wallet3, { from: wallet3 }))
 
       authorized.wallet2 = await securedContract.isAuthorized(wallet2)
       authorized.wallet3 = await securedContract.isAuthorized(wallet3)
 
-      authorized.wallet2.should.be.equal.true
-      authorized.wallet3.should.be.equal.false
+      authorized.wallet2.should.be.true
+      authorized.wallet3.should.be.false
     })
 
     it('getAuthorizations() should return a list of authorized addresses', async() => {
