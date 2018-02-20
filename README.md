@@ -25,7 +25,7 @@ Although currently not implemented, an upcoming version of this smart-contract i
 - OSX or Linux (Windows setup is likely possible but not covered in this guide)
 - Node (version 8.9.4 recommended)
 - Solidity Compiler (version 0.4.18 or other)
-- testrpc
+- Ganache-cli (v6.0.3)
 
 
 #### Testing Environment Setup :
@@ -38,7 +38,7 @@ cd ProofCryptoFiat
 npm install
 ```
 
-- Install the latest version of truffle (Truffle v4.0.5)
+- Install the latest version of truffle (Truffle v4.0.6)
 
 
 ```
@@ -53,7 +53,7 @@ truffle compile
 - Initialize testrpc (or geth)
 
 ```
-testrpc
+./start_rpc.sh
 ```
 
 - Migrate contracts to chosen network
