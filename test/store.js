@@ -1,6 +1,6 @@
 /* global  artifacts:true, web3: true, contract: true */
 import chai from 'chai'
-import { expectInvalidOpcode } from '../scripts/helpers'
+import { expectRevert } from '../scripts/helpers'
 
 chai.should()
 
@@ -98,45 +98,45 @@ contract('Store', (accounts) => {
       const value = 2 ** 250
       const key = web3.sha3('test')
 
-      await expectInvalidOpcode(store.setInt(key, value, { from: hacker }))
+      await expectRevert(store.setInt(key, value, { from: hacker }))
       await store.setInt(key, value, { from: admin })
-      await expectInvalidOpcode(store.deleteInt(key, { from: hacker }))
+      await expectRevert(store.deleteInt(key, { from: hacker }))
     })
 
     it('should not be able to set or delete an uint', async () => {
       const value = 2 ** 255
       const key = web3.sha3('test')
 
-      await expectInvalidOpcode(store.setUint(key, value, { from: hacker }))
+      await expectRevert(store.setUint(key, value, { from: hacker }))
       await store.setInt(key, value, { from: admin })
-      await expectInvalidOpcode(store.deleteUint(key, { from: hacker }))
+      await expectRevert(store.deleteUint(key, { from: hacker }))
     })
 
     it('should not be able to set or delete an address', async () => {
       const value = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
       const key = web3.sha3('test')
 
-      await expectInvalidOpcode(store.setAddress(key, value, { from: hacker }))
+      await expectRevert(store.setAddress(key, value, { from: hacker }))
       await store.setAddress(key, value, { from: admin })
-      await expectInvalidOpcode(store.deleteAddress(key, { from: hacker }))
+      await expectRevert(store.deleteAddress(key, { from: hacker }))
     })
 
     it('should not be able to set or delete a string', async () => {
       const value = 'hey tai'
       const key = web3.sha3('test')
 
-      await expectInvalidOpcode(store.setString(key, value, { from: hacker }))
+      await expectRevert(store.setString(key, value, { from: hacker }))
       await store.setString(key, value, { from: admin })
-      await expectInvalidOpcode(store.deleteString(key, { from: hacker }))
+      await expectRevert(store.deleteString(key, { from: hacker }))
     })
 
     it('should not be able to set or delete boolean', async () => {
       const value = true
       const key = web3.sha3('test')
 
-      await expectInvalidOpcode(store.setBool(key, value, { from: hacker }))
+      await expectRevert(store.setBool(key, value, { from: hacker }))
       await store.setBool(key, value, { from: admin })
-      await expectInvalidOpcode(store.deleteBool(key, { from: hacker }))
+      await expectRevert(store.deleteBool(key, { from: hacker }))
     })
   })
 })
