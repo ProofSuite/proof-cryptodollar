@@ -24,8 +24,9 @@ before_install:
 install:
   - npm install
 
-script:
+before_script:
   - ./start_rpc.sh > testrpc.log &
+script:
   - sleep 5
   - truffle test
 after_script:
