@@ -1,4 +1,5 @@
 // Allows us to use ES6 in our migrations and tests.
+require('dotenv').config()
 var config = require('./config')
 var private = require('./private-config')
 

@@ -1,5 +1,5 @@
 #configuration
-private-config.js
+.env
 
 # Logs
 logs
