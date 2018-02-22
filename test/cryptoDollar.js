@@ -2,7 +2,7 @@
 import chai from 'chai'
 import chaiStats from 'chai-stats'
 
-import { expectInvalidOpcode, waitUntilTransactionsMined } from '../scripts/helpers.js'
+import { expectRevert, waitUntilTransactionsMined } from '../scripts/helpers.js'
 import { ether } from '../scripts/constants.js'
 
 chai.use(require('chai-bignumber')(web3.BigNumber))
@@ -81,7 +81,7 @@ contract('CryptoDollar', (accounts) => {
 
   describe('Fallback function', async () => {
     it('should return invalid opcode', async () => {
-      await expectInvalidOpcode(cryptoDollar.send(1 * ether), { from: sender })
+      await expectRevert(cryptoDollar.send(1 * ether), { from: sender })
     })
   })
 

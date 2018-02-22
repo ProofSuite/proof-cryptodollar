@@ -3,7 +3,7 @@ import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
 import { waitUntilTransactionsMined, expectInvalidOpcode } from '../scripts/helpers'
-import { getState } from '../scripts/cryptofiatHelpers'
+import { getState } from '../scripts/cryptoFiatHelpers'
 
 chai.use(chaiAsPromised)
     .use(require('chai-bignumber')(web3.BigNumber))

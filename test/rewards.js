@@ -2,7 +2,7 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants.js'
-import { expectInvalidOpcode, advanceToBlock, waitUntilTransactionsMined } from '../scripts/helpers'
+import { expectRevert, advanceToBlock, waitUntilTransactionsMined } from '../scripts/helpers'
 import { computeEpoch } from '../scripts/rewardsHelpers'
 
 chai.use(chaiAsPromised)
@@ -114,7 +114,7 @@ contract('Rewards', (accounts) => {
 
     it('should throw an invalid opcode if calling receiveRewards() with an null value', async () => {
       let emptyTx = { from: fund, value: 0 * ether }
-      await expectInvalidOpcode(rewards.receiveRewards(emptyTx))
+      await expectRevert(rewards.receiveRewards(emptyTx))
     })
   })
 
@@ -180,7 +180,7 @@ contract('Rewards', (accounts) => {
 
   describe('Withdraw rewards', async() => {
     it('withdrawRewards() should throw if the caller already withdraw dividends during this epoch', async() => {
-      await expectInvalidOpcode(rewards.withdrawRewards({ from: wallet }))
+      await expectRevert(rewards.withdrawRewards({ from: wallet }))
     })
 
     it('withdrawRewards() should return half of the dividends corresponding to the pool of the previous epoch', async() => {

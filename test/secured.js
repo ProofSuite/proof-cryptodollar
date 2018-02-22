@@ -1,6 +1,6 @@
 /* global  artifacts:true, contract: true */
 import chai from 'chai'
-import { expectInvalidOpcode, waitUntilTransactionsMined } from '../scripts/helpers'
+import { expectRevert, expectInvalidOpcode, waitUntilTransactionsMined } from '../scripts/helpers'
 
 chai.should()
 
@@ -31,7 +31,7 @@ contract('Secured', (accounts) => {
     })
 
     it('only owner should be able to transfer ownership', async() => {
-      await expectInvalidOpcode(securedContract.transferOwnership(wallet2, { from: wallet2 }))
+      await expectRevert(securedContract.transferOwnership(wallet2, { from: wallet2 }))
 
       let owner = await securedContract.owner.call()
       owner.should.be.equal(wallet1)
@@ -46,7 +46,7 @@ contract('Secured', (accounts) => {
     })
 
     it('non owner wallet should not be able to lock ownership', async() => {
-      await expectInvalidOpcode(securedContract.lockOwnership({ from: wallet2 }))
+      await expectRevert(securedContract.lockOwnership({ from: wallet2 }))
 
       let locked = await securedContract.locked.call()
       locked.should.be.equal(false)
@@ -113,7 +113,7 @@ contract('Secured', (accounts) => {
     })
 
     it('only the owner should be able to authorize access', async() => {
-      await expectInvalidOpcode(securedContract.authorizeAccess(wallet2, { from: wallet2 }))
+      await expectRevert(securedContract.authorizeAccess(wallet2, { from: wallet2 }))
     })
 
     it('only the owner should be able to revoke access', async() => {
@@ -121,7 +121,7 @@ contract('Secured', (accounts) => {
       let authorization = await securedContract.isAuthorized(wallet2)
       authorization.should.be.true
 
-      await expectInvalidOpcode(securedContract.revokeAccess(wallet2, { from: wallet3 }))
+      await expectRevert(securedContract.revokeAccess(wallet2, { from: wallet3 }))
     })
 
     it('only the owner should be able to replace access', async() => {
@@ -130,16 +130,16 @@ contract('Secured', (accounts) => {
       authorized.wallet2 = await securedContract.isAuthorized(wallet2)
       authorized.wallet3 = await securedContract.isAuthorized(wallet3)
 
-      authorized.wallet2.should.be.equal.true
-      authorized.wallet3.should.be.equal.false
+      authorized.wallet2.should.be.true
+      authorized.wallet3.should.be.false
 
-      await expectInvalidOpcode(securedContract.replaceAccess(wallet2, wallet3, { from: wallet3 }))
+      await expectRevert(securedContract.replaceAccess(wallet2, wallet3, { from: wallet3 }))
 
       authorized.wallet2 = await securedContract.isAuthorized(wallet2)
       authorized.wallet3 = await securedContract.isAuthorized(wallet3)
 
-      authorized.wallet2.should.be.equal.true
-      authorized.wallet3.should.be.equal.false
+      authorized.wallet2.should.be.true
+      authorized.wallet3.should.be.false
     })
 
     it('getAuthorizations() should return a list of authorized addresses', async() => {
@@ -160,7 +160,7 @@ contract('Secured', (accounts) => {
     })
 
     it('non owner should not be able to lock authorizations', async() => {
-      await expectInvalidOpcode(securedContract.lockAuthorizations({ from: wallet2 }))
+      await expectRevert(securedContract.lockAuthorizations({ from: wallet2 }))
 
       let authorizationsLocked = await securedContract.authorizationsLocked.call()
       authorizationsLocked.should.be.false
@@ -169,7 +169,7 @@ contract('Secured', (accounts) => {
     it('owner should not be able to authorize access if authorizations have been locked', async() => {
       await securedContract.lockAuthorizations()
 
-      await expectInvalidOpcode(securedContract.authorizeAccess(wallet2))
+      await expectRevert(securedContract.authorizeAccess(wallet2))
       let authorized = await securedContract.isAuthorized(wallet2)
       authorized.should.be.false
     })
@@ -178,7 +178,7 @@ contract('Secured', (accounts) => {
       await securedContract.authorizeAccess(wallet2)
       await securedContract.lockAuthorizations()
 
-      await expectInvalidOpcode(securedContract.revokeAccess(wallet2))
+      await expectRevert(securedContract.revokeAccess(wallet2))
       let authorized = await securedContract.isAuthorized(wallet2)
       authorized.should.be.true
     })
@@ -188,7 +188,7 @@ contract('Secured', (accounts) => {
       await securedContract.authorizeAccess(wallet2)
       await securedContract.lockAuthorizations()
 
-      await expectInvalidOpcode(securedContract.replaceAccess(wallet2, wallet3))
+      await expectRevert(securedContract.replaceAccess(wallet2, wallet3))
       authorized.wallet2 = await securedContract.isAuthorized(wallet2)
       authorized.wallet3 = await securedContract.isAuthorized(wallet3)
       authorized.wallet2.should.be.true
@@ -206,7 +206,7 @@ contract('Secured', (accounts) => {
     })
 
     it('non-authorized address should not be able to update data', async() => {
-      await expectInvalidOpcode(securedContract.set(true, { from: wallet2 }))
+      await expectRevert(securedContract.set(true, { from: wallet2 }))
       let value = await securedContract.a.call()
       value.should.be.false
     })

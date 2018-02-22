@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 import "../utils/Secured.sol";
 
@@ -11,7 +11,7 @@ contract SecureContract is Secured {
 
   }
 
-  function get() public returns (bool) {
+  function get() public view returns (bool) {
     return a;
   }
 

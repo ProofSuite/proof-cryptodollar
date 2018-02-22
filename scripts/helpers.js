@@ -200,6 +200,20 @@ const expectInvalidOpcode = async (promise) => {
 }
 
 /**
+ * @description Fails if the input promise is not rejected with a Revert message
+ * @param promise
+ */
+const expectRevert = async (promise) => {
+  try {
+    await promise
+  } catch (error) {
+    expect(error.message).to.include('revert')
+    return
+  }
+  expect.fail('Expected revert not received')
+}
+
+/**
  * @description Fails if the input promise is not reject with an Invalid jump message
  * @param promise
  */
@@ -358,6 +372,7 @@ module.exports = {
   expectInvalidOpcode,
   expectInvalidJump,
   expectOutOfGas,
+  expectRevert,
   advanceToBlock,
   getTxnReceiptData,
   getTxnReceiptTopics,

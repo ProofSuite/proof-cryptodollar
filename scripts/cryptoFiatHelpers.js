@@ -1,3 +1,4 @@
+/* global  web3: true */
 const getBufferFee = (value) => { return value / 200 }
 const applyFee = (value, fee) => { return value * (1 - fee) }
 
@@ -21,4 +22,4 @@ module.exports = {
   getOrderEtherValue,
   getOrderWeiValue,
   getState
- }
+}
