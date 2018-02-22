@@ -17,7 +17,8 @@
     "build": "webpack",
     "dev": "webpack-dev-server",
     "test": "truffle migrate --reset && truffle test",
-    "watch": "npm-watch"
+    "watch": "npm-watch",
+    "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "author": "Proofsuite",
   "license": "MIT",
@@ -40,6 +41,7 @@
     "eslint-plugin-standard": "^2.0.0",
     "html-webpack-plugin": "^2.28.0",
     "json-loader": "^0.5.4",
+    "solidity-coverage": "~0.4.9",
     "style-loader": "^0.13.1",
     "truffle-contract": "^1.1.11",
     "web3": "^0.20.0",
