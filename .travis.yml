@@ -29,3 +29,5 @@ before_script:
 script:
   - sleep 5
   - truffle test
+after_script:
+  - npm run coverage && cat coverage/lcov.info | coveralls
