@@ -4,7 +4,7 @@ Official Repository for the Proof Crypto Fiat project
 
 
 [![Build Status](https://travis-ci.org/ProofSuite/ProofCryptoFiat.svg?branch=develop)](https://travis-ci.org/ProofSuite/ProofCryptoFiat)
-[![Coverage Status](https://coveralls.io/repos/github/ProofSuite/ProofCryptoFiat/badge.svg?branch=develop)](https://coveralls.io/github/ProofSuite/ProofCryptoFiat?branch=develop)
+https://coveralls.io/repos/github/ProofSuite/ProofCryptoFiat/badge.svg?branch=develop(Coverage Status)!:https://coveralls.io/github/ProofSuite/ProofCryptoFiat?branch=develop
 
 
 ### Contracts
