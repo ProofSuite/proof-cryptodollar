@@ -102,6 +102,15 @@ npm run watch
 npm run lint
 ```
 
+- Run code coverage
+
+```
+npm run coverage
+```
+
+Some tests will be failing on code coverage as the solidity coverage tool instruments contracts and breaks some of the tests
+by adding an additional amount of gas. Currently there does not seem to be any workaround for this.
+
 
 #### Debugging (with vs-code)
 
