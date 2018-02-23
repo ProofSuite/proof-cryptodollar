@@ -1,5 +1,6 @@
 #configuration
 .env
+coverage.json
 
 # Logs
 logs
