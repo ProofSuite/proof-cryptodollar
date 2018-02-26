@@ -146,7 +146,7 @@ function calculateStandardDeviation () { // calculate standard deviation
 function findValidRates () { // find valid rates
   return new Promise((resolve, reject) => {
     for (let i = 0; i < ratesLength; i++) {
-      if (Math.abs(rates[i] - sampleMean) <= standardDeviation)      { validRates.push(rates[i])}
+      if (Math.abs(rates[i] - sampleMean) <= standardDeviation) validRates.push(rates[i])
     }
     resolve(0)
   })
