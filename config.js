@@ -16,6 +16,10 @@ let config = {
     TOKEN_UNITS: 10 ** 18,
     ETHER: 10 ** 18
   },
+  ipfs: {
+    production: 'QmRKF8ctYqRnKbkeZUVsco2CWdRz5P7AWQqHu1cmtxA6jE',
+    testing: 'QmSv7qRz7QA4j81G8zBpkB2km7d7SwCDd5aZv3s9rnWfzW'
+  },
   addresses: {
     development: {
       WALLET_ADDRESS: '',
