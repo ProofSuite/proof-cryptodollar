@@ -6,13 +6,10 @@ const getFee = (value, fee) => { return value * fee }
 const getOrderEtherValue = (value) => { return web3.fromWei(value - getFee(value, 0.01)) }
 const getOrderWeiValue = (value) => { return (value - getFee(value, 0.01)) }
 
-const getState = async(cryptoFiat) => {
-  let currentStateID = await cryptoFiat.currentState.call()
-  if (currentStateID.eq(1)) {
-    return 'UNPEGGED'
-  } else {
-    return 'PEGGED'
-  }
+const getState = async(cryptoFiat, priceFeed) => {
+  let exchangeRate = await priceFeed.exchangeRate.call()
+  let isPegged = await cryptoFiat.inState(0, exchangeRate)
+  return (isPegged ? 'PEGGED' : 'UNPEGGED')
 }
 
 module.exports = {
