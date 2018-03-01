@@ -1,3 +1,4 @@
+const config = require('../config')
 const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
 const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
 const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
@@ -5,12 +6,15 @@ const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
+const PriceFeed = artifacts.require('./PriceFeed.sol')
 const Store = artifacts.require("./Store.sol");
 const Rewards = artifacts.require("./Rewards.sol")
 
 
 //for some reason async/await makes this file crash
 module.exports = function(deployer) {
+
+  let IPFSHash = config.ipfs.testing
 
   //deploy libraries
   deployer.deploy(SafeMath)
@@ -51,12 +55,19 @@ module.exports = function(deployer) {
         ProofToken.address
       )})
     .then(() => {
+      return deployer.deploy(
+        PriceFeed,
+        IPFSHash
+      )
+    })
+    .then(() => {
        return deployer.deploy(
         CryptoFiatHub,
         CryptoDollar.address,
         Store.address,
         ProofToken.address,
-        Rewards.address
+        Rewards.address,
+        PriceFeed.address
     )})
     //authorize store access to the CryptoFiatHub, CryptoDollar and Rewards contracts
     .then(async() => {
