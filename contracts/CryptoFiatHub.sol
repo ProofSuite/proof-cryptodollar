@@ -8,33 +8,35 @@ import './interfaces/ProofTokenInterface.sol';
 import './interfaces/StoreInterface.sol';
 import './interfaces/RewardsInterface.sol';
 import './interfaces/CryptoDollarInterface.sol';
+import './interfaces/PriceFeedInterface.sol';
+import './utils/usingOraclize.sol';
+import './utils/Logger.sol';
 
 
-
-contract CryptoFiatHub {
+contract CryptoFiatHub is usingOraclize, Logger {
   using SafeMath for uint256;
   using CryptoFiatStorageProxy for address;
   using RewardsStorageProxy for address;
 
-
   CryptoDollarInterface public cryptoDollar;
   ProofTokenInterface public proofToken;
   RewardsInterface public proofRewards;
+  PriceFeedInterface public priceFeed;
   uint256 pointMultiplier = 10 ** 18;
   address public store;
-  uint256 public exchangeRate;
 
-  enum State{ PEGGED, UNPEGGED }
+  enum State { PEGGED, UNPEGGED }
+  enum Func { Buy, Sell, SellUnpegged }
 
-
-  function CryptoFiatHub(address _cryptoDollarAddress, address _storeAddress, address _proofTokenAddress, address _proofRewardsAddress) public {
+  function CryptoFiatHub(address _cryptoDollarAddress, address _storeAddress, address _proofTokenAddress, address _proofRewardsAddress, address _priceFeedAddress) public {
     cryptoDollar = CryptoDollarInterface(_cryptoDollarAddress);
     proofToken = ProofTokenInterface(_proofTokenAddress);
     proofRewards = RewardsInterface(_proofRewardsAddress);
+    priceFeed = PriceFeedInterface(_priceFeedAddress);
     store = _storeAddress;
-    exchangeRate = 10000;
-  }
 
+    OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475); //only test mode
+  }
 
   /**
    * @notice initialize() initialize the CryptoFiat smart contract system (CryptoFiat/CryptoDollar/Rewards)
@@ -59,62 +61,104 @@ contract CryptoFiatHub {
   */
   function capitalize() public payable {}
 
-
-  /**
-  * @notice buyCryptoDollar() buys CryptoDollar tokens for a price of 1 CryptoDollar Token = 1 USD (paid in ether)
-  */
   function buyCryptoDollar() public payable {
       require(msg.sender != 0x0);
       require(msg.value > 0);
+      uint256 oraclizeFee = oraclize_getPrice("computation");
 
-      uint256 value = msg.value;
-      uint256 tokenHoldersFee = value.div(200);
-      uint256 bufferFee = value.div(200);
-      uint256 paymentValue = value - tokenHoldersFee - bufferFee;
-
-      proofRewards.receiveRewards.value(tokenHoldersFee)();
-      uint256 tokenAmount = paymentValue.mul(exchangeRate).div(1 ether);
-
-      cryptoDollar.buy(msg.sender, tokenAmount, paymentValue);
+      priceFeed.getRate.value(this.balance)(msg.sender, msg.value - oraclizeFee, PriceFeedInterface.Func.Buy);
   }
 
   /**
   * @notice sellCryptoDollar() sells CryptoDollar tokens for the equivalent USD value at which they were bought
   * @param _tokenNumber Number of CryptoDollar tokens to be sold against ether
   */
-  function sellCryptoDollar(uint256 _tokenNumber) inState(State.PEGGED) public {
-      uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
-      uint256 reservedEther = cryptoDollar.reservedEther(msg.sender);
+  function sellCryptoDollar(uint256 _tokenNumber) public payable {
+    uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
 
-      require(_tokenNumber >= 0);
-      require(_tokenNumber <= tokenBalance);
+    require(_tokenNumber >= 0);
+    require(_tokenNumber <= tokenBalance);
+    uint256 oraclizeFee = oraclize_getPrice("computation");
 
-      uint256 paymentValue = _tokenNumber.mul(1 ether).div(exchangeRate);
-      uint256 etherValue = _tokenNumber.mul(reservedEther).div(tokenBalance);
-
-      cryptoDollar.sell(msg.sender, _tokenNumber, etherValue);
-      msg.sender.transfer(paymentValue);
+    priceFeed.getRate.value(oraclizeFee)(msg.sender, _tokenNumber, PriceFeedInterface.Func.Sell);
   }
-
 
   /**
   * @notice sellUnpeggedCryptoDollar sells CryptoDollar tokens for the equivalent ether value at which they were bought
   * @dev Need to replace inState by inFutureState to account for the possibility the contract could become unpegged with the current transaction
   * @param _tokenNumber Number of CryptoDollar tokens to be sold against ether
   */
-  function sellUnpeggedCryptoDollar(uint256 _tokenNumber) inState(State.UNPEGGED) public {
+  function sellUnpeggedCryptoDollar(uint256 _tokenNumber) public payable {
     uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
-    uint256 reservedEther = cryptoDollar.reservedEther(msg.sender);
+
+    require(_tokenNumber >= 0);
+    require(_tokenNumber <= tokenBalance);
+    uint256 oraclizeFee = oraclize_getPrice("computation");
+
+    priceFeed.getRate.value(oraclizeFee)(msg.sender, _tokenNumber, PriceFeedInterface.Func.SellUnpegged);
+  }
+
+
+  function buyCryptoDollarCallback(uint256 _exchangeRate, address _sender, uint256 _value) public {
+    require(inState(State.PEGGED, _exchangeRate));
+    require(msg.sender == address(priceFeed));
+
+    uint256 tokenHoldersFee = _value.div(200);
+    uint256 bufferFee = _value.div(200);
+    uint256 paymentValue = _value - tokenHoldersFee - bufferFee;
+
+    proofRewards.receiveRewards.value(tokenHoldersFee)();
+    uint256 tokenAmount = paymentValue.mul(_exchangeRate).div(100).div(1 ether);
+
+    cryptoDollar.buy(_sender, tokenAmount, paymentValue);
+  }
+
+
+
+  function sellCryptoDollarCallback(uint256 _exchangeRate, address _sender, uint256 _tokenNumber) public {
+    require(inState(State.PEGGED, _exchangeRate));
+    require(msg.sender == address(priceFeed));
+
+    //do the checks again to avoid race condition
+    uint256 tokenBalance = cryptoDollar.balanceOf(_sender);
+    uint256 reservedEther = cryptoDollar.reservedEther(_sender);
+    require(_tokenNumber >= 0);
+    require(_tokenNumber <= tokenBalance);
+
+    printNumber("Callback", _exchangeRate);
+
+    uint256 paymentValue = _tokenNumber.mul(1 ether).mul(100).div(_exchangeRate);
+
+    printNumber("PaymentValue", paymentValue);
+
+    uint256 etherValue = _tokenNumber.mul(reservedEther).div(tokenBalance);
+
+    cryptoDollar.sell(_sender, _tokenNumber, etherValue);
+    _sender.transfer(paymentValue);
+
+  }
+
+  /**
+  * @dev Not quite sure if it is necessary to query the exchangeRate in this case. A priori one needs to make sure
+  * that the contract is unpegged to let this function be called. So i think the exchange rate needs to be updated each time
+  * there is an attempt to call this function
+  */
+  function sellUnpeggedCryptoDollarCallback(uint256 _exchangeRate, address _sender, uint256 _tokenNumber) public {
+    require(inState(State.UNPEGGED, _exchangeRate));
+    require(msg.sender == address(priceFeed));
+
+    uint256 tokenBalance = cryptoDollar.balanceOf(_sender);
+    uint256 reservedEther = cryptoDollar.reservedEther(_sender);
 
     require(_tokenNumber >= 0);
     require(_tokenNumber <= tokenBalance);
 
-    // uint256 etherValue  = reservedEther;
     uint256 etherValue = _tokenNumber.mul(reservedEther).div(tokenBalance);
 
-    cryptoDollar.sell(msg.sender, _tokenNumber, etherValue);
-    msg.sender.transfer(etherValue);
+    cryptoDollar.sell(_sender, _tokenNumber, etherValue);
+    _sender.transfer(etherValue);
   }
+
 
 
   /**
@@ -138,53 +182,34 @@ contract CryptoFiatHub {
   * @notice The totalOutstanding() function returns the amount of ether that is owed to all cryptoDollar token holders for a pegged contract state
   * @return Total value in ether of the cryptoDollar tokens that have been issued
   */
-  function totalOutstanding() public constant returns(uint256) {
+  function totalOutstanding(uint256 _exchangeRate) public constant returns(uint256) {
     uint256 supply = cryptoDollar.totalSupply();
-    return supply.mul(1 ether).div(exchangeRate);
+    return supply.mul(1 ether).div(_exchangeRate);
   }
 
   /**
   * @notice The buffer function computes the difference between the current contract balance and the amount of outstanding tokens.
   * @return Buffer Value
   */
-  function buffer() public constant returns (int256) {
-    int256 value = int256(this.balance - totalOutstanding());
+  function buffer(uint256 _exchangeRate) public constant returns (int256) {
+    int256 value = int256(this.balance - totalOutstanding(_exchangeRate));
     return value;
   }
 
+
+  function inState(State state, uint256 _exchangeRate) public view returns (bool) {
+    if (buffer(_exchangeRate) > 0) {
+      return (state == State.PEGGED);
+    } else {
+      return (state == State.UNPEGGED);
+    }
+  }
 
   function contractBalance() public constant returns (uint256) {
     return this.balance;
   }
 
-  /**
-  * @return Current state of the contract
-  */
-  function currentState() public constant returns (State) {
-    if (buffer() > 0) {
-      return State.PEGGED;
-    } else {
-      return State.UNPEGGED;
-    }
+  function oraclizeFee() public constant returns (uint256) {
+    oraclize_getPrice("computation");
   }
-
-
-  /**
-  * @notice Computes the state of the contract whenever included in function header
-  * @param state Potential contract state (either PEGGED or UNPEGGED)
-  */
-  modifier inState(State state) {
-    assert(state == currentState());
-    _;
-  }
-
-  /**
-  * @dev Temporary mock function. Will be removed when adding interactions with oracles
-  * @param _value of the new ETH/USD conversion rate in cents
-  */
-  function setExchangeRate(uint256 _value) public {
-    exchangeRate = _value;
-  }
-
-
 }
