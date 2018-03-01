@@ -17,12 +17,13 @@ const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
-const Store = artifacts.require("./Store.sol")
-const Rewards = artifacts.require("./Rewards.sol")
+const Store = artifacts.require('./Store.sol')
+const Rewards = artifacts.require('./Rewards.sol')
+const PriceFeedMock = artifacts.require('./PriceFeedMock.sol')
 
 contract('Buffer', (accounts) => {
   let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath
-  let store, proofToken, cryptoDollar, rewards, cryptoFiatHub
+  let store, proofToken, cryptoDollar, rewards, cryptoFiatHub, priceFeed
   let fund = accounts[0]
   let wallet1 = accounts[1]
   let initialExchangeRate
@@ -31,6 +32,9 @@ contract('Buffer', (accounts) => {
   let payment
   let rewardsFee
   let bufferFee
+  let oraclizeFee = 5385000000000000
+  let exchangeRate = 20000
+
 
   /*
   The initial exchange rate is equal to 1 ETH = 100 USD (in cents, exchangeRate = 10000)
@@ -67,14 +71,16 @@ contract('Buffer', (accounts) => {
     proofToken = await ProofToken.new()
     cryptoDollar = await CryptoDollar.new(store.address)
     rewards = await Rewards.new(store.address, proofToken.address)
-    cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
+    priceFeed = await PriceFeedMock.new(exchangeRate, oraclizeFee)
+    cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address, priceFeed.address)
 
     await store.authorizeAccess(cryptoFiatHub.address)
     await store.authorizeAccess(cryptoDollar.address)
     await store.authorizeAccess(rewards.address)
+    await priceFeed.setCryptoFiatHub(cryptoFiatHub.address)
     await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
 
-    initialExchangeRate = await cryptoFiatHub.exchangeRate.call()
+    initialExchangeRate = 20000
     updatedExchangeRate = initialExchangeRate / 10
     funding = 1 * ether
     payment = 1 * ether
@@ -96,12 +102,12 @@ contract('Buffer', (accounts) => {
     })
 
     it('total outstanding should be equal to 0', async() => {
-      let totalOutstanding = await cryptoFiatHub.totalOutstanding()
+      let totalOutstanding = await cryptoFiatHub.totalOutstanding(initialExchangeRate)
       totalOutstanding.should.be.bignumber.equal(0)
     })
 
     it('buffer should be equal to 0', async() => {
-      let buffer = await cryptoFiatHub.buffer()
+      let buffer = await cryptoFiatHub.buffer(initialExchangeRate)
       buffer.should.be.bignumber.equal(10 ** 18)
     })
   })
@@ -112,21 +118,23 @@ contract('Buffer', (accounts) => {
       await waitUntilTransactionsMined(txn.tx)
     })
 
-    it('contract balance should be equal to funding + payment - rewards fee', async () => {
+    // The oraclizeFee is also removed from the payment value. The oraclize fee basically pays for the callback
+    // function
+    it('contract balance should be equal to funding + payment - rewards fee - oraclize fee', async () => {
       let balance = await cryptoFiatHub.contractBalance()
-      let expectedBalance = funding + payment - rewardsFee
+      let expectedBalance = funding + payment - rewardsFee - oraclizeFee
       balance.should.be.bignumber.equal(expectedBalance)
     })
 
     it('total outstanding should be equal to 1 ether - rewards fee - buffer fee', async () => {
-      let totalOutstanding = await cryptoFiatHub.totalOutstanding()
+      let totalOutstanding = await cryptoFiatHub.totalOutstanding(initialExchangeRate)
       let expectedTotalOutstanding = payment - rewardsFee - bufferFee
       totalOutstanding.should.be.bignumber.equal(expectedTotalOutstanding)
     })
 
-    it('buffer should be equal to initial buffer + buffer fee', async () => {
-      let buffer = await cryptoFiatHub.buffer()
-      let expectedBuffer = funding + bufferFee
+    it('buffer should be equal to initial buffer + buffer fee - oraclizeFee', async () => {
+      let buffer = await cryptoFiatHub.buffer(initialExchangeRate)
+      let expectedBuffer = funding + bufferFee - oraclizeFee
       buffer.should.be.bignumber.equal(expectedBuffer)
     })
   })
@@ -136,18 +144,18 @@ contract('Buffer', (accounts) => {
       let txn
       txn = await cryptoFiatHub.buyCryptoDollar({ from: wallet1, value: 1 * ether })
       await waitUntilTransactionsMined(txn.tx)
-      txn = await cryptoFiatHub.setExchangeRate(updatedExchangeRate)
+      txn = await priceFeed.setExchangeRate(updatedExchangeRate)
       await waitUntilTransactionsMined(txn.tx)
     })
 
-    it('contract balance should be equal to initial funding + 1 ether - rewards fee', async () => {
+    it('contract balance should be equal to initial funding + 1 ether - rewards fee - oraclize fee', async () => {
       let balance = await cryptoFiatHub.contractBalance()
-      let expectedBalance = funding + payment - rewardsFee
+      let expectedBalance = funding + payment - rewardsFee - oraclizeFee
       balance.should.be.bignumber.equal(expectedBalance)
     })
 
     it('total outstanding should be equal to total outstanding tokens x exchange rate', async () => {
-      let totalOutstanding = await cryptoFiatHub.totalOutstanding()
+      let totalOutstanding = await cryptoFiatHub.totalOutstanding(updatedExchangeRate)
       let tokenSupply = await cryptoFiatHub.cryptoDollarTotalSupply()
       let expectedTotalOutstanding = tokenSupply.times(1 * ether).div(updatedExchangeRate)
 
@@ -156,15 +164,15 @@ contract('Buffer', (accounts) => {
 
     it('buffer should be negative', async () => {
       let contractBalance = await cryptoFiatHub.contractBalance()
-      let totalOutstanding = await cryptoFiatHub.totalOutstanding()
+      let totalOutstanding = await cryptoFiatHub.totalOutstanding(updatedExchangeRate)
 
       contractBalance.minus(totalOutstanding).should.be.bignumber.below(0)
     })
 
     it('buffer should be equal to initial funding + 1 ether - rewards fee - token supply * exchange rate', async () => {
       let tokenSupply = await cryptoFiatHub.cryptoDollarTotalSupply()
-      let bufferValue = await cryptoFiatHub.buffer()
-      let balance = funding + payment - rewardsFee
+      let bufferValue = await cryptoFiatHub.buffer(updatedExchangeRate)
+      let balance = funding + payment - rewardsFee - oraclizeFee
       let outstanding = tokenSupply.times(1 * ether).div(updatedExchangeRate).toNumber()
       let expectedBufferValue = balance - outstanding
       bufferValue.should.be.bignumber.equal(expectedBufferValue)

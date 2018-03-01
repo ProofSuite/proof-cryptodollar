@@ -1,6 +1,7 @@
 /* global  artifacts:true, web3: true, contract: true */
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
+import { ether } from '../scripts/constants'
 import { getFee, getOrderEtherValue, getOrderWeiValue } from '../scripts/cryptoFiatHelpers'
 import { getWeiBalance } from '../scripts/helpers'
 
@@ -16,13 +17,17 @@ const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
-const Store = artifacts.require("./Store.sol")
-const Rewards = artifacts.require("./Rewards.sol")
+const PriceFeedMock = artifacts.require('./mocks/PriceFeedMock.sol')
+const Store = artifacts.require('./Store.sol')
+const Rewards = artifacts.require('./Rewards.sol')
 
 contract('Cryptofiat Hub', (accounts) => {
   let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath
-  let store, proofToken, cryptoDollar, rewards, cryptoFiatHub
+  let store, proofToken, cryptoDollar, rewards, cryptoFiatHub, priceFeed
   let wallet1 = accounts[0]
+  let exchangeRateInCents = 100000
+  let exchangeRate = 1000
+  let oraclizeFee = 5385000000000000
 
   beforeEach(async () => {
     // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
@@ -48,7 +53,8 @@ contract('Cryptofiat Hub', (accounts) => {
     proofToken = await ProofToken.new()
     cryptoDollar = await CryptoDollar.new(store.address)
     rewards = await Rewards.new(store.address, proofToken.address)
-    cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
+    priceFeed = await PriceFeedMock.new(exchangeRateInCents, oraclizeFee)
+    cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address, priceFeed.address)
 
     /**
      * allow store access and initialize the cryptofiat system and initialize the CryptoFiatHub
@@ -62,6 +68,7 @@ contract('Cryptofiat Hub', (accounts) => {
     await store.authorizeAccess(cryptoDollar.address)
     await store.authorizeAccess(rewards.address)
     await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
+    await priceFeed.setCryptoFiatHub(cryptoFiatHub.address)
     await cryptoFiatHub.initialize(20)
   })
 
@@ -89,11 +96,9 @@ contract('Cryptofiat Hub', (accounts) => {
 
   describe('Buying Tokens', async () => {
     let defaultOrder
-    let exchangeRate
 
     beforeEach(async () => {
-      defaultOrder = { from: wallet1, value: 1 * 10 ** 18 }
-      exchangeRate = await cryptoFiatHub.exchangeRate.call()
+      defaultOrder = { from: wallet1, value: 1 * ether }
     })
 
     it('should be able to buy CryptoDollar tokens', async() => {
@@ -124,8 +129,8 @@ contract('Cryptofiat Hub', (accounts) => {
 
     it('should increase the total cryptodollar supply by 99% of invested value', async () => {
       let initialSupply = await cryptoDollar.totalSupply()
-      let etherValue = await getOrderEtherValue(defaultOrder.value) //get the ether value of the order after fee
-      let expectedIncrement = exchangeRate.times(etherValue)
+      let payment = await getOrderEtherValue(defaultOrder.value) // get the ether value of the order after fee
+      let expectedIncrement = exchangeRate * payment
 
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
 
@@ -137,7 +142,7 @@ contract('Cryptofiat Hub', (accounts) => {
     it('should increment the buyer cryptoDollar token balance by 99% of invested value', async () => {
       let initialBalance = await cryptoDollar.balanceOf(wallet1)
       let etherValue = await getOrderEtherValue(defaultOrder.value)
-      let expectedIncrement = exchangeRate.times(etherValue)
+      let expectedIncrement = exchangeRate * etherValue
 
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
 
@@ -160,17 +165,15 @@ contract('Cryptofiat Hub', (accounts) => {
 
   describe('Selling Cryptodollar tokens', async() => {
     let params
-    let exchangeRate
     let tokens
     let defaultOrder
 
     beforeEach(async () => {
-      defaultOrder = { from: wallet1, value: 1 * 10 ** 18 }
+      defaultOrder = { from: wallet1, value: 1 * ether }
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
 
       params = { from: wallet1, gasPrice: 10 * 10 ** 9 }
-      exchangeRate = await cryptoFiatHub.exchangeRate.call()
-      tokens = 100
+      tokens = 100 // (= 100 dollars)
     })
 
     it('should be able to sell CryptoDollar tokens', async() => {
@@ -179,7 +182,6 @@ contract('Cryptofiat Hub', (accounts) => {
 
     it('should decrease the total supply of cryptodollars', async() => {
       let initialSupply = await cryptoDollar.totalSupply()
-
       await cryptoFiatHub.sellCryptoDollar(tokens, params)
 
       let supply = await cryptoDollar.totalSupply()
@@ -189,7 +191,6 @@ contract('Cryptofiat Hub', (accounts) => {
 
     it('should decrease the cryptodollar balance', async() => {
       let initialSupply = await cryptoDollar.balanceOf(wallet1)
-
       await cryptoFiatHub.sellCryptoDollar(tokens, params)
 
       let supply = await cryptoDollar.balanceOf(wallet1)
@@ -198,15 +199,16 @@ contract('Cryptofiat Hub', (accounts) => {
     })
 
     it('should correctly increase the seller account ether balance', async() => {
+      let params = { from: wallet1, gasPrice: 10 * 10 ** 9, value: oraclizeFee }
       let initialBalance = web3.eth.getBalance(wallet1)
       let txn = await cryptoFiatHub.sellCryptoDollar(tokens, params)
       let balance = web3.eth.getBalance(wallet1)
       let txFee = params.gasPrice * txn.receipt.gasUsed
       let payment = web3.toWei(tokens / exchangeRate)
 
+      console.log(payment)
       let expectedIncrement = payment - txFee
       let increment = balance.minus(initialBalance)
-
       increment.should.be.bignumber.equal(expectedIncrement)
     })
 
@@ -219,19 +221,15 @@ contract('Cryptofiat Hub', (accounts) => {
 
       let expectedVariation = initialReservedEther.mul(tokens).div(initialTokenBalance).negated().toNumber()
       let variation = reservedEther.minus(initialReservedEther)
-
       variation.should.be.bignumber.equal(expectedVariation)
     })
   })
 
   describe('Proxy CryptoDollar State and Balances', async() => {
     let defaultOrder
-    let exchangeRate
 
     before(async () => {
       defaultOrder = { from: wallet1, value: 1 * 10 ** 18 }
-
-      exchangeRate = await cryptoFiatHub.exchangeRate.call()
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
     })
 
@@ -251,7 +249,7 @@ contract('Cryptofiat Hub', (accounts) => {
 
     it('should return correct total outstanding value', async() => {
       let supply = await cryptoDollar.totalSupply()
-      let totalOutstanding = await cryptoFiatHub.totalOutstanding()
+      let totalOutstanding = await cryptoFiatHub.totalOutstanding(exchangeRate)
       let expectedTotalOutstanding = supply.times(10 ** 18).div(exchangeRate)
 
       expectedTotalOutstanding.should.be.bignumber.equal(totalOutstanding)
@@ -259,8 +257,8 @@ contract('Cryptofiat Hub', (accounts) => {
 
     it('should return correct buffer value', async() => {
       let contractBalance = web3.eth.getBalance(CryptoFiatHub.address)
-      let totalOutstanding = await cryptoFiatHub.totalOutstanding()
-      let buffer = await cryptoFiatHub.buffer()
+      let totalOutstanding = await cryptoFiatHub.totalOutstanding(exchangeRate)
+      let buffer = await cryptoFiatHub.buffer(exchangeRate)
       let expectedBuffer = contractBalance - totalOutstanding
 
       expectedBuffer.should.be.bignumber.equal(buffer)
