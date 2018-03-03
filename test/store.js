@@ -1,4 +1,4 @@
-/* global  artifacts:true, web3: true, contract: true */
+/* global  artifacts: true, web3: true, contract: true */
 import chai from 'chai'
 import { expectRevert } from '../scripts/helpers'
 
@@ -73,6 +73,20 @@ contract('Store', (accounts) => {
       storedValue.should.be.equal('')
     })
 
+    it('should set, get, and delete a bytes array', async () => {
+      const value = "0x1234567890"
+      const key = web3.sha3('test')
+      let storedValue
+
+      await store.setBytes(key, value)
+      storedValue = await store.getBytes(key)
+      storedValue.should.be.equal(value)
+
+      await store.deleteString(key)
+      storedValue = await store.getString(key)
+      storedValue.should.be.equal("")
+    })
+
     it('should set, get and delete a boolean', async () => {
       const value = true
       const key = web3.sha3('test')
@@ -128,6 +142,15 @@ contract('Store', (accounts) => {
       await expectRevert(store.setString(key, value, { from: hacker }))
       await store.setString(key, value, { from: admin })
       await expectRevert(store.deleteString(key, { from: hacker }))
+    })
+
+    it('should not be able to set or delete a bytes array', async () => {
+      const value = "0x1234567890"
+      const key = web3.sha3('test')
+
+      await expectRevert(store.setBytes(key, value, { from: hacker }))
+      await store.setBytes(key, value, { from: admin })
+      await expectRevert(store.deleteBytes(key, { from: hacker }))
     })
 
     it('should not be able to set or delete boolean', async () => {
