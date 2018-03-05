@@ -110,6 +110,12 @@ npm run lint
 npm run coverage
 ```
 
+- Run tests for computation scripts (Oraclize)
+
+```
+npm run test-computation-script
+```
+
 Some tests will be failing on code coverage as the solidity coverage tool instruments contracts and breaks some of the tests
 by adding an additional amount of gas. Currently there does not seem to be any workaround for this.
 
