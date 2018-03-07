@@ -21,6 +21,8 @@ before_install:
   - npm install -g npm@latest
   - npm install -g ganache-cli@latest truffle@latest
   - npm install -g codecov
+  - cd /ethereum-bridge/
+  - npm install
 
 install:
   - npm install
@@ -28,8 +30,8 @@ install:
 before_script:
   - ./start_rpc.sh > testrpc.log &
   - sleep 5
-  - chmod+x ./start_bridge.sh
-  - ./start_bridge.sh > bridge.log &
+  - cd ethereum-bridge
+  - node bridge -H localhost:8545 -a 1 --dev
   - sleep 5
 script:
   - truffle test
