@@ -8,10 +8,9 @@ import './interfaces/ProofTokenInterface.sol';
 import './interfaces/RewardsInterface.sol';
 import './interfaces/CryptoDollarInterface.sol';
 import './utils/usingOraclize.sol';
-import './utils/Logger.sol';
 
 
-contract CryptoFiatHub is usingOraclize, Logger {
+contract CryptoFiatHub is usingOraclize {
   using SafeMath for uint256;
   using CryptoFiatStorageProxy for address;
   using RewardsStorageProxy for address;
