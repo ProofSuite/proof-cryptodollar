@@ -55,19 +55,12 @@ module.exports = function(deployer) {
         ProofToken.address
       )})
     .then(() => {
-      return deployer.deploy(
-        PriceFeed,
-        IPFSHash
-      )
-    })
-    .then(() => {
        return deployer.deploy(
         CryptoFiatHub,
         CryptoDollar.address,
         Store.address,
         ProofToken.address,
         Rewards.address,
-        PriceFeed.address
     )})
     //authorize store access to the CryptoFiatHub, CryptoDollar and Rewards contracts
     .then(async() => {
