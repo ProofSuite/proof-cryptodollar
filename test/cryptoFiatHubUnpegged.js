@@ -2,8 +2,9 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
-import { waitUntilTransactionsMined, expectRevert } from '../scripts/helpers'
+import { waitUntilTransactionsMined, expectInvalidOpcode } from '../scripts/helpers'
 import { getState } from '../scripts/cryptoFiatHelpers'
+import { watchNextEvent } from '../scripts/events'
 
 chai.use(chaiAsPromised)
     .use(require('chai-bignumber')(web3.BigNumber))
@@ -17,20 +18,26 @@ const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
-const PriceFeedMock = artifacts.require('./mocks/PriceFeedMock.sol')
 const Store = artifacts.require('./Store.sol')
 const Rewards = artifacts.require('./Rewards.sol')
 
 contract('Cryptofiat Hub', (accounts) => {
   let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath
-  let store, proofToken, cryptoDollar, rewards, cryptoFiatHub, priceFeed
-  let fund = accounts[0]
-  let wallet1 = accounts[1]
+  let store, proofToken, cryptoDollar, rewards, cryptoFiatHub
   let initialExchangeRate
   let updatedExchangeRate
-  let funding
-  let payment
   let tokens
+
+  // Standard scenario with an initial collateral of 1 ether and payment (buy value) of 1 ether.
+  let collateral = 1 * ether
+  let payment = 1 * ether
+  let fund = accounts[0]
+  let wallet1 = accounts[1]
+  let oraclize = accounts[2]
+  let oraclizeFee = 5385000000000000
+  let defaultGasPrice = 1 * 10 ** 9
+  let defaultBuyOrder = { from: wallet1, value: 1 * ether, gasPrice: defaultGasPrice }
+  let defaultSellOrder = { from: wallet1, gasPrice: defaultGasPrice }
 
   /*
   The initial exchange rate is equal to 1 ETH = 100 USD (in cents, exchangeRate = 10000)
@@ -47,15 +54,19 @@ contract('Cryptofiat Hub', (accounts) => {
     let txn
 
     before(async () => {
-      // Standard scenario with an initial funding of 1 ether and payment (buy value) of 1 ether.
-      funding = 1 * ether
-      payment = 1 * ether
-
       // In this scenario, the initial exchange rate is 1 ETH = 100 USD (exchangeRate = 10000)
       // The updated exchange rate is 1 ETH = 10 USD (exchangeRate 1000)
       // The exchange rate is actually representing ethers to cents
-      initialExchangeRate = 20000
-      updatedExchangeRate = initialExchangeRate / 10
+      // The exchange rates are kept in objects that references them both in strings and numbers since the
+      // __callback function takes exchanges rate as a string value
+      initialExchangeRate = {
+        string: '20000',
+        number: 20000
+      }
+      updatedExchangeRate = {
+        string: '2000',
+        number: 2000
+      }
 
       rewardsStorageProxy = await RewardsStorageProxy.new()
       cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
@@ -67,6 +78,7 @@ contract('Cryptofiat Hub', (accounts) => {
       await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
       await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
       await CryptoDollar.link(SafeMath, safeMath.address)
+      await CryptoFiatHub.link(RewardsStorageProxy, cryptoFiatStorageProxy.address)
       await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
       await CryptoFiatHub.link(SafeMath, safeMath.address)
       await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
@@ -78,8 +90,7 @@ contract('Cryptofiat Hub', (accounts) => {
       proofToken = await ProofToken.new()
       cryptoDollar = await CryptoDollar.new(store.address)
       rewards = await Rewards.new(store.address, proofToken.address)
-      priceFeed = await PriceFeedMock.new(initialExchangeRate)
-      cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address, priceFeed.address)
+      cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
 
       /**
        * allow store access and initialize the cryptofiat system and initialize the CryptoFiatHub
@@ -93,18 +104,14 @@ contract('Cryptofiat Hub', (accounts) => {
       await store.authorizeAccess(cryptoDollar.address)
       await store.authorizeAccess(rewards.address)
       await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-      await priceFeed.setCryptoFiatHub(cryptoFiatHub.address)
       await cryptoFiatHub.initialize(20)
 
-      let txn = await cryptoFiatHub.capitalize({ from: fund, value: funding })
-      await waitUntilTransactionsMined(txn.tx)
+      let txn = await cryptoFiatHub.capitalize({ from: fund, value: collateral })
 
-      let params = { from: wallet1, value: payment }
-      txn = await cryptoFiatHub.buyCryptoDollar(params)
-      await waitUntilTransactionsMined(txn.tx)
-
-      txn = await priceFeed.setExchangeRate(updatedExchangeRate)
-      await waitUntilTransactionsMined(txn.tx)
+      //buy tokens and simulate oraclize callback
+      txn = await cryptoFiatHub.buyCryptoDollar(defaultBuyOrder)
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId, initialExchangeRate.string)
 
       tokens = await cryptoFiatHub.cryptoDollarBalance(wallet1)
       tokens = tokens.toNumber()
@@ -112,30 +119,38 @@ contract('Cryptofiat Hub', (accounts) => {
 
     it('should be in an unpegged state', async () => {
       // the state depends both on the state of the cryptodollar/cryptofiat contract and the pricefeed
-      let currentState = await getState(cryptoFiatHub, priceFeed)
+      let currentState = await getState(cryptoFiatHub, updatedExchangeRate.number)
       currentState.should.be.equal('UNPEGGED')
     })
 
-    it('should throw an invalid opcode when calling the sellCryptoDollar function', async () => {
-      await expectRevert(cryptoFiatHub.sellCryptoDollar(1, { from: wallet1, value: 1 * ether }))
+    it('__callback after an calling the (pegged) cryptoDollar function', async () => {
+      let txn = await cryptoFiatHub.sellCryptoDollar(1, { from: wallet1, value: ether })
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      await expectInvalidOpcode(cryptoFiatHub.__callback(queryId, updatedExchangeRate.number))
     })
 
     it('should sell unpegged cryptodollar tokens', async () => {
       let accountBalance = web3.eth.getBalance(wallet1)
       let reservedEther = await cryptoDollar.reservedEther(wallet1)
-      let oraclizeFee = 0.03 * ether
-      let params = { from: wallet1, gasPrice: 10 * 10 ** 9, value: oraclizeFee }
 
-      txn = await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, params).should.be.fulfilled
-      await waitUntilTransactionsMined(txn.tx)
-      let sellTxnFee = txn.receipt.gasUsed * params.gasPrice
+      let txn = await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, defaultSellOrder).should.be.fulfilled
+      let txnFee = txn.receipt.gasUsed * defaultSellOrder.gasPrice
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId, updatedExchangeRate.string, { from: oraclize })
+
+      // check that callback parameters correspond to initial query
+      let callingValue = await cryptoFiatHub.callingValue(queryId)
+      let callingAddress = await cryptoFiatHub.callingAddress(queryId)
+      let callingFee = await cryptoFiatHub.callingFee(queryId)
+      callingValue.should.be.bignumber.equal(tokens)
+      callingAddress.should.be.equal(wallet1)
+      callingFee.should.be.bignumber.equal(oraclizeFee)
 
       let finalAccountBalance = web3.eth.getBalance(wallet1)
       let finalReservedEther = await cryptoDollar.reservedEther(wallet1)
-
       let reservedEtherVariation = finalReservedEther.minus(reservedEther)
       let accountBalanceVariation = finalAccountBalance.minus(accountBalance)
-      let expectedAccountBalanceVariation = reservedEther.minus(sellTxnFee).minus(oraclizeFee)
+      let expectedAccountBalanceVariation = reservedEther.minus(txnFee).minus(oraclizeFee)
 
       accountBalanceVariation.should.be.bignumber.equal(expectedAccountBalanceVariation)
       reservedEtherVariation.should.be.bignumber.equal(-reservedEther)

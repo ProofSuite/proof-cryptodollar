@@ -1,7 +1,7 @@
 /* global  artifacts:true, web3: true, contract: true */
 import chai from 'chai'
 
-chai.use(require('chai-bignumber')())
+chai.use(require('chai-bignumber')(web3.BigNumber))
 chai.should()
 
 const Store = artifacts.require('./Store.sol')
@@ -24,7 +24,7 @@ contract('CryptoFiatStorageProxy', (accounts) => {
 
       await cryptofiatStorageProxy.setCreationTimestamp(store.address, expectedValue)
       storedValue = await cryptofiatStorageProxy.getCreationTimestamp(store.address)
-      storedValue.toNumber().should.be.equal(expectedValue)
+      storedValue.should.be.bignumber.equal(expectedValue)
     })
   })
 
@@ -35,7 +35,7 @@ contract('CryptoFiatStorageProxy', (accounts) => {
 
       await cryptofiatStorageProxy.setCreationBlockNumber(store.address, expectedValue)
       storedValue = await cryptofiatStorageProxy.getCreationBlockNumber(store.address)
-      storedValue.toNumber().should.be.equal(expectedValue)
+      storedValue.should.be.bignumber.equal(expectedValue)
     })
   })
 })

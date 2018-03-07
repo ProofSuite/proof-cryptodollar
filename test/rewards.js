@@ -16,7 +16,6 @@ const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStor
 const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
-const PriceFeedMock = artifacts.require('./mocks/PriceFeedMock.sol')
 const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
 
@@ -31,7 +30,6 @@ contract('Rewards', (accounts) => {
   let cryptoFiatStorageProxy
   let cryptoDollarStorageProxy
   let proofToken
-  let priceFeed
   let blocksPerEpoch
 
   let fund = accounts[0]
@@ -73,14 +71,12 @@ contract('Rewards', (accounts) => {
     store = await Store.new()
     rewards = await Rewards.new(store.address, proofToken.address)
     cryptoDollar = await CryptoDollar.new(store.address)
-    priceFeed = await PriceFeedMock.new(exchangeRate)
-    cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address, priceFeed.address)
+    cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
 
     await store.authorizeAccess(cryptoFiatHub.address)
     await store.authorizeAccess(cryptoDollar.address)
     await store.authorizeAccess(rewards.address)
     await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-    await priceFeed.setCryptoFiatHub(cryptoFiatHub.address)
     await cryptoFiatHub.initialize(blocksPerEpoch)
 
     creationBlockNumber = await cryptoFiatStorageProxy.getCreationBlockNumber(store.address)
