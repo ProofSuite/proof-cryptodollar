@@ -20,17 +20,29 @@ contract CryptoFiatHub is usingOraclize {
   RewardsInterface public proofRewards;
   uint256 pointMultiplier = 10 ** 18;
   address public store;
+  bool public usingOraclize;
+
+  mapping (bytes32 => address) public callingAddress;
+  mapping (bytes32 => uint256) public callingValue;
+  mapping (bytes32 => Func) public callingFunction;
+  mapping (bytes32 => uint256) public callingFee;
+  string public ipfsHash;
 
   enum State { PEGGED, UNPEGGED }
   enum Func { Buy, Sell, SellUnpegged }
 
-  function CryptoFiatHub(address _cryptoDollarAddress, address _storeAddress, address _proofTokenAddress, address _proofRewardsAddress, address _priceFeedAddress) public {
+  event BuyCryptoDollar(bytes32 queryId, address sender, uint256 value, uint256 oraclizeFee);
+  event SellCryptoDollar(bytes32 queryId, address sender, uint256 tokenAmount, uint256 oraclizeFee);
+  event SellUnpeggedCryptoDollar(bytes32 queryId, address sender, uint256 tokenAmount, uint256 oraclizeFee);
+  event BuyCryptoDollarCallback(bytes32 queryId, string result, address sender, uint256 tokenAmount, uint256 paymentValue);
+  event SellCryptoDollarCallback(bytes32 queryId, string result, address sender, uint256 tokenAmount, uint256 paymentValue);
+  event SellUnpeggedCryptoDollarCallback(bytes32 queryId, string result, address sender, uint256 tokenAmount, uint256 paymentValue);
+
+  function CryptoFiatHub(address _cryptoDollarAddress, address _storeAddress, address _proofTokenAddress, address _proofRewardsAddress) public {
     cryptoDollar = CryptoDollarInterface(_cryptoDollarAddress);
     proofToken = ProofTokenInterface(_proofTokenAddress);
     proofRewards = RewardsInterface(_proofRewardsAddress);
     store = _storeAddress;
-
-    OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475); //only test mode
   }
 
   /**
@@ -40,6 +52,14 @@ contract CryptoFiatHub is usingOraclize {
   function initialize(uint256 _blocksPerEpoch) public {
     store.setCreationBlockNumber(block.number);
     store.setBlocksPerEpoch(_blocksPerEpoch);
+  }
+
+  function initializeOraclize(string _ipfsHash, bool _test) public {
+    usingOraclize = true;
+    ipfsHash = _ipfsHash;
+    if (_test) {
+      OAR = OraclizeAddrResolverI(0x2fCf0C51c9Fd41e8bE29968D1D0854A090e495b8); //only test mode
+    }
   }
 
 
@@ -57,104 +77,182 @@ contract CryptoFiatHub is usingOraclize {
   function capitalize() public payable {}
 
   function buyCryptoDollar() public payable {
+      require(this.balance > oraclize_getPrice("computation"));
       require(msg.sender != 0x0);
       require(msg.value > 0);
-      uint256 oraclizeFee = oraclize_getPrice("computation");
+      bytes32 queryId;
 
-      priceFeed.getRate.value(this.balance)(msg.sender, msg.value - oraclizeFee, PriceFeedInterface.Func.Buy);
+      if (usingOraclize) {
+        queryId = oraclize_query("computation", [ipfsHash]);
+      } else {
+        queryId = keccak256(block.number); //for testing purposes only
+      }
+
+      callingAddress[queryId] = msg.sender;
+      callingValue[queryId] = msg.value;
+      callingFunction[queryId] = Func.Buy;
+      callingFee[queryId] = oraclize_getPrice("computation");
+      BuyCryptoDollar(queryId, msg.sender, msg.value, oraclize_getPrice("computation"));
   }
 
+
   /**
+  * @dev Currently the oraclizeFee is withdrawn after receiving the tokens. However, what happens when a user
+  * sells a very small amount of tokens ? Then the contract balance decreases (the total value sent to the user is also 0)
+  * which is problematic. The workarounds are:
+  * - Add a transaction fee that corresponds to the transaction fee
+  * - Put a minimum amount of tokens that you could buy/sell
   * @notice sellCryptoDollar() sells CryptoDollar tokens for the equivalent USD value at which they were bought
-  * @param _tokenNumber Number of CryptoDollar tokens to be sold against ether
+  * @param _tokenAmount Number of CryptoDollar tokens to be sold against ether
   */
-  function sellCryptoDollar(uint256 _tokenNumber) public payable {
-    uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
-
-    require(_tokenNumber >= 0);
-    require(_tokenNumber <= tokenBalance);
+  function sellCryptoDollar(uint256 _tokenAmount) public payable {
     uint256 oraclizeFee = oraclize_getPrice("computation");
+    uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
+    bytes32 queryId;
 
-    priceFeed.getRate.value(oraclizeFee)(msg.sender, _tokenNumber, PriceFeedInterface.Func.Sell);
+    require(_tokenAmount >= 0);
+    require(_tokenAmount <= tokenBalance);
+
+    if (usingOraclize) {
+      queryId = oraclize_query("computation", [ipfsHash]);
+    } else {
+      queryId = keccak256(block.number); //for testing purposes only
+    }
+
+    callingAddress[queryId] = msg.sender;
+    callingValue[queryId] = _tokenAmount;
+    callingFunction[queryId] = Func.Sell;
+    callingFee[queryId] = oraclizeFee;
+    SellCryptoDollar(queryId, msg.sender, _tokenAmount, oraclizeFee);
   }
 
   /**
   * @notice sellUnpeggedCryptoDollar sells CryptoDollar tokens for the equivalent ether value at which they were bought
-  * @dev Need to replace inState by inFutureState to account for the possibility the contract could become unpegged with the current transaction
-  * @param _tokenNumber Number of CryptoDollar tokens to be sold against ether
+  * @param _tokenAmount Number of CryptoDollar tokens to be sold against ether
   */
-  function sellUnpeggedCryptoDollar(uint256 _tokenNumber) public payable {
-    uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
-
-    require(_tokenNumber >= 0);
-    require(_tokenNumber <= tokenBalance);
+  function sellUnpeggedCryptoDollar(uint256 _tokenAmount) public payable {
     uint256 oraclizeFee = oraclize_getPrice("computation");
+    uint256 tokenBalance = cryptoDollar.balanceOf(msg.sender);
+    bytes32 queryId;
 
-    priceFeed.getRate.value(oraclizeFee)(msg.sender, _tokenNumber, PriceFeedInterface.Func.SellUnpegged);
-  }
+    require(_tokenAmount >= 0);
+    require(_tokenAmount <= tokenBalance);
 
+    if (usingOraclize) {
+      queryId = oraclize_query("computation", [ipfsHash]);
+    } else {
+      queryId = keccak256(block.number);
+    }
 
-  function buyCryptoDollarCallback(uint256 _exchangeRate, address _sender, uint256 _value) public {
-    require(inState(State.PEGGED, _exchangeRate));
-    require(msg.sender == address(priceFeed));
-
-    uint256 tokenHoldersFee = _value.div(200);
-    uint256 bufferFee = _value.div(200);
-    uint256 paymentValue = _value - tokenHoldersFee - bufferFee;
-
-    proofRewards.receiveRewards.value(tokenHoldersFee)();
-    uint256 tokenAmount = paymentValue.mul(_exchangeRate).div(100).div(1 ether);
-
-    cryptoDollar.buy(_sender, tokenAmount, paymentValue);
-  }
-
-
-
-  function sellCryptoDollarCallback(uint256 _exchangeRate, address _sender, uint256 _tokenNumber) public {
-    require(inState(State.PEGGED, _exchangeRate));
-    require(msg.sender == address(priceFeed));
-
-    //do the checks again to avoid race condition
-    uint256 tokenBalance = cryptoDollar.balanceOf(_sender);
-    uint256 reservedEther = cryptoDollar.reservedEther(_sender);
-    require(_tokenNumber >= 0);
-    require(_tokenNumber <= tokenBalance);
-
-    printNumber("Callback", _exchangeRate);
-
-    uint256 paymentValue = _tokenNumber.mul(1 ether).mul(100).div(_exchangeRate);
-
-    printNumber("PaymentValue", paymentValue);
-
-    uint256 etherValue = _tokenNumber.mul(reservedEther).div(tokenBalance);
-
-    cryptoDollar.sell(_sender, _tokenNumber, etherValue);
-    _sender.transfer(paymentValue);
-
+    callingAddress[queryId] = msg.sender;
+    callingValue[queryId] = _tokenAmount;
+    callingFunction[queryId] = Func.SellUnpegged;
+    callingFee[queryId] = oraclizeFee;
+    SellUnpeggedCryptoDollar(queryId, msg.sender, _tokenAmount, oraclizeFee);
   }
 
   /**
-  * @dev Not quite sure if it is necessary to query the exchangeRate in this case. A priori one needs to make sure
-  * that the contract is unpegged to let this function be called. So i think the exchange rate needs to be updated each time
-  * there is an attempt to call this function
-  */
-  function sellUnpeggedCryptoDollarCallback(uint256 _exchangeRate, address _sender, uint256 _tokenNumber) public {
-    require(inState(State.UNPEGGED, _exchangeRate));
-    require(msg.sender == address(priceFeed));
-
-    uint256 tokenBalance = cryptoDollar.balanceOf(_sender);
-    uint256 reservedEther = cryptoDollar.reservedEther(_sender);
-
-    require(_tokenNumber >= 0);
-    require(_tokenNumber <= tokenBalance);
-
-    uint256 etherValue = _tokenNumber.mul(reservedEther).div(tokenBalance);
-
-    cryptoDollar.sell(_sender, _tokenNumber, etherValue);
-    _sender.transfer(etherValue);
+   * @notice __callback is triggered asynchronously after a buy/sell through Oraclize.
+   * @dev In production this function should be callable only by the oraclize callback address.
+   *      The contract has to be appropriately set up to do so
+   * @param _queryId {bytes32} Oraclize Query ID identidying the original transaction
+   * @param _result {string} Oraclize query result (average of the ETH/USD price)
+   */
+  function __callback(bytes32 _queryId, string _result) public onlyOraclize {
+    if (callingFunction[_queryId] == Func.Buy) {
+      buyCryptoDollarCallback(_queryId, _result);
+    } else if (callingFunction[_queryId] == Func.Sell) {
+      sellCryptoDollarCallback(_queryId, _result);
+    } else if (callingFunction[_queryId] == Func.SellUnpegged) {
+      sellUnpeggedCryptoDollarCallback(_queryId, _result);
+    }
   }
 
+  /**
+  * @notice buyCryptoDollarCallback is called internally through __callback
+  * This function is called if the queryID corresponds to a Buy call
+  * @param _queryId {bytes32} Oraclize queryID identifying the original transaction
+  * @param _result {string} Oraclize query result (average of ETH/USD price)
+  */
+  function buyCryptoDollarCallback(bytes32 _queryId, string _result) internal {
+    uint256 exchangeRate = parseInt(_result);
+    require(inState(State.PEGGED, exchangeRate));
 
+    uint256 value = callingValue[_queryId];
+    address sender = callingAddress[_queryId];
+    uint256 oraclizeFee = callingFee[_queryId];
+
+    uint256 tokenHoldersFee = value.div(200);
+    uint256 bufferFee = value.div(200);
+    uint256 paymentValue = value - tokenHoldersFee - bufferFee - oraclizeFee;
+
+    proofRewards.receiveRewards.value(tokenHoldersFee)();
+    uint256 tokenAmount = paymentValue.mul(exchangeRate).div(1 ether);
+
+    cryptoDollar.buy(sender, tokenAmount, paymentValue);
+    BuyCryptoDollarCallback(_queryId, _result, sender, tokenAmount, paymentValue);
+  }
+
+  /**
+  * @notice buyCryptoDollarCallback is called internally through __callback
+  * This function is called if the queryID corresponds to a Sell call
+  * @param _queryId {bytes32} Oraclize queryID identifying the original transaction
+  * @param _result {string} Oraclize query result (average of ETH/USD price)
+  */
+  function sellCryptoDollarCallback(bytes32 _queryId, string _result) internal {
+    uint256 exchangeRate = parseInt(_result);
+    require(inState(State.PEGGED, exchangeRate));
+
+    uint256 tokenAmount = callingValue[_queryId];
+    address sender = callingAddress[_queryId];
+    uint256 oraclizeFee = callingFee[_queryId];
+
+    uint256 tokenBalance = cryptoDollar.balanceOf(sender);
+    uint256 reservedEther = cryptoDollar.reservedEther(sender);
+
+    require(tokenAmount > 0);
+    require(tokenAmount <= tokenBalance);
+
+    uint256 tokenValue = tokenAmount.mul(1 ether).div(exchangeRate);
+    require(tokenValue > oraclizeFee);
+
+    uint256 paymentValue = tokenValue - oraclizeFee;
+    uint256 etherValue = tokenAmount.mul(reservedEther).div(tokenBalance);
+
+    cryptoDollar.sell(sender, tokenAmount, etherValue);
+    sender.transfer(paymentValue);
+    SellCryptoDollarCallback(_queryId, _result, sender, tokenAmount, paymentValue);
+  }
+
+  /**
+  * @notice sellUnpeggedCryptoDollarCallback is called internally through __callback
+  * This function is called if the queryID corresponds to a SellUnpegged call
+  * @param _queryId {bytes32} Oraclize queryID identifying the original transaction
+  * @param _result {string} Oraclize query result (average of ETH/USD price)
+  */
+  function sellUnpeggedCryptoDollarCallback(bytes32 _queryId, string _result) internal {
+    uint256 exchangeRate = parseInt(_result);
+    require(inState(State.UNPEGGED, exchangeRate));
+
+    uint256 tokenAmount = callingValue[_queryId];
+    address sender = callingAddress[_queryId];
+    uint256 oraclizeFee = callingFee[_queryId];
+
+    uint256 tokenBalance = cryptoDollar.balanceOf(sender);
+    uint256 reservedEther = cryptoDollar.reservedEther(sender);
+
+    require(tokenAmount > 0);
+    require(tokenAmount <= tokenBalance);
+
+    uint256 tokenValue = tokenAmount.mul(reservedEther).div(tokenBalance);
+    // uint256 etherValue = tokenAmount.mul(reservedEther).div(tokenBalance);
+    require(tokenValue > oraclizeFee);
+
+    uint256 paymentValue = tokenValue - oraclizeFee;
+    cryptoDollar.sell(sender, tokenAmount, tokenValue);
+    sender.transfer(paymentValue);
+    SellUnpeggedCryptoDollarCallback(_queryId, _result, sender, tokenAmount, paymentValue);
+  }
 
   /**
   * @notice Proxies _holder CryptoDollar token balance from the CryptoDollar contract
@@ -184,27 +282,41 @@ contract CryptoFiatHub is usingOraclize {
 
   /**
   * @notice The buffer function computes the difference between the current contract balance and the amount of outstanding tokens.
-  * @return Buffer Value
+  * @param _exchangeRate {uint256}
+  * @return {int256} Buffer Value
   */
   function buffer(uint256 _exchangeRate) public constant returns (int256) {
     int256 value = int256(this.balance - totalOutstanding(_exchangeRate));
     return value;
   }
 
-
-  function inState(State state, uint256 _exchangeRate) public view returns (bool) {
+  /**
+  * @notice Returns a boolean corresponding to whether the contract is in state _state
+  * (for 1 ETH = _exchangeRate USD)
+  * @param _state {State}
+  * @param _exchangeRate {uint256}
+  * @return {bool}
+  */
+  function inState(State _state, uint256 _exchangeRate) public view returns (bool) {
     if (buffer(_exchangeRate) > 0) {
-      return (state == State.PEGGED);
+      return (_state == State.PEGGED);
     } else {
-      return (state == State.UNPEGGED);
+      return (_state == State.UNPEGGED);
     }
   }
 
+  /**
+   * @notice Returns contract balance
+   * @return {uint256} Contract Balance
+   */
   function contractBalance() public constant returns (uint256) {
     return this.balance;
   }
 
-  function oraclizeFee() public constant returns (uint256) {
-    oraclize_getPrice("computation");
+  modifier onlyOraclize() {
+    if (usingOraclize) {
+      require(msg.sender == oraclize_cbAddress());
+    }
+    _;
   }
 }
