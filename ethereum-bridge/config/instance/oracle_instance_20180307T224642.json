@@ -1,7 +1,7 @@
 {
-    "context_name": "eth_DD126AE9AC",
-    "latest_block_number": 76,
-    "oar": "0xf633823b007054804bcc98acf04c46344cd1c00e",
+    "context_name": "eth_912B84288A",
+    "latest_block_number": -1,
+    "oar": "0x6f485c8bf6fc43ea212e93bbf8ce046c7f1cb475",
     "node": {
         "main": "http://localhost:8545",
         "backup": []
@@ -179,5 +179,5 @@
         ],
         "base_price": 0.00000277
     },
-    "connector": "0x4cba4f94ac3d2405f72b08eec71aefddfd765ea8"
+    "connector": "0x30915c9b1cfd050d9d9a9fa316aa0ec82b3ff552"
 }
