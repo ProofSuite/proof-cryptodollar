@@ -1,3 +1,4 @@
+const config = require('../config')
 const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
 const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
 const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
@@ -11,6 +12,8 @@ const Rewards = artifacts.require("./Rewards.sol")
 
 //for some reason async/await makes this file crash
 module.exports = function(deployer) {
+
+  let IPFSHash = config.ipfs.testing
 
   //deploy libraries
   deployer.deploy(SafeMath)
@@ -56,7 +59,7 @@ module.exports = function(deployer) {
         CryptoDollar.address,
         Store.address,
         ProofToken.address,
-        Rewards.address
+        Rewards.address,
     )})
     //authorize store access to the CryptoFiatHub, CryptoDollar and Rewards contracts
     .then(async() => {

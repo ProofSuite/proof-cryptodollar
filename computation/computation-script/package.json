@@ -1,0 +1,16 @@
+{
+    "name": "TestETH",
+    "version": "1.0.0",
+    "description": "This project allows to get an average ether price from different sites.",
+    "main": "server.js",
+    "dependencies": {
+        "async": "^2.6.0",
+        "chai": "^4.1.2",
+        "request": "^2.83.0"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "start": "node index.js"
+    },
+    "license": "ISC"
+}
