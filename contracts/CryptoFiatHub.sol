@@ -5,10 +5,8 @@ import './libraries/CryptoDollarStorageProxy.sol';
 import './libraries/CryptoFiatStorageProxy.sol';
 import './libraries/RewardsStorageProxy.sol';
 import './interfaces/ProofTokenInterface.sol';
-import './interfaces/StoreInterface.sol';
 import './interfaces/RewardsInterface.sol';
 import './interfaces/CryptoDollarInterface.sol';
-import './interfaces/PriceFeedInterface.sol';
 import './utils/usingOraclize.sol';
 import './utils/Logger.sol';
 
