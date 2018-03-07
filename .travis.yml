@@ -21,7 +21,7 @@ before_install:
   - npm install -g npm@latest
   - npm install -g ganache-cli@latest truffle@latest
   - npm install -g codecov
-  - cd /ethereum-bridge/
+  - cd $TRAVIS_BUILD_DIR/ethereum-bridge/
   - npm install
 
 install:
