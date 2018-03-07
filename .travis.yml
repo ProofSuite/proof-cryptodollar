@@ -28,7 +28,6 @@ install:
 before_script:
   - ./start_rpc.sh > testrpc.log &
   - sleep 5
-  - chmod+x ./start_bridge.sh
   - ./start_bridge.sh > bridge.log &
   - sleep 5
 script:
