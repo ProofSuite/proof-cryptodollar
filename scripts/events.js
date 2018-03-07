@@ -89,6 +89,7 @@ const watchNextEvent = async(contract, blockNumber) => {
             data[key] = result.args[key]
           }
         }
+        events.stopWatching()
         resolve(data)
       }
     })
@@ -96,7 +97,6 @@ const watchNextEvent = async(contract, blockNumber) => {
 }
 
 const watchContract = (contract, blockNumber) => {
-  console.log(contract.address)
   const filter = web3.eth.filter({toBlock: 'latest', address: contract.address })
   filter.watch((err, res) => {
     if (err) {
