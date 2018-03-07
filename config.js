@@ -6,8 +6,8 @@ let config = {
     kovan: 'https://kovan.infura.io/Oi27hEUIuGqMsrYGpI7e'
   },
   constants: {
-    DEFAULT_GAS: 4.7 * 10 ** 6,
-    MAX_GAS: 4.7 * 10 ** 6,
+    DEFAULT_GAS: 6 * 10 ** 6,
+    MAX_GAS: 6 * 10 ** 6,
     DEFAULT_LOW_GAS_PRICE: 0.1 * 10 ** 9,
     DEFAULT_GAS_PRICE: 2 * 10 ** 9,
     DEFAULT_HIGH_GAS_PRICE: 5 * 10 ** 9,
