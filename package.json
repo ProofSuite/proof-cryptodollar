@@ -19,6 +19,7 @@
     "test": "truffle migrate --reset && truffle test",
     "watch": "npm-watch",
     "coverage": "./node_modules/.bin/solidity-coverage",
+    "testrpc": "./start_rpc.sh",
     "test-computation-script": "mocha ./computation/test"
   },
   "author": "Proofsuite",
