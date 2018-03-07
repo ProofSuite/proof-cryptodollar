@@ -21,7 +21,6 @@ contract CryptoFiatHub is usingOraclize, Logger {
   CryptoDollarInterface public cryptoDollar;
   ProofTokenInterface public proofToken;
   RewardsInterface public proofRewards;
-  PriceFeedInterface public priceFeed;
   uint256 pointMultiplier = 10 ** 18;
   address public store;
 
@@ -32,7 +31,6 @@ contract CryptoFiatHub is usingOraclize, Logger {
     cryptoDollar = CryptoDollarInterface(_cryptoDollarAddress);
     proofToken = ProofTokenInterface(_proofTokenAddress);
     proofRewards = RewardsInterface(_proofRewardsAddress);
-    priceFeed = PriceFeedInterface(_priceFeedAddress);
     store = _storeAddress;
 
     OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475); //only test mode

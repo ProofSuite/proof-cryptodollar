@@ -26,11 +26,5 @@ contract ProofTokenInterface {
   function approveAndCall(address _spender, uint256 _amount, bytes _extraData) public returns (bool success);
   function allowance(address _owner, address _spender) public constant returns (uint256 remaining);
   function mint(address _owner, uint _amount) public returns (bool);
-  function importPresaleBalances(address[] _addresses, uint256[] _balances, address _presaleAddress) public returns (bool);
-  function lockPresaleBalances() public returns (bool);
-  function finishMinting() public returns (bool);
-  function enableTransfers(bool _value) public;
-  function enableMasterTransfers(bool _value) public;
-  function createCloneToken(uint _snapshotBlock, string _cloneTokenName, string _cloneTokenSymbol) public returns (address);
 
 }
