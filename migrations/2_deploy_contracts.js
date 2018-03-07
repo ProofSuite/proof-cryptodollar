@@ -6,7 +6,6 @@ const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
-const PriceFeed = artifacts.require('./PriceFeed.sol')
 const Store = artifacts.require("./Store.sol");
 const Rewards = artifacts.require("./Rewards.sol")
 
