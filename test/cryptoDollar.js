@@ -25,26 +25,39 @@ contract('CryptoDollar', (accounts) => {
   beforeEach(async () => {
     // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
     // state for each test so we redeploy all libraries an other contracts every time.
-    rewardsStorageProxy = await RewardsStorageProxy.new()
-    cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
-    cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
-    safeMath = await SafeMath.new()
+    let deployedLibraries = await Promise.all([
+      RewardsStorageProxy.new(),
+      CryptoFiatStorageProxy.new(),
+      CryptoDollarStorageProxy.new(),
+      SafeMath.new()
+    ])
 
-    // Linking libraries
-    await ProofToken.link(SafeMath, safeMath.address)
-    await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
-    await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-    await CryptoDollar.link(SafeMath, safeMath.address)
-    await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-    await CryptoFiatHub.link(SafeMath, safeMath.address)
-    await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-    await Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address)
-    await Rewards.link(SafeMath, safeMath.address)
+    rewardsStorageProxy = deployedLibraries[0]
+    cryptoFiatStorageProxy = deployedLibraries[1]
+    cryptoDollarStorageProxy = deployedLibraries[2]
+    safeMath = deployedLibraries[3]
+
+    // Libraries are linked to each contract
+    await Promise.all([
+      ProofToken.link(SafeMath, safeMath.address),
+      CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address),
+      CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+      CryptoDollar.link(SafeMath, safeMath.address),
+      CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+      CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address),
+      CryptoFiatHub.link(SafeMath, safeMath.address),
+      Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+      Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address),
+      Rewards.link(SafeMath, safeMath.address)
+    ])
 
     store = await Store.new()
     cryptoDollar = await CryptoDollar.new(store.address)
-    await store.authorizeAccess(cryptoDollar.address)
-    await cryptoDollar.authorizeAccess(admin)
+
+    await Promise.all([
+      store.authorizeAccess(cryptoDollar.address),
+      cryptoDollar.authorizeAccess(admin)
+    ])
   })
 
   describe('State variables', async () => {
@@ -102,19 +115,23 @@ contract('CryptoDollar', (accounts) => {
 
   describe('Buy & Sell', async() => {
     it('should buy tokens for receiver', async () => {
-      let initialSupply = await cryptoDollar.totalSupply()
-      let initialBalance = await cryptoDollar.balanceOf(receiver)
-      let initialReservedEther = await cryptoDollar.reservedEther(receiver)
+      let initialState = await Promise.all([
+        cryptoDollar.totalSupply(),
+        cryptoDollar.balanceOf(receiver),
+        cryptoDollar.reservedEther(receiver)])
+      let [initialSupply, initialBalance, initialReservedEther] = initialState
+
       await cryptoDollar.buy(receiver, 1, 1)
 
-      let supply = await cryptoDollar.totalSupply()
-      let balance = await cryptoDollar.balanceOf(receiver)
-      let reservedEther = await cryptoDollar.reservedEther(receiver)
+      let finalState = await Promise.all([
+        cryptoDollar.totalSupply(),
+        cryptoDollar.balanceOf(receiver),
+        cryptoDollar.reservedEther(receiver)])
+      let [supply, balance, reservedEther ] = finalState
 
       let supplyIncrement = supply.minus(initialSupply)
       let balanceIncrement = balance.minus(initialBalance)
       let reservedEtherIncrement = reservedEther.minus(initialReservedEther)
-
       supplyIncrement.should.be.bignumber.equal(1)
       balanceIncrement.should.be.bignumber.equal(1)
       reservedEtherIncrement.should.be.bignumber.equal(1)
@@ -122,19 +139,24 @@ contract('CryptoDollar', (accounts) => {
 
     it('should sell tokens for receiver', async() => {
       await cryptoDollar.buy(receiver, 1, 1)
-      let initialSupply = await cryptoDollar.totalSupply()
-      let initialBalance = await cryptoDollar.balanceOf(receiver)
-      let initialReservedEther = await cryptoDollar.reservedEther(receiver)
+
+      let initialState = await Promise.all([
+        cryptoDollar.totalSupply(),
+        cryptoDollar.balanceOf(receiver),
+        cryptoDollar.reservedEther(receiver)])
+      let [initialSupply, initialBalance, initialReservedEther] = initialState
 
       await cryptoDollar.sell(receiver, 1, 1)
-      let supply = await cryptoDollar.totalSupply()
-      let balance = await cryptoDollar.balanceOf(receiver)
-      let reservedEther = await cryptoDollar.reservedEther(receiver)
+
+      let finalState = await Promise.all([
+        cryptoDollar.totalSupply(),
+        cryptoDollar.balanceOf(receiver),
+        cryptoDollar.reservedEther(receiver)])
+      let [supply, balance, reservedEther] = finalState
 
       let supplyDecrement = initialSupply.minus(supply)
       let balanceDecrement = initialBalance.minus(balance)
       let reservedEtherDecrement = initialReservedEther.minus(reservedEther)
-
       supplyDecrement.should.be.bignumber.equal(1)
       balanceDecrement.should.be.bignumber.equal(1)
       reservedEtherDecrement.should.be.bignumber.equal(1)
@@ -161,21 +183,22 @@ contract('CryptoDollar', (accounts) => {
     it('should transfer reserved ether from sender to receiver', async() => {
       await cryptoDollar.buy(sender, 100, 1 * 10 ** 18)
 
-      let initialSenderReservedEther = await cryptoDollar.reservedEther(sender)
-      let initialSenderBalance = await cryptoDollar.balanceOf(sender)
-      let initialReceiverReservedEther = await cryptoDollar.reservedEther(receiver)
+      let initialState = await Promise.all([
+        cryptoDollar.reservedEther(sender),
+        cryptoDollar.balanceOf(sender),
+        cryptoDollar.reservedEther(receiver)])
+      let [initialSenderReservedEther, initialSenderBalance, initialReceiverReservedEther] = initialState
 
-      let txn = await cryptoDollar.transfer(receiver, 50, { from: sender })
-      await waitUntilTransactionsMined(txn.tx)
+      await cryptoDollar.transfer(receiver, 50, { from: sender })
 
-      let senderReservedEther = await cryptoDollar.reservedEther(sender)
-      let receiverReservedEther = await cryptoDollar.reservedEther(receiver)
+      let finalState = await Promise.all([
+        cryptoDollar.reservedEther(sender),
+        cryptoDollar.reservedEther(receiver)])
+      let [senderReservedEther, receiverReservedEther] = finalState
 
       let expectedVariation = initialSenderReservedEther.mul(50).div(initialSenderBalance)
-
       let senderReservedEtherVariation = senderReservedEther.minus(initialSenderReservedEther)
       let receiverReservedEtherVariation = receiverReservedEther.minus(initialReceiverReservedEther)
-
       senderReservedEtherVariation.should.be.bignumber.equal(-expectedVariation)
       receiverReservedEtherVariation.should.be.bignumber.equal(expectedVariation)
     })
@@ -208,34 +231,31 @@ contract('CryptoDollar', (accounts) => {
 
       let receiverBalanceVariation = receiverBalance.minus(initialReceiverBalance)
       let senderBalanceVariation = senderBalance.minus(initialSenderBalance)
-
       receiverBalanceVariation.should.be.bignumber.equal(amount)
       senderBalanceVariation.should.be.bignumber.equal(-amount)
     })
 
     it('should transfer reserved ether', async() => {
       let amount = 50
-      let txn
-      txn = await cryptoDollar.buy(sender, 100, 1 * 10 ** 18)
-      await waitUntilTransactionsMined(txn.tx)
+      await cryptoDollar.buy(sender, 100, 1 * 10 ** 18)
 
-      let initialReceiverReservedEther = await cryptoDollar.reservedEther(receiver)
-      let initialSenderReservedEther = await cryptoDollar.reservedEther(sender)
-      let initialSenderBalance = await cryptoDollar.balanceOf(sender)
+      let initialState = await Promise.all([
+        cryptoDollar.balanceOf(sender),
+        cryptoDollar.reservedEther(sender),
+        cryptoDollar.reservedEther(receiver)])
+      let [initialSenderBalance, initialSenderReservedEther, initialReceiverReservedEther] = initialState
 
-      txn = await cryptoDollar.approve(receiver, amount, { from: sender  })
-      await waitUntilTransactionsMined(txn.tx)
-      txn = await cryptoDollar.transferFrom(sender, receiver, 50)
-      await waitUntilTransactionsMined(txn.tx)
+      await cryptoDollar.approve(receiver, amount, { from: sender })
+      await cryptoDollar.transferFrom(sender, receiver, 50)
 
       let etherValue = initialSenderReservedEther.mul(amount).div(initialSenderBalance)
-
-      let receiverReservedEther = await cryptoDollar.reservedEther(receiver)
-      let senderReservedEther = await cryptoDollar.reservedEther(sender)
+      let finalState = await Promise.all([
+        cryptoDollar.reservedEther(receiver),
+        cryptoDollar.reservedEther(sender)])
+      let [senderReservedEther, receiverReservedEther] = finalState
 
       let receiverReservedEtherVariation = receiverReservedEther.minus(initialReceiverReservedEther)
       let senderReservedEtherVariation = senderReservedEther.minus(initialSenderReservedEther)
-
       receiverReservedEtherVariation.should.be.bignumber.equal(etherValue)
       senderReservedEtherVariation.should.be.bignumber.equal(-etherValue)
     })

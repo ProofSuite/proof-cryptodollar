@@ -46,21 +46,31 @@ contract('Buffer', (accounts) => {
   beforeEach(async() => {
     // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
     // state for each test so we redeploy all libraries an other contracts every time.
-    rewardsStorageProxy = await RewardsStorageProxy.new()
-    cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
-    cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
-    safeMath = await SafeMath.new()
+    let deployedLibraries = await Promise.all([
+      RewardsStorageProxy.new(),
+      CryptoFiatStorageProxy.new(),
+      CryptoDollarStorageProxy.new(),
+      SafeMath.new()
+    ])
 
-    // Linking libraries
-    await ProofToken.link(SafeMath, safeMath.address)
-    await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
-    await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-    await CryptoDollar.link(SafeMath, safeMath.address)
-    await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-    await CryptoFiatHub.link(SafeMath, safeMath.address)
-    await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-    await Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address)
-    await Rewards.link(SafeMath, safeMath.address)
+    rewardsStorageProxy = deployedLibraries[0]
+    cryptoFiatStorageProxy = deployedLibraries[1]
+    cryptoDollarStorageProxy = deployedLibraries[2]
+    safeMath = deployedLibraries[3]
+
+    // Libraries are linked to each contract
+    await Promise.all([
+      ProofToken.link(SafeMath, safeMath.address),
+      CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address),
+      CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+      CryptoDollar.link(SafeMath, safeMath.address),
+      CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+      CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address),
+      CryptoFiatHub.link(SafeMath, safeMath.address),
+      Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+      Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address),
+      Rewards.link(SafeMath, safeMath.address)
+    ])
 
     store = await Store.new()
     proofToken = await ProofToken.new()
@@ -68,14 +78,17 @@ contract('Buffer', (accounts) => {
     rewards = await Rewards.new(store.address, proofToken.address)
     cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
 
-    await store.authorizeAccess(cryptoFiatHub.address)
-    await store.authorizeAccess(cryptoDollar.address)
-    await store.authorizeAccess(rewards.address)
-    await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-    await cryptoFiatHub.initialize(20)
+    await Promise.all([
+      store.authorizeAccess(cryptoFiatHub.address),
+      store.authorizeAccess(cryptoDollar.address),
+      store.authorizeAccess(rewards.address)
+    ])
 
-    await cryptoFiatHub.initialize(blocksPerEpoch)
-    await cryptoFiatHub.capitalize({ from: fund, value: collateral })
+    await Promise.all([
+      cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+      cryptoFiatHub.initialize(blocksPerEpoch),
+      cryptoFiatHub.capitalize({ from: fund, value: collateral })
+    ])
   })
 
   describe('Initial Buffer State', async () => {
