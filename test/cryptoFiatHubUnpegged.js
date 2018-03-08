@@ -55,9 +55,15 @@ contract('Cryptofiat Hub', (accounts) => {
       // The exchange rates are kept in objects that references them both in strings and numbers since the
       // __callback function takes exchanges rate as a string value
       initialExchangeRate = { asString: '20000', asNumber: 20000 }
+<<<<<<< 9262c1ea70b8b9232ceeadb7dbb964c24d39588c
       updatedExchangeRate = { asString: '2000', asNumber: 2000 }
 
       // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+=======
+      updatedExchangeRate = { asString: '20000', asNumber: 20000 }
+
+            // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+>>>>>>> [#155692396] Improved syntax
       // state for each test so we redeploy all libraries an other contracts every time.
       let deployedLibraries = await Promise.all([
         RewardsStorageProxy.new(),
