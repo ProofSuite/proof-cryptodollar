@@ -63,14 +63,18 @@ module.exports = function(deployer) {
     )})
     //authorize store access to the CryptoFiatHub, CryptoDollar and Rewards contracts
     .then(async() => {
-      let store = await Store.deployed()
-      let cryptoDollar = await CryptoDollar.deployed()
-      let rewards = await Rewards.deployed()
+      let [ store, cryptoDollar, rewards ] = await Promise.all([
+        Store.deployed(),
+        CryptoDollar.deployed(),
+        Rewards.deployed()
+      ])
 
-      await store.authorizeAccess(CryptoFiatHub.address)
-      await store.authorizeAccess(CryptoDollar.address)
-      await store.authorizeAccess(Rewards.address)
-      await cryptoDollar.authorizeAccess(CryptoFiatHub.address)
+      await Promise.all([
+        store.authorizeAccess(CryptoFiatHub.address),
+        store.authorizeAccess(CryptoDollar.address),
+        store.authorizeAccess(Rewards.address),
+        cryptoDollar.authorizeAccess(CryptoFiatHub.address)
+      ])
     })
     /**
      * Initialize the CryptoFiatHub with a 20 blocks epoch.
