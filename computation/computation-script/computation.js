@@ -1,15 +1,6 @@
 const request = require('request')
 
-const threshold = 3
-
-let rates = []
-let ratesLength = 0
-let ratesSum = 0
-let sampleMean = 0
-let standardDeviation = 0
-let validRates = []
-let validRatesLength = 0
-let validRateSum = 0
+const THRESHOLD = 3
 
 function kraken () {
   return new Promise((resolve, reject) => {
@@ -111,9 +102,9 @@ function yobit () {
 }
 
 async function getRates () {
-  let nonZeroRates = []
+  let rateList
   try {
-    const rateList = await Promise.all([
+    rateList = await Promise.all([
       kraken(),
       bitfinex(),
       gdax(),
@@ -122,60 +113,22 @@ async function getRates () {
       gemini(),
       yobit()
     ])
-    for (let i = 0; i < rateList.length; i++) {
-      if (rateList[i] > 0) {}
-      nonZeroRates.push(rateList[i])
-    }
   } catch (err) {
   } finally {
-    return nonZeroRates
+    return rateList.filter(rate => rate > 0)
   }
 }
 
-function calculateStandardDeviation () { // calculate standard deviation
-  return new Promise((resolve, reject) => {
-    let sum = 0
-    for (let i = 0; i < ratesLength; i++) {
-      sum += Math.pow(rates[i] - sampleMean, 2)
-    }
-    standardDeviation = Math.sqrt((1 / (ratesLength - 1)) * sum)
-    resolve(standardDeviation)
-  })
-}
-
-function findValidRates () { // find valid rates
-  return new Promise((resolve, reject) => {
-    for (let i = 0; i < ratesLength; i++) {
-      if (Math.abs(rates[i] - sampleMean) <= standardDeviation) validRates.push(rates[i])
-    }
-    resolve(0)
-  })
-}
-
-function findValidRatesMean () { // find valid rates mean
-  return new Promise((resolve, reject) => {
-    validRatesLength = validRates.length
-    for (let i = 0; i < validRatesLength; i++) {
-      validRateSum += validRates[i]
-    }
-    resolve(validRateSum / validRatesLength)
-  })
-}
-
-async function calculateAverage (_rates) {
+async function calculateAverage (rates) {
   try {
-    rates = _rates
-    ratesLength = rates.length
-    for (let i = 0; i < ratesLength; i++) {
-      ratesSum += rates[i]
-    }
+    const ratesSum = rates.reduce((acc, cur) => acc + cur, 0)
 
-    if (ratesLength > threshold && ratesSum !== 0) {
-      sampleMean = ratesSum / ratesLength
-      await calculateStandardDeviation()
-      await findValidRates()
-      const avgPrice = await findValidRatesMean()
-      return avgPrice.toFixed(2)
+    if (rates.length > THRESHOLD && ratesSum !== 0) {
+      const sampleMean = ratesSum / rates.length
+      const standardDeviation = Math.sqrt((1 / (rates.length - 1)) * rates.reduce((acc, cur) => acc + Math.pow(cur - sampleMean, 2), 0))
+      const validRates = rates.filter(rate => Math.abs(rate - sampleMean) <= standardDeviation)
+      const averagePrice = validRates.reduce((acc, cur) => acc + cur, 0) / validRates.length
+      return averagePrice.toFixed(2)
     } else {
       return '0'
     }
@@ -184,34 +137,7 @@ async function calculateAverage (_rates) {
   }
 }
 
-function init () {
-  rates = []
-  ratesLength = 0
-  ratesSum = 0
-  sampleMean = 0
-  standardDeviation = 0
-  validRates = []
-  validRatesLength = 0
-  validRateSum = 0
-}
-
-function getSampleMean () {
-  return sampleMean
-}
-
-function getStandardDeviation () {
-  return standardDeviation
-}
-
-function getValidRates () {
-  return validRates
-}
-
 module.exports = {
-  init: init,
   getRates: getRates,
-  calculateAverage : calculateAverage,
-  getSampleMean : getSampleMean,
-  getStandardDeviation : getStandardDeviation,
-  getValidRates: getValidRates
+  calculateAverage : calculateAverage
 }
