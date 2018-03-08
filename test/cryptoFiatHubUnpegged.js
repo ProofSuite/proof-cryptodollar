@@ -103,7 +103,7 @@ contract('Cryptofiat Hub', (accounts) => {
         store.authorizeAccess(cryptoFiatHub.address),
         store.authorizeAccess(cryptoDollar.address),
         store.authorizeAccess(rewards.address),
-        cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+        cryptoDollar.authorizeAccess(cryptoFiatHub.address)
       ])
 
       await Promise.all([
@@ -111,7 +111,7 @@ contract('Cryptofiat Hub', (accounts) => {
         cryptoFiatHub.capitalize({ from: fund, value: collateral })
       ])
 
-      //buy tokens and simulate oraclize callback
+      // buy tokens and simulate oraclize callback
       await cryptoFiatHub.buyCryptoDollar(defaultBuyOrder)
       let { queryId } = await watchNextEvent(cryptoFiatHub)
       await cryptoFiatHub.__callback(queryId, initialExchangeRate.asString)
