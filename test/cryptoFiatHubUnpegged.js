@@ -100,13 +100,17 @@ contract('Cryptofiat Hub', (accounts) => {
        * requires a significant amount of time (40 blocks ~ 5-10 seconds). Final tests should be run
        * with bigger epochs.
        */
-      await store.authorizeAccess(cryptoFiatHub.address)
-      await store.authorizeAccess(cryptoDollar.address)
-      await store.authorizeAccess(rewards.address)
-      await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-      await cryptoFiatHub.initialize(20)
+      await Promise.all([
+        store.authorizeAccess(cryptoFiatHub.address),
+        store.authorizeAccess(cryptoDollar.address),
+        store.authorizeAccess(rewards.address),
+        cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+      ])
 
-      let txn = await cryptoFiatHub.capitalize({ from: fund, value: collateral })
+      await Promise.all([
+        cryptoFiatHub.initialize(20),
+        cryptoFiatHub.capitalize({ from: fund, value: collateral })
+      ])
 
       //buy tokens and simulate oraclize callback
       await cryptoFiatHub.buyCryptoDollar(defaultBuyOrder)
@@ -139,9 +143,13 @@ contract('Cryptofiat Hub', (accounts) => {
       await cryptoFiatHub.__callback(queryId, updatedExchangeRate.asString, { from: oraclize })
 
       // check that callback parameters correspond to initial query
-      let callingValue = await cryptoFiatHub.callingValue(queryId)
-      let callingAddress = await cryptoFiatHub.callingAddress(queryId)
-      let callingFee = await cryptoFiatHub.callingFee(queryId)
+      let queryParameters = [
+        cryptoFiatHub.callingValue(queryId),
+        cryptoFiatHub.callingAddress(queryId),
+        cryptoFiatHub.callingFee(queryId)
+      ]
+
+      let [ callingValue, callingAddress, callingFee ] = await Promise.all(queryParameters)
       callingValue.should.be.bignumber.equal(tokens)
       callingAddress.should.be.equal(wallet1)
       callingFee.should.be.bignumber.equal(oraclizeFee)

@@ -63,11 +63,12 @@ module.exports = function(deployer) {
     )})
     //authorize store access to the CryptoFiatHub, CryptoDollar and Rewards contracts
     .then(async() => {
-      let [ store, cryptoDollar, rewards ] = await Promise.all([
+      let deployedContracts = await Promise.all([
         Store.deployed(),
         CryptoDollar.deployed(),
         Rewards.deployed()
       ])
+      let [ store, cryptoDollar, rewards ] = deployedContracts
 
       await Promise.all([
         store.authorizeAccess(CryptoFiatHub.address),
