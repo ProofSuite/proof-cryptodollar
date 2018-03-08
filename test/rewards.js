@@ -2,7 +2,7 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants.js'
-import { expectRevert, advanceToBlock, waitUntilTransactionsMined } from '../scripts/helpers'
+import { expectRevert, advanceToBlock } from '../scripts/helpers'
 import { computeEpoch } from '../scripts/rewardsHelpers'
 
 chai.use(chaiAsPromised)
@@ -20,7 +20,6 @@ const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
 
 contract('Rewards', (accounts) => {
-  let txn
   let store
   let rewards
   let cryptoDollar
@@ -31,13 +30,14 @@ contract('Rewards', (accounts) => {
   let cryptoDollarStorageProxy
   let proofToken
   let blocksPerEpoch
+  let defaultGasPrice = 10 * 10 ** 9
 
   let fund = accounts[0]
   let wallet = accounts[1]
-  let params = { from: fund, value: 1 * ether }
+  let defaultReward = { from: fund, value: 1 * ether, gasPrice: defaultGasPrice }
+  let defaultParams = { from: wallet, gasPrice: defaultGasPrice }
 
   let creationBlockNumber, epoch1, epoch2
-  let exchangeRate = 20000
 
   beforeEach(async() => {
     blocksPerEpoch = 20
@@ -62,10 +62,8 @@ contract('Rewards', (accounts) => {
 
     // We mint 1000 tokens and transfer half of them to the testing wallet address.
     proofToken = await ProofToken.new()
-    txn = await proofToken.mint(fund, 1000)
-    await waitUntilTransactionsMined(txn.tx)
-    txn = await proofToken.transfer(wallet, 500, { from: fund })
-    await waitUntilTransactionsMined(txn.tx)
+    await proofToken.mint(fund, 1000)
+    await proofToken.transfer(wallet, 500, { from: fund })
 
     // We deploy the rest of the contracts. The Proof tokens are already allocated before the first epoch
     store = await Store.new()
@@ -99,15 +97,13 @@ contract('Rewards', (accounts) => {
 
   describe('Receive rewards', async() => {
     it('should update the contract balance when receiving rewards', async() => {
-      await rewards.receiveRewards(params)
-
+      await rewards.receiveRewards(defaultReward)
       let balance = web3.eth.getBalance(rewards.address)
       balance.should.be.bignumber.equal(10 ** 18)
     })
 
     it('should update the current pool balance when receiving rewards', async() => {
-      await rewards.receiveRewards(params)
-
+      await rewards.receiveRewards(defaultReward)
       let currentPoolBalance = await rewards.getCurrentPoolBalance()
       currentPoolBalance.should.be.bignumber.equal(1 * ether)
     })
@@ -122,7 +118,6 @@ contract('Rewards', (accounts) => {
     it('should get the current epoch', async() => {
       let currentBlockNumber = web3.eth.blockNumber
       let epoch = await rewards.getCurrentEpoch()
-
       let expectedEpoch = computeEpoch(currentBlockNumber, creationBlockNumber, blocksPerEpoch)
       epoch.should.be.bignumber.equal(expectedEpoch)
     })
@@ -130,17 +125,15 @@ contract('Rewards', (accounts) => {
     it('receiveRewards() should update the epoch', async() => {
       let initialEpoch = await rewards.getCurrentEpoch()
 
-      params = { from: fund, value: 1 * ether }
-      await rewards.receiveRewards(params)
+      await rewards.receiveRewards(defaultReward)
       await advanceToBlock(epoch1)
-      await rewards.receiveRewards(params) // We call the receive dividends function again to trigger the update epoch modifier
+      await rewards.receiveRewards(defaultReward) // We call the receive dividends function again to trigger the update epoch modifier
 
       let epoch = await rewards.getCurrentEpoch()
       epoch.should.be.bignumber.equal(initialEpoch.add(1))
 
       let poolBalance = await rewards.getCurrentPoolBalance()
       poolBalance.should.be.bignumber.equal(1 * ether)
-
       let previousPoolBalance = await rewards.getNthPoolBalance(initialEpoch)
       previousPoolBalance.should.be.bignumber.equal(1 * ether)
     })
@@ -148,14 +141,12 @@ contract('Rewards', (accounts) => {
     it('receiveRewards() should set the current pool balance to 0 if the epoch is updated', async() => {
       let initialEpoch = await rewards.getCurrentEpoch()
 
-      params = { from: fund, value: 1 * ether }
-      await rewards.receiveRewards(params)
+      await rewards.receiveRewards(defaultReward)
       await advanceToBlock(epoch1) // We call the receive dividends function again to trigger the epoch udpate
-      await rewards.receiveRewards(params)
+      await rewards.receiveRewards(defaultReward)
 
       let poolBalance = await rewards.getCurrentPoolBalance()
       poolBalance.should.be.bignumber.equal(1 * ether)
-
       let previousPoolBalance = await rewards.getNthPoolBalance(initialEpoch)
       previousPoolBalance.should.be.bignumber.equal(1 * ether)
     })
@@ -188,17 +179,14 @@ contract('Rewards', (accounts) => {
       let initialBalance = web3.eth.getBalance(wallet)
 
       // dividends are sent during the first epoch (epoch 0)
-      params = { from: fund, value: 1 * ether }
-      txn = await rewards.receiveRewards(params)
-      await waitUntilTransactionsMined(txn.tx)
+      txn = await rewards.receiveRewards(defaultReward)
 
       // advance to second epoch (epoch 1)
       await advanceToBlock(epoch1)
 
       // rewards are withdrawn during the second epoch (epoch 1). The rewards corresponding to epoch 0 are sent.
-      params = { from: wallet, gasPrice: 10 * 10 ** 9 }
-      txn = await rewards.withdrawRewards(params)
-      txnFee = params.gasPrice * txn.receipt.gasUsed
+      txn = await rewards.withdrawRewards(defaultParams)
+      txnFee = defaultParams.gasPrice * txn.receipt.gasUsed
 
       let balance = web3.eth.getBalance(wallet)
       let balanceIncrement = balance.minus(initialBalance)
@@ -215,31 +203,24 @@ contract('Rewards', (accounts) => {
       let initialBalance = web3.eth.getBalance(wallet)
 
       // dividends are sent during the first epoch (epoch 0)
-      params = { from: fund, value: 1 * ether }
-      txn = await rewards.receiveRewards(params)
-      await waitUntilTransactionsMined(txn.tx)
+      txn = await rewards.receiveRewards(defaultReward)
 
       // 250 tokens are sent out of the wallet during the first epoch (epoch 0). There are 250 remaining tokens
-      params = { from: wallet, gasPrice: 10 * 10 ** 9 }
-      txn = await proofToken.transfer(fund, 250, params)
-      txnFee1 = params.gasPrice * txn.receipt.gasUsed
-      await waitUntilTransactionsMined(txn.tx)
+      txn = await proofToken.transfer(fund, 250, defaultParams)
+      txnFee1 = defaultParams.gasPrice * txn.receipt.gasUsed
 
       // advance to second epoch (epoch 1)
       await advanceToBlock(epoch1)
 
       // rewards are sent to the reward pool during the second epoch (epoch 1)
-      params = { from: fund, value: 1 * ether }
-      txn = await rewards.receiveRewards(params)
-      await waitUntilTransactionsMined(txn.tx)
+      txn = await rewards.receiveRewards(defaultReward)
 
       // advance to third epoch (epoch 2)
       await advanceToBlock(epoch2)
 
       // rewards are withdraw during the third epoch (epoch 2). The rewards corresponding to the epochs 0 and 1 are sent
-      params = { from: wallet, gasPrice: 10 * 10 ** 9 }
-      txn = await rewards.withdrawRewards(params)
-      txnFee2 = params.gasPrice * txn.receipt.gasUsed
+      txn = await rewards.withdrawRewards(defaultParams)
+      txnFee2 = defaultParams.gasPrice * txn.receipt.gasUsed
 
       // the testing address is entitled for 50% of dividends for epoch 0 and 25% of dividends of epoch 1 (~= 0.75 ether)
       let balance = web3.eth.getBalance(wallet)

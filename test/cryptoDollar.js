@@ -1,15 +1,10 @@
 /* global  artifacts:true, web3: true, contract: true */
 import chai from 'chai'
-import chaiStats from 'chai-stats'
-
-import { expectRevert, waitUntilTransactionsMined } from '../scripts/helpers.js'
+import { expectRevert } from '../scripts/helpers.js'
 import { ether } from '../scripts/constants.js'
 
-chai.use(require('chai-bignumber')(web3.BigNumber))
-    .use(chaiStats)
-    .should()
+chai.use(require('chai-bignumber')(web3.BigNumber)).should()
 
-const should = chai.should()
 const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
 const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
 const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
@@ -17,8 +12,8 @@ const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
-const Store = artifacts.require("./Store.sol")
-const Rewards = artifacts.require("./Rewards.sol")
+const Store = artifacts.require('./Store.sol')
+const Rewards = artifacts.require('./Rewards.sol')
 
 contract('CryptoDollar', (accounts) => {
   let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath
@@ -150,18 +145,15 @@ contract('CryptoDollar', (accounts) => {
 
     it('should transfer tokens from sender to receiver', async() => {
       await cryptoDollar.buy(sender, 100, 0)
-
       let initialSenderBalance = await cryptoDollar.balanceOf(sender)
       let initialReceiverBalance = await cryptoDollar.balanceOf(receiver)
 
       await cryptoDollar.transfer(receiver, 100, { from: sender })
-
       let senderBalance = await cryptoDollar.balanceOf(sender)
       let receiverBalance = await cryptoDollar.balanceOf(receiver)
 
       let senderBalanceVariation = senderBalance.minus(initialSenderBalance)
       let receiverBalanceVariation = receiverBalance.minus(initialReceiverBalance)
-
       senderBalanceVariation.should.be.bignumber.equal(-100)
       receiverBalanceVariation.should.be.bignumber.equal(+100)
     })
@@ -198,7 +190,6 @@ contract('CryptoDollar', (accounts) => {
       await cryptoDollar.approve(receiver, amount, { from: sender })
 
       let receiverAllowance = await cryptoDollar.allowance(sender, receiver);
-
       let difference = receiverAllowance.minus(initialReceiverAllowance)
       difference.should.be.bignumber.equal(amount)
     })
@@ -206,7 +197,6 @@ contract('CryptoDollar', (accounts) => {
     it('should transfer tokens', async() => {
       let amount = 50
       await cryptoDollar.buy(sender, 100, 0)
-
       let initialReceiverBalance = await cryptoDollar.balanceOf(receiver)
       let initialSenderBalance = await cryptoDollar.balanceOf(sender)
 

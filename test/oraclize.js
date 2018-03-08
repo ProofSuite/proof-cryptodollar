@@ -10,7 +10,6 @@ chai.use(require('chai-bignumber')(web3.BigNumber))
 .should()
 
 const should = chai.should()
-
 const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
 const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
 const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
@@ -34,6 +33,7 @@ contract('Oraclize', async(accounts) => {
   let defaultSellOrder = { from: sender, gasPrice: defaultGasPrice }
   let expectedExchangeRate = '87537'
   let totalTokens
+  let blocksPerEpoch = 20
 
   /**
   * In this series of tests, we use the testing archive that sends back a static value
@@ -88,7 +88,6 @@ contract('Oraclize', async(accounts) => {
       event2.queryId.should.be.equal(event1.queryId)
       event2.result.should.be.equal(expectedExchangeRate)
       event2.sender.should.be.equal(sender)
-
       event2.tokenAmount.should.be.bignumber.equal(86190)
 
       let expectedPaymentValue = 0.99 * event1.value - event1.oraclizeFee
