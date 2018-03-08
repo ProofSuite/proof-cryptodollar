@@ -3,6 +3,7 @@ import chai from 'chai'
 import { expectRevert } from '../scripts/helpers'
 
 chai.use(require('chai-bignumber')(web3.BigNumber)).should()
+<<<<<<< 12fccb4ec72af554b84e892d2b26e4196c10d7b9
 const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
 const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
 const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
@@ -10,6 +11,8 @@ const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
+=======
+>>>>>>> [#155692396] Improved syntax
 const Store = artifacts.require('./Store.sol')
 const Rewards = artifacts.require('./Rewards.sol')
 
