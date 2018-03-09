@@ -27,8 +27,10 @@ install:
 
 before_script:
   - ./start_rpc.sh > testrpc.log &
-script:
   - sleep 5
+  - ./start_bridge.sh > bridge.log &
+  - sleep 5
+script:
   - truffle test
 after_script:
   - npm run coverage && cat coverage/lcov.info

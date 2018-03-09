@@ -37,6 +37,7 @@ contract('Rewards', (accounts) => {
   let params = { from: fund, value: 1 * ether }
 
   let creationBlockNumber, epoch1, epoch2
+  let exchangeRate = 20000
 
   beforeEach(async() => {
     blocksPerEpoch = 20
@@ -76,7 +77,6 @@ contract('Rewards', (accounts) => {
     await store.authorizeAccess(cryptoDollar.address)
     await store.authorizeAccess(rewards.address)
     await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-
     await cryptoFiatHub.initialize(blocksPerEpoch)
 
     creationBlockNumber = await cryptoFiatStorageProxy.getCreationBlockNumber(store.address)
