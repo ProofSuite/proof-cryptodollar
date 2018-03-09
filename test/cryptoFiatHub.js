@@ -5,6 +5,7 @@ import { ether } from '../scripts/constants'
 import { getWeiBalance, expectRevert } from '../scripts/helpers'
 import { watchNextEvent } from '../scripts/events'
 
+
 chai.use(chaiAsPromised).use(require('chai-bignumber')(web3.BigNumber)).should()
 
 const should = chai.should()
@@ -30,6 +31,7 @@ contract('Cryptofiat Hub', accounts => {
   let defaultGasPrice = 10 * 10 ** 9
   let defaultOrder = { from: wallet1, value: 1 * ether, gasPrice: defaultGasPrice }
   let defaultSellOrder = { from: wallet1, gasPrice: defaultGasPrice }
+  let defaultParams = { from: wallet1 }
   let oraclizeFee = 5385000000000000
 
   /**
