@@ -4,6 +4,7 @@ import chaiStats from 'chai-stats'
 import { ipfs } from '../config'
 import { ether } from '../scripts/constants'
 import { watchNextEvent } from '../scripts/events'
+import { expectRevert } from '../scripts/helpers'
 
 chai.use(require('chai-bignumber')(web3.BigNumber))
 .use(chaiStats)
@@ -30,7 +31,6 @@ contract('Oraclize', async(accounts) => {
   let collateral = 1 * ether
   let defaultGasPrice = 10 * 10 ** 9
   let defaultOrder = { from: sender, value: 1 * ether, gasPrice: defaultGasPrice }
-  let defaultSellOrder = { from: sender, gasPrice: defaultGasPrice }
   let expectedExchangeRate = '87537'
   let totalTokens
   let blocksPerEpoch = 20
@@ -311,6 +311,62 @@ contract('Oraclize', async(accounts) => {
       let contractBalance = web3.eth.getBalance(cryptoFiatHub.address)
       let expectedBalance = collateral + oraclizeFee - expectedPaymentValue
       contractBalance.toNumber().should.be.equal(expectedBalance)
+    })
+  })
+
+  describe.skip('__callback function', async() => {
+    before(async() => {
+      // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+      // state for each test so we redeploy all libraries an other contracts every time.
+      let deployedLibraries = await Promise.all([
+        RewardsStorageProxy.new(),
+        CryptoFiatStorageProxy.new(),
+        CryptoDollarStorageProxy.new(),
+        SafeMath.new()
+      ])
+
+      rewardsStorageProxy = deployedLibraries[0]
+      cryptoFiatStorageProxy = deployedLibraries[1]
+      cryptoDollarStorageProxy = deployedLibraries[2]
+      safeMath = deployedLibraries[3]
+
+      // Linking libraries
+      await Promise.all([
+        ProofToken.link(SafeMath, safeMath.address),
+        CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address),
+        CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoDollar.link(SafeMath, safeMath.address),
+        CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        CryptoFiatHub.link(SafeMath, safeMath.address),
+        Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        Rewards.link(SafeMath, safeMath.address)
+      ])
+
+      // Deploy CryptoFiat Contracts
+      store = await Store.new()
+      proofToken = await ProofToken.new()
+      cryptoDollar = await CryptoDollar.new(store.address)
+      rewards = await Rewards.new(store.address, proofToken.address)
+      cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
+
+      // CryptoFiat Contract Network Setup
+      await Promise.all([
+        store.authorizeAccess(cryptoFiatHub.address),
+        store.authorizeAccess(cryptoDollar.address),
+        store.authorizeAccess(rewards.address),
+        cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+        cryptoFiatHub.initialize(blocksPerEpoch),
+        cryptoFiatHub.initializeOraclize(IPFSHash, true)
+      ])
+    })
+
+    it('__callback function should only be callable by oraclize', async() => {
+      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
+      let event1 = await watchNextEvent(cryptoFiatHub)
+      event1.oraclizeFee.should.be.bignumber.equal(oraclizeFee)
+      await expectRevert(cryptoFiatHub.__callback(event1.queryId, '100'))
     })
   })
 })

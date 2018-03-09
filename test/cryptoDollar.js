@@ -21,6 +21,7 @@ contract('CryptoDollar', (accounts) => {
   let admin = accounts[0]
   let sender = accounts[1]
   let receiver = accounts[2]
+  let hacker = accounts[3]
 
   beforeEach(async () => {
     // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
@@ -161,6 +162,10 @@ contract('CryptoDollar', (accounts) => {
       balanceDecrement.should.be.bignumber.equal(1)
       reservedEtherDecrement.should.be.bignumber.equal(1)
     })
+
+    it('buy should only be callable by the cryptoDollar (or authorized contract)', async() => {
+      await expectRevert(cryptoDollar.buy(hacker, 1, 1, { from: hacker }))
+    })
   })
 
   describe('Transfer', async() => {
@@ -202,6 +207,36 @@ contract('CryptoDollar', (accounts) => {
       senderReservedEtherVariation.should.be.bignumber.equal(-expectedVariation)
       receiverReservedEtherVariation.should.be.bignumber.equal(expectedVariation)
     })
+
+    it('should not be able to transfer more tokens than balance', async() => {
+      await cryptoDollar.buy(sender, 100, 1 * 10 ** 18)
+
+      let initialState = await Promise.all([
+        cryptoDollar.balanceOf(sender),
+        cryptoDollar.balanceOf(receiver),
+        cryptoDollar.reservedEther(sender),
+        cryptoDollar.reservedEther(receiver)])
+      let [initialSenderBalance, initialReceiverBalance, initialSenderReservedEther, initialReceiverReservedEther] = initialState
+
+      await expectRevert(cryptoDollar.transfer(receiver, 101, { from: sender }))
+
+      let finalState = await Promise.all([
+        cryptoDollar.balanceOf(sender),
+        cryptoDollar.balanceOf(receiver),
+        cryptoDollar.reservedEther(sender),
+        cryptoDollar.reservedEther(receiver)])
+      let [senderBalance, receiverBalance, senderReservedEther, receiverReservedEther] = finalState
+
+      let senderBalanceVariation = senderBalance.minus(initialSenderBalance)
+      let senderReservedEtherVariation = senderReservedEther.minus(initialSenderReservedEther)
+      let receiverBalanceVariation = receiverBalance.minus(initialReceiverBalance)
+      let receiverReservedEtherVariation = receiverReservedEther.minus(initialReceiverReservedEther)
+
+      senderBalanceVariation.should.be.bignumber.equal(0)
+      receiverBalanceVariation.should.be.bignumber.equal(0)
+      senderReservedEtherVariation.should.be.bignumber.equal(0)
+      receiverReservedEtherVariation.should.be.bignumber.equal(0)
+    })
   })
 
   describe('Approve and TransferFrom', async() => {
@@ -233,6 +268,13 @@ contract('CryptoDollar', (accounts) => {
       let senderBalanceVariation = senderBalance.minus(initialSenderBalance)
       receiverBalanceVariation.should.be.bignumber.equal(amount)
       senderBalanceVariation.should.be.bignumber.equal(-amount)
+    })
+
+    it('should not be able to transfer more tokens than allowed', async() => {
+      let amount = 50
+      await cryptoDollar.buy(sender, 100, 0)
+      await cryptoDollar.approve(receiver, amount, { from: sender })
+      await expectRevert(cryptoDollar.transferFrom(sender, receiver, 51))
     })
 
     it('should transfer reserved ether', async() => {
