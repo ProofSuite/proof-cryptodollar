@@ -1,2 +1,4 @@
 node_modules
-
+config/instance/*.json
+database/tingodb/CallbackTxs
+database/tingodb/Queries
