@@ -2,7 +2,7 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
-import { expectInvalidOpcode } from '../scripts/helpers'
+import { expectInvalidOpcode, expectRevert } from '../scripts/helpers'
 import { getState } from '../scripts/cryptoFiatHelpers'
 import { watchNextEvent } from '../scripts/events'
 
@@ -56,7 +56,7 @@ contract('Cryptofiat Hub', (accounts) => {
       // The exchange rates are kept in objects that references them both in strings and numbers since the
       // __callback function takes exchanges rate as a string value
       initialExchangeRate = { asString: '20000', asNumber: 20000 }
-      updatedExchangeRate = { asString: '20000', asNumber: 20000 }
+      updatedExchangeRate = { asString: '2000', asNumber: 2000 }
 
             // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
       // state for each test so we redeploy all libraries an other contracts every time.
@@ -171,6 +171,12 @@ contract('Cryptofiat Hub', (accounts) => {
     it('should update the token supply', async () => {
       let tokenSupply = await cryptoFiatHub.cryptoDollarTotalSupply()
       tokenSupply.should.be.bignumber.equal(0)
+    })
+
+    it('should fail if selling amount of tokens above balance', async () => {
+      let tokenBalance = await cryptoFiatHub.cryptoDollarBalance(wallet1)
+      let tokenAmount = tokenBalance.plus(1)
+      await expectRevert(cryptoFiatHub.sellUnpeggedCryptoDollar(tokenAmount, defaultSellOrder))
     })
   })
 })
