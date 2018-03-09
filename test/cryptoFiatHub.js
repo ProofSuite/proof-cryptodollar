@@ -2,7 +2,7 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
-import { getWeiBalance, expectRevert, waitUntilTransactionsMined } from '../scripts/helpers'
+import { getWeiBalance, expectRevert } from '../scripts/helpers'
 import { watchNextEvent } from '../scripts/events'
 
 
