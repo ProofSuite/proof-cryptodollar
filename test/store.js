@@ -3,10 +3,19 @@ import chai from 'chai'
 import { expectRevert } from '../scripts/helpers'
 
 chai.use(require('chai-bignumber')(web3.BigNumber)).should()
+const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
+const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
+const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
+const SafeMath = artifacts.require('./libraries/SafeMath.sol')
+const CryptoDollar = artifacts.require('./CryptoDollar.sol')
+const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
+const ProofToken = artifacts.require('./mocks/ProofToken.sol')
 const Store = artifacts.require('./Store.sol')
+const Rewards = artifacts.require('./Rewards.sol')
 
 contract('Store', (accounts) => {
-  let store
+  let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath
+  let store, proofToken, cryptoDollar, rewards, cryptoFiatHub
   let admin = accounts[0]
   let hacker = accounts[1]
 
@@ -134,6 +143,73 @@ contract('Store', (accounts) => {
       await expectRevert(store.setBool(key, value, { from: hacker }))
       await store.setBool(key, value, { from: admin })
       await expectRevert(store.deleteBool(key, { from: hacker }))
+    })
+  })
+
+  describe('Proxy Access', async() => {
+    beforeEach(async () => {
+      // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+      // state for each test so we redeploy all libraries an other contracts every time.
+      // TODO Refactor. This is quite ugly.
+      let deployedLibraries = await Promise.all([
+        RewardsStorageProxy.new(),
+        CryptoFiatStorageProxy.new(),
+        CryptoDollarStorageProxy.new(),
+        SafeMath.new()
+      ])
+
+      rewardsStorageProxy = deployedLibraries[0]
+      cryptoFiatStorageProxy = deployedLibraries[1]
+      cryptoDollarStorageProxy = deployedLibraries[2]
+      safeMath = deployedLibraries[3]
+
+      // Libraries are linked to each contract
+      await Promise.all([
+        ProofToken.link(SafeMath, safeMath.address),
+        CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address),
+        CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoDollar.link(SafeMath, safeMath.address),
+        CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        CryptoFiatHub.link(SafeMath, safeMath.address),
+        Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        Rewards.link(SafeMath, safeMath.address)
+      ])
+
+      // Contracts are deployed with a blank state for each test
+      store = await Store.new()
+      proofToken = await ProofToken.new()
+      cryptoDollar = await CryptoDollar.new(store.address)
+      rewards = await Rewards.new(store.address, proofToken.address)
+      cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
+
+      /**
+       * allow store access and initialize the cryptofiat system and initialize the CryptoFiatHub
+       * with a 20 blocks epoch.
+       * The number of blocks per epoch should be increased to reflect the production behavior.
+       * The choice of 20 blocks has been made solely for testing purposes as mining the test EVM
+       * requires a significant amount of time (40 blocks ~ 5-10 seconds). Final tests should be run
+       * with bigger epochs.
+       */
+      await Promise.all([
+        store.authorizeAccess(cryptoFiatHub.address),
+        store.authorizeAccess(cryptoDollar.address),
+        store.authorizeAccess(rewards.address),
+        cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+      ])
+
+      await cryptoFiatHub.initialize(20)
+    })
+
+    it('should not be accesible via cryptoFiatStorageProxy by a non-authorized address', async() => {
+      await expectRevert(cryptoFiatStorageProxy.setCreationTimestamp(store.address, 1, { from: hacker }))
+    })
+    it('should not be accessible via cryptoDollarProxy by a non-authorized address', async() => {
+      await expectRevert(cryptoDollarStorageProxy.setBalance(store.address, hacker, 1 * 10 ** 18, { from: hacker }))
+    })
+    it('should not be accessible via rewardsStorageProxy by a non-authorized address', async() => {
+      await expectRevert(rewardsStorageProxy.setCurrentEpoch(store.address, 1, { from: hacker }))
     })
   })
 })
