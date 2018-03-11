@@ -4,7 +4,8 @@
       "standard"
     ],
     "plugins": [
-      "babel"
+      "babel",
+      "react"
     ],
     "rules": {
       "key-spacing"          : 0,
@@ -14,6 +15,8 @@
       "no-extend-native": "off"
     },
     "env": {
+      "browser": true,
+      "es6": true,
       "mocha": true,
       "node": true
     }
