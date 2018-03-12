@@ -3,10 +3,12 @@ import BuyCryptoDollarInput from './BuyCryptoDollarInput'
 import SellCryptoDollarInput from './SellCryptoDollarInput'
 import SellUnpeggedCryptoDollarInput from './SellUnpeggedCryptoDollarInput'
 
+import styles from './styles.css'
+
 export default class CryptoDollarTransactionForm extends Component {
-  render() {
+  render () {
     return (
-      <div>
+      <div className={styles.cryptoDollarTransactionForm}>
         <BuyCryptoDollarInput />
         <SellCryptoDollarInput />
         <SellUnpeggedCryptoDollarInput />

@@ -8,7 +8,7 @@ let getWeb3 = new Promise((resolve, reject) => {
     if (typeof web3 !== 'undefined') {
       web3 = new Web3(web3.currentProvider)
       results = { web3: web3 }
-      console.log('Injected web3 detected.');
+      console.log('Injected web3 detected.')
       resolve(results)
     } else {
       var provider = new Web3.providers.HttpProvider('http://127.0.0.1:9545')

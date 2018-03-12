@@ -1,13 +1,9 @@
-
 import React, { Component } from 'react'
 import CryptoDollarStateList from './CryptoDollarStateList'
+import PropTypes from 'prop-types'
 
-export default class CryptoDollarState extends Component {
-  constructor(props) {
-    super(props)
-  }
-
-  render() {
+class CryptoDollarState extends Component {
+  render () {
     return (
       <div>
         <CryptoDollarStateList contractState={this.props.contractState} />
@@ -15,3 +11,9 @@ export default class CryptoDollarState extends Component {
     )
   }
 }
+
+CryptoDollarState.propTypes = {
+  contractState: PropTypes.object
+}
+
+export default CryptoDollarState
