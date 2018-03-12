@@ -1,7 +1,8 @@
 {
   "parser": "babel-eslint",
     "extends": [
-      "standard"
+      "standard",
+      "plugin:react/recommended"
     ],
     "plugins": [
       "babel",
@@ -12,7 +13,8 @@
       "jsx-quotes"           : [2, "prefer-single"],
       "max-len"              : [2, 120, 2],
       "object-curly-spacing" : [2, "always"],
-      "no-extend-native": "off"
+      "no-extend-native": "off",
+      "no-unused-vars": 1
     },
     "env": {
       "browser": true,
