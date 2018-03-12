@@ -10,7 +10,6 @@ chai.use(require('chai-bignumber')(web3.BigNumber))
 .should()
 
 const should = chai.should()
-
 const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
 const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
 const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
@@ -34,6 +33,7 @@ contract('Oraclize', async(accounts) => {
   let defaultSellOrder = { from: sender, gasPrice: defaultGasPrice }
   let expectedExchangeRate = '87537'
   let totalTokens
+  let blocksPerEpoch = 20
 
   /**
   * In this series of tests, we use the testing archive that sends back a static value
@@ -41,22 +41,33 @@ contract('Oraclize', async(accounts) => {
   */
   describe.skip('Oraclize Buying CryptoDollars ', async() => {
     before(async() => {
-      rewardsStorageProxy = await RewardsStorageProxy.new()
-      cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
-      cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
-      safeMath = await SafeMath.new()
+      // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+      // state for each test so we redeploy all libraries an other contracts every time.
+      let deployedLibraries = await Promise.all([
+        RewardsStorageProxy.new(),
+        CryptoFiatStorageProxy.new(),
+        CryptoDollarStorageProxy.new(),
+        SafeMath.new()
+      ])
+
+      rewardsStorageProxy = deployedLibraries[0]
+      cryptoFiatStorageProxy = deployedLibraries[1]
+      cryptoDollarStorageProxy = deployedLibraries[2]
+      safeMath = deployedLibraries[3]
 
       // Linking libraries
-      await ProofToken.link(SafeMath, safeMath.address)
-      await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
-      await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await CryptoDollar.link(SafeMath, safeMath.address)
-      await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address)
-      await CryptoFiatHub.link(SafeMath, safeMath.address)
-      await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address)
-      await Rewards.link(SafeMath, safeMath.address)
+      await Promise.all([
+        ProofToken.link(SafeMath, safeMath.address),
+        CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address),
+        CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoDollar.link(SafeMath, safeMath.address),
+        CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        CryptoFiatHub.link(SafeMath, safeMath.address),
+        Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        Rewards.link(SafeMath, safeMath.address)
+      ])
 
       // Deploy CryptoFiat Contracts
       store = await Store.new()
@@ -66,13 +77,14 @@ contract('Oraclize', async(accounts) => {
       cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
 
       // CryptoFiat Contract Network Setup
-
-      await store.authorizeAccess(cryptoFiatHub.address)
-      await store.authorizeAccess(cryptoDollar.address)
-      await store.authorizeAccess(rewards.address)
-      await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-      await cryptoFiatHub.initialize(20)
-      await cryptoFiatHub.initializeOraclize(IPFSHash, true)
+      await Promise.all([
+        store.authorizeAccess(cryptoFiatHub.address),
+        store.authorizeAccess(cryptoDollar.address),
+        store.authorizeAccess(rewards.address),
+        cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+        cryptoFiatHub.initialize(blocksPerEpoch),
+        cryptoFiatHub.initializeOraclize(IPFSHash, true)
+      ])
     })
 
     it('should sucessfully call buyCryptoDollar and call correct callback (first free oraclize query)', async() => {
@@ -88,7 +100,6 @@ contract('Oraclize', async(accounts) => {
       event2.queryId.should.be.equal(event1.queryId)
       event2.result.should.be.equal(expectedExchangeRate)
       event2.sender.should.be.equal(sender)
-
       event2.tokenAmount.should.be.bignumber.equal(86190)
 
       let expectedPaymentValue = 0.99 * event1.value - event1.oraclizeFee
@@ -124,22 +135,33 @@ contract('Oraclize', async(accounts) => {
 
   describe.skip('Oraclize Selling CryptoDollars ', async() => {
     before(async() => {
-      rewardsStorageProxy = await RewardsStorageProxy.new()
-      cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
-      cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
-      safeMath = await SafeMath.new()
+      // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+      // state for each test so we redeploy all libraries an other contracts every time.
+      let deployedLibraries = await Promise.all([
+        RewardsStorageProxy.new(),
+        CryptoFiatStorageProxy.new(),
+        CryptoDollarStorageProxy.new(),
+        SafeMath.new()
+      ])
+
+      rewardsStorageProxy = deployedLibraries[0]
+      cryptoFiatStorageProxy = deployedLibraries[1]
+      cryptoDollarStorageProxy = deployedLibraries[2]
+      safeMath = deployedLibraries[3]
 
       // Linking libraries
-      await ProofToken.link(SafeMath, safeMath.address)
-      await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
-      await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await CryptoDollar.link(SafeMath, safeMath.address)
-      await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address)
-      await CryptoFiatHub.link(SafeMath, safeMath.address)
-      await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address)
-      await Rewards.link(SafeMath, safeMath.address)
+      await Promise.all([
+        ProofToken.link(SafeMath, safeMath.address),
+        CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address),
+        CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoDollar.link(SafeMath, safeMath.address),
+        CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        CryptoFiatHub.link(SafeMath, safeMath.address),
+        Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        Rewards.link(SafeMath, safeMath.address)
+      ])
 
       // Deploy CryptoFiat Contracts
       store = await Store.new()
@@ -149,19 +171,22 @@ contract('Oraclize', async(accounts) => {
       cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
 
       // CryptoFiat Contract Network Setup
-      await store.authorizeAccess(cryptoFiatHub.address)
-      await store.authorizeAccess(cryptoDollar.address)
-      await store.authorizeAccess(rewards.address)
-      await store.authorizeAccess(cryptoDollarStorageProxy.address)
-      await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-      await cryptoFiatHub.initialize(20)
-      await cryptoFiatHub.initializeOraclize(IPFSHash, true)
+      await Promise.all([
+        store.authorizeAccess(cryptoFiatHub.address),
+        store.authorizeAccess(cryptoDollar.address),
+        store.authorizeAccess(rewards.address),
+        cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+        cryptoFiatHub.initialize(blocksPerEpoch),
+        cryptoFiatHub.initializeOraclize(IPFSHash, true),
+        cryptoFiatHub.capitalize({ value: collateral })
+      ])
 
       // We initialize the storage contract with initial CryptoDollar balance for the sender
-      await cryptoFiatHub.capitalize({ value: collateral })
-      await cryptoDollarStorageProxy.incrementBalance(store.address, sender, 10000)
-      await cryptoDollarStorageProxy.incrementTotalSupply(store.address, 10000)
-      await cryptoDollarStorageProxy.incrementReservedEther(store.address, sender, 1)
+      await Promise.all([
+        cryptoDollarStorageProxy.incrementBalance(store.address, sender, 10000),
+        cryptoDollarStorageProxy.incrementTotalSupply(store.address, 10000),
+        cryptoDollarStorageProxy.incrementReservedEther(store.address, sender, 1)
+      ])
     })
 
     it('should successfully call sellCryptoDollar and call the correct callback', async() => {
@@ -200,22 +225,33 @@ contract('Oraclize', async(accounts) => {
 
   describe.skip('Oraclize Selling Unpegged CryptoDollars ', async() => {
     before(async() => {
-      rewardsStorageProxy = await RewardsStorageProxy.new()
-      cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
-      cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
-      safeMath = await SafeMath.new()
+      // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+      // state for each test so we redeploy all libraries an other contracts every time.
+      let deployedLibraries = await Promise.all([
+        RewardsStorageProxy.new(),
+        CryptoFiatStorageProxy.new(),
+        CryptoDollarStorageProxy.new(),
+        SafeMath.new()
+      ])
+
+      rewardsStorageProxy = deployedLibraries[0]
+      cryptoFiatStorageProxy = deployedLibraries[1]
+      cryptoDollarStorageProxy = deployedLibraries[2]
+      safeMath = deployedLibraries[3]
 
       // Linking libraries
-      await ProofToken.link(SafeMath, safeMath.address)
-      await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
-      await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await CryptoDollar.link(SafeMath, safeMath.address)
-      await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address)
-      await CryptoFiatHub.link(SafeMath, safeMath.address)
-      await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address)
-      await Rewards.link(SafeMath, safeMath.address)
+      await Promise.all([
+        ProofToken.link(SafeMath, safeMath.address),
+        CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address),
+        CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoDollar.link(SafeMath, safeMath.address),
+        CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        CryptoFiatHub.link(SafeMath, safeMath.address),
+        Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        Rewards.link(SafeMath, safeMath.address)
+      ])
 
       // Deploy CryptoFiat Contracts
       store = await Store.new()
@@ -225,20 +261,24 @@ contract('Oraclize', async(accounts) => {
       cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
 
       // CryptoFiat Contract Network Setup
-      await store.authorizeAccess(cryptoFiatHub.address)
-      await store.authorizeAccess(cryptoDollar.address)
-      await store.authorizeAccess(rewards.address)
-      await store.authorizeAccess(cryptoDollarStorageProxy.address)
-      await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-      await cryptoFiatHub.initialize(20)
-      await cryptoFiatHub.initializeOraclize(IPFSHash, true)
+      await Promise.all([
+        store.authorizeAccess(cryptoFiatHub.address),
+        store.authorizeAccess(cryptoDollar.address),
+        store.authorizeAccess(rewards.address),
+        store.authorizeAccess(cryptoDollarStorageProxy.address),
+        cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+        cryptoFiatHub.initialize(20),
+        cryptoFiatHub.initializeOraclize(IPFSHash, true),
+        cryptoFiatHub.capitalize({ value: collateral })
+      ])
 
       // We initialize the storage contract with initial CryptoDollar balance for the sender
       totalTokens = 100000
-      await cryptoFiatHub.capitalize({ value: collateral })
-      await cryptoDollarStorageProxy.incrementBalance(store.address, sender, totalTokens)
-      await cryptoDollarStorageProxy.incrementTotalSupply(store.address, totalTokens)
-      await cryptoDollarStorageProxy.incrementReservedEther(store.address, sender, 1 * ether)
+      await Promise.all([
+        cryptoDollarStorageProxy.incrementBalance(store.address, sender, totalTokens),
+        cryptoDollarStorageProxy.incrementTotalSupply(store.address, totalTokens),
+        cryptoDollarStorageProxy.incrementReservedEther(store.address, sender, 1 * ether)
+      ])
     })
 
     it('should successfully call sellCryptoDollar and call the correct callback', async() => {
