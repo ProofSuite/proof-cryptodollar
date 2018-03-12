@@ -1,56 +1,88 @@
 import React, { Component } from 'react'
 import getWeb3 from './utils/getWeb3'
+import Accounts from './components/accounts/Accounts'
+import DeployedContracts from './components/deployedContracts/DeployedContracts'
+import CryptoDollarState from './components/cryptoDollarState/CryptoDollarState'
 // import contract from 'truffle-contract'
 
 class App extends Component {
   constructor (props) {
     super(props)
-
-    this.state = {
-      storageValue: 0,
-      web3: null
-    }
   }
-
-  componentWillMount () {
-    getWeb3
-    .then(results => {
-      this.setState({
-        web3: results.web3
-      })
-
-      // Instantiate contract once web3 provided.
-      // this.instantiateContract()
-    })
-    .catch(() => {
-      console.log('Error finding web3.')
-    })
-  }
-
-  // async instantiateContract () {
-  //   const simpleStorage = contract(SimpleStorageContract)
-  //   simpleStorage.setProvider(this.state.web3.currentProvider)
-
-  //   // Declaring this for later so we can chain functions on SimpleStorage.
-  //   let simpleStorageInstance = await simpleStorage.deployed()
-
-  //   let accounts = this.state.web3.eth.accounts
-
-  //   await simpleStorageInstance.set(5, { from: accounts[0] })
-  //   let result = await simpleStorageInstance.get.call(accounts[0])
-  //   this.setState({ storageValue: result.c[0] })
-  // }
 
   render () {
+
+    const accounts = [
+      {
+        address: "0x0123",
+        ethereumBalance: 1231,
+        cryptoDollarBalance: 123,
+      },
+      {
+        address: "0x0123",
+        ethereumBalance: 1231,
+        cryptoDollarBalance: 123,
+      },
+      {
+        address: "0x0123",
+        ethereumBalance: 1231,
+        cryptoDollarBalance: 123,
+      },
+      {
+        address: "0x0123",
+        ethereumBalance: 1231,
+        cryptoDollarBalance: 123,
+      },
+      {
+        address: "0x0123",
+        ethereumBalance: 1231,
+        cryptoDollarBalance: 123,
+      }
+    ]
+
+    const contracts = [
+      {
+        "name": "cryptoDollar",
+        "address": "0x123",
+      },
+      {
+        "name": "store",
+        "address": "01235",
+      },
+      {
+        "name": "cryptoFiatHub",
+        "address": "0x01234"
+      },
+      {
+        "name": "rewards",
+        "address": "0x3453"
+      }
+    ]
+
+    const contractState = [
+      {
+        "name": "Total Supply",
+        "value": 10000
+      },
+      {
+        "name": "Contract Balance",
+        "value": 1000000
+      },
+      {
+        "name": "Buffer",
+        "value": 10000
+      },
+      {
+        "name": "Outstanding Value",
+        "value": 100000
+      }
+    ]
+
     return (
       <div className='App'>
-        <main className='container'>
-          <div>
-            <div>
-              <p>The stored value is: {this.state.storageValue}</p>
-            </div>
-          </div>
-        </main>
+        <Accounts accounts={accounts} />
+        <DeployedContracts contracts={contracts} />
+        <CryptoDollarState contractState={contractState} />
       </div>
     )
   }
