@@ -1,17 +1,32 @@
-import React from 'react';
+import React from 'react'
+import PropTypes from 'prop-types'
+import { Card, List } from 'semantic-ui-react'
 
-const CryptoDollarStateList = (props) => {
+const CryptoDollarStateCard = (props) => {
   const variablesList = props.contractState.map((variable, index) => (
-    <li key={index}>
-      {variable.name}: {variable.value}
-    </li>
+    <List.Item key={index}>
+      {variable.name} : {variable.value}
+    </List.Item>
   ))
 
   return (
-    <ul>
-      {variablesList}
-    </ul>
+    <Card>
+      <Card.Content>
+      <Card.Header>
+        CryptoDollar State
+      </Card.Header>
+      <Card.Description>
+        <List>
+          {variablesList}
+        </List>
+      </Card.Description>
+      </Card.Content>
+    </Card>
   )
-};
+}
 
-export default CryptoDollarStateList;
+CryptoDollarStateCard.propTypes = {
+  contractState: PropTypes.object
+}
+
+export default CryptoDollarStateCard

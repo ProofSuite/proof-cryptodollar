@@ -1,13 +1,10 @@
 
 import React, { Component } from 'react'
 import DeployedContractsList from './DeployedContractsList'
+import PropTypes from 'prop-types'
 
-export default class DeployedContracts extends Component {
-  constructor(props) {
-    super(props)
-  }
-
-  render() {
+class DeployedContracts extends Component {
+  render () {
     return (
       <div>
         <DeployedContractsList contracts={this.props.contracts} />
@@ -15,3 +12,9 @@ export default class DeployedContracts extends Component {
     )
   }
 }
+
+DeployedContracts.propTypes = {
+  contracts: PropTypes.object
+}
+
+export default DeployedContracts

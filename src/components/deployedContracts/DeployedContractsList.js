@@ -1,17 +1,33 @@
-import React from 'react';
+import React from 'react'
+import PropTypes from 'prop-types'
+import { Card, List } from 'semantic-ui-react'
 
-const DeployedContractsList = (props) => {
-  const contractList = props.contracts.map((contract, index) => (
-    <li key={index}>
+const DeployedContractsCard = (props) => {
+  const contracts = props.contracts
+  const contractList = contracts.map((contract, index) => (
+    <List.Item key={index}>
       {contract.name}: {contract.address}
-    </li>
+    </List.Item>
   ))
 
   return (
-    <ul>
-      {contractList}
-    </ul>
+    <Card>
+      <Card.Content>
+        <Card.Header>
+          Deployed Contracts
+        </Card.Header>
+        <Card.Description>
+          <List>
+            {contractList}
+          </List>
+        </Card.Description>
+        </Card.Content>
+      </Card>
   )
-};
+}
 
-export default DeployedContractsList;
+DeployedContractsCard.propTypes = {
+  contracts: PropTypes.object
+}
+
+export default DeployedContractsCard
