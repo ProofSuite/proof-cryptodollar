@@ -72,6 +72,10 @@
     "react": "~16.2.0",
     "react-dev-utils": "~5.0.0",
     "react-dom": "~16.2.0",
+    "react-router": "~4.2.0",
+    "react-router-redux": "~4.0.8",
+    "redux": "~3.7.2",
+    "redux-thunk": "~2.2.0",
     "web3": "~1.0.0-beta.30",
     "webpack-html-plugin": "~0.1.1",
     "webpack-manifest-plugin": "~1.1.2"
