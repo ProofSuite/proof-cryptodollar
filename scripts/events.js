@@ -1,4 +1,4 @@
-// const displayEther = (wei) => web3.fromWei(wei, 'ether').toNumber()
+/* global  web3: true */
 const displayNumber = (num) => num.toNumber()
 const displayBytes = (bts) => bts.toString()
 const displayAddress = (addr) => addr.toString()
@@ -97,7 +97,7 @@ const watchNextEvent = async(contract, blockNumber) => {
 }
 
 const watchContract = (contract, blockNumber) => {
-  const filter = web3.eth.filter({toBlock: 'latest', address: contract.address })
+  const filter = web3.eth.filter({ toBlock: 'latest', address: contract.address })
   filter.watch((err, res) => {
     if (err) {
       console.log(`Watch error: ${err}`)

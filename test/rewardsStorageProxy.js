@@ -1,9 +1,7 @@
-/* global  artifacts:true, contract: true */
+/* global  artifacts:true, web3: true, contract: true */
 import chai from 'chai'
 
-chai.use(require('chai-bignumber')())
-chai.should()
-
+chai.use(require('chai-bignumber')(web3.BigNumber)).should()
 const Store = artifacts.require('./Store.sol')
 const RewardsStorageProxy = artifacts.require('./RewardsStorageProxy.sol')
 
@@ -24,7 +22,7 @@ contract('RewardsStorageProxy', (accounts) => {
 
       await rewardsStorageProxy.setCurrentPoolIndex(store.address, 1)
       poolIndex = await rewardsStorageProxy.getCurrentPoolIndex(store.address)
-      poolIndex.toNumber().should.be.equal(expectedPoolIndex)
+      poolIndex.should.be.bignumber.equal(expectedPoolIndex)
     })
 
     it('should increment the current pool index', async () => {
@@ -33,7 +31,7 @@ contract('RewardsStorageProxy', (accounts) => {
 
       await rewardsStorageProxy.incrementCurrentPoolIndex(store.address, increment)
       poolIndex = await rewardsStorageProxy.getCurrentPoolIndex(store.address)
-      poolIndex.toNumber().should.be.equal(increment)
+      poolIndex.should.be.bignumber.equal(increment)
     })
   })
 
@@ -44,7 +42,7 @@ contract('RewardsStorageProxy', (accounts) => {
 
       await rewardsStorageProxy.setCurrentEpoch(store.address, 1)
       epoch = await rewardsStorageProxy.getCurrentEpoch(store.address)
-      epoch.toNumber().should.be.equal(expectedEpoch)
+      epoch.should.be.bignumber.equal(expectedEpoch)
     })
 
     it('should increment the current epoch', async () => {
@@ -53,7 +51,7 @@ contract('RewardsStorageProxy', (accounts) => {
 
       await rewardsStorageProxy.incrementCurrentEpoch(store.address, increment)
       epoch = await rewardsStorageProxy.getCurrentEpoch(store.address)
-      epoch.toNumber().should.be.equal(increment)
+      epoch.should.be.bignumber.equal(increment)
     })
   })
 
@@ -64,7 +62,7 @@ contract('RewardsStorageProxy', (accounts) => {
 
       await rewardsStorageProxy.setCurrentPoolBalance(store.address, 1)
       poolBalance = await rewardsStorageProxy.getCurrentPoolBalance(store.address)
-      poolBalance.toNumber().should.be.equal(expectedPoolBalance)
+      poolBalance.should.be.bignumber.equal(expectedPoolBalance)
     })
 
     it('should increment the current pool balance', async () => {
@@ -73,7 +71,7 @@ contract('RewardsStorageProxy', (accounts) => {
 
       await rewardsStorageProxy.incrementCurrentPoolBalance(store.address, increment)
       poolBalance = await rewardsStorageProxy.getCurrentPoolBalance(store.address)
-      poolBalance.toNumber().should.be.equal(increment)
+      poolBalance.should.be.bignumber.equal(increment)
     })
   })
 
@@ -85,7 +83,7 @@ contract('RewardsStorageProxy', (accounts) => {
 
       await rewardsStorageProxy.setNthPoolBalance(store.address, poolIndex, expectedDividends)
       dividends = await rewardsStorageProxy.getNthPoolBalance(store.address, poolIndex)
-      dividends.toNumber().should.be.equal(expectedDividends)
+      dividends.should.be.bignumber.equal(expectedDividends)
     })
 
     it('should set and get Nth pool remaining dividends', async () => {
@@ -95,19 +93,19 @@ contract('RewardsStorageProxy', (accounts) => {
 
       await rewardsStorageProxy.setNthPoolRemainingDividends(store.address, poolIndex, expectedValue)
       storedValue = await rewardsStorageProxy.getNthPoolRemainingDividends(store.address, poolIndex)
-      storedValue.toNumber().should.be.equal(expectedValue)
+      storedValue.should.be.bignumber.equal(expectedValue)
     })
   })
 
   describe('Account Last withdrawal', async() => {
     it('should set and get the last account withdrawal', async() => {
-      let account = "0x3712501089ae5b863c4ff8fc32d4193fd52519e4"
+      let account = '0x3712501089ae5b863c4ff8fc32d4193fd52519e4'
       let storedValue = 10
       let expectedValue = 1 * 10 ** 18
 
       await rewardsStorageProxy.setAccountLastWithdrawal(store.address, account, expectedValue)
       storedValue = await await rewardsStorageProxy.getAccountLastWithdrawal(store.address, account)
-      storedValue.toNumber().should.be.equal(expectedValue)
+      storedValue.should.be.bignumber.equal(expectedValue)
     })
   })
 })

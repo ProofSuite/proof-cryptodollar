@@ -2,7 +2,7 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
-import { waitUntilTransactionsMined, expectInvalidOpcode } from '../scripts/helpers'
+import { expectInvalidOpcode } from '../scripts/helpers'
 import { getState } from '../scripts/cryptoFiatHelpers'
 import { watchNextEvent } from '../scripts/events'
 
@@ -10,7 +10,6 @@ chai.use(chaiAsPromised)
     .use(require('chai-bignumber')(web3.BigNumber))
     .should()
 
-const should = chai.should()
 const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
 const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
 const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
@@ -30,7 +29,6 @@ contract('Cryptofiat Hub', (accounts) => {
 
   // Standard scenario with an initial collateral of 1 ether and payment (buy value) of 1 ether.
   let collateral = 1 * ether
-  let payment = 1 * ether
   let fund = accounts[0]
   let wallet1 = accounts[1]
   let oraclize = accounts[2]
@@ -51,41 +49,43 @@ contract('Cryptofiat Hub', (accounts) => {
   Thus buffer = contractbalance - outstanding = 11 ether - 1000 cryptodollar tokens = 11 ether - 100 ether = - 89 ether
   **/
   describe('Selling unpegged dollars', async () => {
-    let txn
-
     before(async () => {
       // In this scenario, the initial exchange rate is 1 ETH = 100 USD (exchangeRate = 10000)
       // The updated exchange rate is 1 ETH = 10 USD (exchangeRate 1000)
       // The exchange rate is actually representing ethers to cents
       // The exchange rates are kept in objects that references them both in strings and numbers since the
       // __callback function takes exchanges rate as a string value
-      initialExchangeRate = {
-        string: '20000',
-        number: 20000
-      }
-      updatedExchangeRate = {
-        string: '2000',
-        number: 2000
-      }
+      initialExchangeRate = { asString: '20000', asNumber: 20000 }
+      updatedExchangeRate = { asString: '2000', asNumber: 2000 }
 
-      rewardsStorageProxy = await RewardsStorageProxy.new()
-      cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
-      cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
-      safeMath = await SafeMath.new()
+            // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+      // state for each test so we redeploy all libraries an other contracts every time.
+      let deployedLibraries = await Promise.all([
+        RewardsStorageProxy.new(),
+        CryptoFiatStorageProxy.new(),
+        CryptoDollarStorageProxy.new(),
+        SafeMath.new()
+      ])
 
-      // Link Libraries
-      await ProofToken.link(SafeMath, safeMath.address)
-      await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
-      await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await CryptoDollar.link(SafeMath, safeMath.address)
-      await CryptoFiatHub.link(RewardsStorageProxy, cryptoFiatStorageProxy.address)
-      await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await CryptoFiatHub.link(SafeMath, safeMath.address)
-      await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-      await Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address)
-      await Rewards.link(SafeMath, safeMath.address)
+      rewardsStorageProxy = deployedLibraries[0]
+      cryptoFiatStorageProxy = deployedLibraries[1]
+      cryptoDollarStorageProxy = deployedLibraries[2]
+      safeMath = deployedLibraries[3]
 
-      // Contracts are deployed with a blank state for each test
+      // Libraries are linked to each contract
+      await Promise.all([
+        ProofToken.link(SafeMath, safeMath.address),
+        CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address),
+        CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoDollar.link(SafeMath, safeMath.address),
+        CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        CryptoFiatHub.link(SafeMath, safeMath.address),
+        Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        Rewards.link(SafeMath, safeMath.address)
+      ])
+
       store = await Store.new()
       proofToken = await ProofToken.new()
       cryptoDollar = await CryptoDollar.new(store.address)
@@ -100,18 +100,22 @@ contract('Cryptofiat Hub', (accounts) => {
        * requires a significant amount of time (40 blocks ~ 5-10 seconds). Final tests should be run
        * with bigger epochs.
        */
-      await store.authorizeAccess(cryptoFiatHub.address)
-      await store.authorizeAccess(cryptoDollar.address)
-      await store.authorizeAccess(rewards.address)
-      await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-      await cryptoFiatHub.initialize(20)
+      await Promise.all([
+        store.authorizeAccess(cryptoFiatHub.address),
+        store.authorizeAccess(cryptoDollar.address),
+        store.authorizeAccess(rewards.address),
+        cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+      ])
 
-      let txn = await cryptoFiatHub.capitalize({ from: fund, value: collateral })
+      await Promise.all([
+        cryptoFiatHub.initialize(20),
+        cryptoFiatHub.capitalize({ from: fund, value: collateral })
+      ])
 
       //buy tokens and simulate oraclize callback
-      txn = await cryptoFiatHub.buyCryptoDollar(defaultBuyOrder)
+      await cryptoFiatHub.buyCryptoDollar(defaultBuyOrder)
       let { queryId } = await watchNextEvent(cryptoFiatHub)
-      await cryptoFiatHub.__callback(queryId, initialExchangeRate.string)
+      await cryptoFiatHub.__callback(queryId, initialExchangeRate.asString)
 
       tokens = await cryptoFiatHub.cryptoDollarBalance(wallet1)
       tokens = tokens.toNumber()
@@ -119,14 +123,14 @@ contract('Cryptofiat Hub', (accounts) => {
 
     it('should be in an unpegged state', async () => {
       // the state depends both on the state of the cryptodollar/cryptofiat contract and the pricefeed
-      let currentState = await getState(cryptoFiatHub, updatedExchangeRate.number)
+      let currentState = await getState(cryptoFiatHub, updatedExchangeRate.asNumber)
       currentState.should.be.equal('UNPEGGED')
     })
 
     it('__callback after an calling the (pegged) cryptoDollar function', async () => {
-      let txn = await cryptoFiatHub.sellCryptoDollar(1, { from: wallet1, value: ether })
+      await cryptoFiatHub.sellCryptoDollar(1, { from: wallet1, value: ether })
       let { queryId } = await watchNextEvent(cryptoFiatHub)
-      await expectInvalidOpcode(cryptoFiatHub.__callback(queryId, updatedExchangeRate.number))
+      await expectInvalidOpcode(cryptoFiatHub.__callback(queryId, updatedExchangeRate.asNumber))
     })
 
     it('should sell unpegged cryptodollar tokens', async () => {
@@ -136,12 +140,16 @@ contract('Cryptofiat Hub', (accounts) => {
       let txn = await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, defaultSellOrder).should.be.fulfilled
       let txnFee = txn.receipt.gasUsed * defaultSellOrder.gasPrice
       let { queryId } = await watchNextEvent(cryptoFiatHub)
-      await cryptoFiatHub.__callback(queryId, updatedExchangeRate.string, { from: oraclize })
+      await cryptoFiatHub.__callback(queryId, updatedExchangeRate.asString, { from: oraclize })
 
       // check that callback parameters correspond to initial query
-      let callingValue = await cryptoFiatHub.callingValue(queryId)
-      let callingAddress = await cryptoFiatHub.callingAddress(queryId)
-      let callingFee = await cryptoFiatHub.callingFee(queryId)
+      let queryParameters = [
+        cryptoFiatHub.callingValue(queryId),
+        cryptoFiatHub.callingAddress(queryId),
+        cryptoFiatHub.callingFee(queryId)
+      ]
+
+      let [ callingValue, callingAddress, callingFee ] = await Promise.all(queryParameters)
       callingValue.should.be.bignumber.equal(tokens)
       callingAddress.should.be.equal(wallet1)
       callingFee.should.be.bignumber.equal(oraclizeFee)
@@ -151,7 +159,6 @@ contract('Cryptofiat Hub', (accounts) => {
       let reservedEtherVariation = finalReservedEther.minus(reservedEther)
       let accountBalanceVariation = finalAccountBalance.minus(accountBalance)
       let expectedAccountBalanceVariation = reservedEther.minus(txnFee).minus(oraclizeFee)
-
       accountBalanceVariation.should.be.bignumber.equal(expectedAccountBalanceVariation)
       reservedEtherVariation.should.be.bignumber.equal(-reservedEther)
     })

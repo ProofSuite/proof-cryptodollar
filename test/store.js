@@ -2,10 +2,7 @@
 import chai from 'chai'
 import { expectRevert } from '../scripts/helpers'
 
-chai.should()
-
-const should = chai.should
-chai.use(require('chai-bignumber')(web3.BigNumber))
+chai.use(require('chai-bignumber')(web3.BigNumber)).should()
 const Store = artifacts.require('./Store.sol')
 
 contract('Store', (accounts) => {
