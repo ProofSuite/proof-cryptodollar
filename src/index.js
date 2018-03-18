@@ -1,15 +1,11 @@
 import React from 'react'
-import { AppContainer } from 'react-hot-loader'
 import { render } from 'react-dom'
-import { Router, Route, IndexRoute } from 'react-router'
 import { Provider } from 'react-redux'
-import { createBrowserHistory } from 'history'
-import { syncHistoryWithStore } from 'react-router-redux'
-
-import App from './App/App'
-import getWeb3 from './utils/getWeb3'
+import App from './app/App'
 import store from './redux-store'
 
+import { createBrowserHistory } from 'history'
+import { syncHistoryWithStore } from 'react-router-redux'
 const history = syncHistoryWithStore(createBrowserHistory(), store)
 
 render((
@@ -17,7 +13,3 @@ render((
     <App />
   </Provider>
 ), document.getElementById('root'))
-
-// <Router history={history}>
-//       <Route path="/" component={App} />
-//     </Router>

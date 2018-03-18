@@ -19,6 +19,7 @@ const env = getClientEnvironment(publicUrl)
 module.exports = {
   devtool: 'cheap-module-source-map',
   entry: [
+    'babel-polyfill',
     require.resolve('react-dev-utils/webpackHotDevClient'),
     require.resolve('./polyfills'),
     paths.appIndexJs
