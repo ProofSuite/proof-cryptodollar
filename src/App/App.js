@@ -1,93 +1,59 @@
 import React, { Component } from 'react'
-import getWeb3 from '../utils/getWeb3'
-import { hot } from 'react-hot-loader'
-import Accounts from '../components/accounts/Accounts'
-import DeployedContracts from '../components/deployedContracts/DeployedContracts'
-import CryptoDollarState from '../components/cryptoDollarState/CryptoDollarState'
-import CryptoDollarInterface from '../components/cryptoDollarTransaction/CryptoDollarInterface'
 
+import { hot } from 'react-hot-loader'
+import { connect } from 'react-redux'
+import AccountsContainer from '../components/accounts/AccountsContainer'
+import CryptoDollarContainer from '../components/cryptoDollar/CryptoDollarContainer'
+import ContractAddressesContainer from '../components/contractAddresses/ContractAddressesContainer'
+import RewardsFormContainer from '../components/rewards/rewardsFormContainer'
+import PropTypes from 'prop-types'
+
+import { initializeWeb3 } from '../services/web3/web3Actions.js'
 import 'semantic-ui-css/semantic.min.css?global'
 import styles from './App.css'
 
 class App extends Component {
-  render () {
-    const accounts = [
-      {
-        address: '0x0123',
-        etherBalance: 1231,
-        cryptoDollarBalance: 123
-      },
-      {
-        address: '0x0123',
-        etherBalance: 1231,
-        cryptoDollarBalance: 123
-      },
-      {
-        address: '0x0123',
-        etherBalance: 1231,
-        cryptoDollarBalance: 123
-      },
-      {
-        address: '0x0123',
-        etherBalance: 1231,
-        cryptoDollarBalance: 123
-      },
-      {
-        address: '0x0123',
-        etherBalance: 1231,
-        cryptoDollarBalance: 123
-      }
-    ]
+  componentDidMount () {
+    this.props.initializeWeb3({ websockets: true })
+  }
 
-    const contracts = [
-      {
-        'name': 'cryptoDollar',
-        'address': '0x123'
-      },
-      {
-        'name': 'store',
-        'address': '01235'
-      },
-      {
-        'name': 'cryptoFiatHub',
-        'address': '0x01234'
-      },
-      {
-        'name': 'rewards',
-        'address': '0x3453'
-      }
-    ]
-
-    const contractState = [
-      {
-        'name': 'Total Supply',
-        'value': 10000
-      },
-      {
-        'name': 'Contract Balance',
-        'value': 1000000
-      },
-      {
-        'name': 'Buffer',
-        'value': 10000
-      },
-      {
-        'name': 'Outstanding Value',
-        'value': 100000
-      }
-    ]
-
+  renderApplication () {
     return (
       <div className={styles.app}>
-        <Accounts accounts={accounts} />
-        <div className={styles.contractsInformation}>
-          <DeployedContracts contracts={contracts} />
-          <CryptoDollarState contractState={contractState} />
-        </div>
-        <CryptoDollarInterface />
+        <CryptoDollarContainer />
+        <RewardsFormContainer />
+        <AccountsContainer />
+        <ContractAddressesContainer />
       </div>
     )
   }
+
+  renderLoading () {
+    return <div className={styles.app}>Loading</div>
+  }
+
+  render () {
+    if (this.props.web3Instance) {
+      return this.renderApplication()
+    } else {
+      return this.renderLoading()
+    }
+  }
 }
 
-export default hot(module)(App)
+const mapStateToProps = state => ({
+  web3Instance: state.web3.web3Instance
+})
+
+const mapDispatchToProps = {
+  initializeWeb3
+}
+
+App.propTypes = {
+  initializeWeb3: PropTypes.func,
+  web3Instance: PropTypes.object
+}
+
+const AppContainer = connect(mapStateToProps, mapDispatchToProps)(App)
+
+export default hot(module)(AppContainer)
