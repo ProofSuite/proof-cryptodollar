@@ -13,10 +13,18 @@ module.exports = {
     development: {
       host: 'localhost',
       port: 8545,
-      network_id: '*',
+      network_id: '1000',
       gas: config.constants.MAX_GAS,
       gasPrice: config.constants.DEFAULT_GAS_PRICE,
       from: '0xdf08f82de32b8d460adbe8d72043e3a7e25a3b39'  // testprc main account here
+    },
+    development_geth: {
+      host: 'localhost',
+      port: 8545,
+      network_id: '8888',
+      gas: config.constants.MAX_GAS,
+      gasPrice: config.constants.DEFAULT_GAS_PRICE,
+      from: '0xe8e84ee367bc63ddb38d3d01bccef106c194dc47'
     },
     ethereum: {
       provider: new LightWalletProvider({

@@ -5,7 +5,6 @@ import { ether } from '../scripts/constants'
 import { getWeiBalance, expectRevert } from '../scripts/helpers'
 import { watchNextEvent } from '../scripts/events'
 
-
 chai.use(chaiAsPromised).use(require('chai-bignumber')(web3.BigNumber)).should()
 
 const should = chai.should()
