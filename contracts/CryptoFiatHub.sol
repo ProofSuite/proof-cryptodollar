@@ -58,7 +58,8 @@ contract CryptoFiatHub is usingOraclize {
     usingOraclize = true;
     ipfsHash = _ipfsHash;
     if (_test) {
-      OAR = OraclizeAddrResolverI(0x2fCf0C51c9Fd41e8bE29968D1D0854A090e495b8); //only test mode
+      oraclize_setCustomGasPrice(4000000000 wei);
+      OAR = OraclizeAddrResolverI(0x6f485c8bf6fc43ea212e93bbf8ce046c7f1cb475); //only test mode
     }
   }
 
