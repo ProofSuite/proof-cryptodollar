@@ -1,9 +1,9 @@
 
 import store from '../../redux-store'
-import Accounts from 'web3-eth-accounts'
 import Web3 from 'web3'
-import CryptoDollarInterface from '../../../build/contracts/CryptoDollar.json'
-import { default as Contract } from 'truffle-contract'
+import CryptoDollar from '../../../build/contracts/CryptoDollar.json'
+import { getWeb3ContractInstance } from '../../helpers/contractHelpers'
+import { formatEtherColumn, formatCUSDColumn } from '../../helpers/formatHelpers'
 
 const actions = {
   fetchingAddresses: () => ({ type: 'FETCHING_ADDRESSES ' }),
@@ -11,24 +11,6 @@ const actions = {
   fetchingAccounts: () => ({ type: 'FETCHING_ACCOUNTS' }),
   fetchAccountsSuccess: (payload) => ({ type: 'FETCH_ACCOUNTS_SUCCESS', payload }),
   fetchAccountsError: () => ({ type: 'FETCH_ACCOUNTS_ERROR' })
-}
-
-export const fetchAddresses = () => {
-  return async dispatch => {
-    let accounts, result
-    dispatch(actions.fetchingAddresses())
-
-    let web3 = store.getState().web3.web3Instance
-    if (typeof web3 !== 'undefined') {
-      accounts = new Accounts('ws://localhost:8545')
-      result = { accounts }
-    } else {
-      accounts = new Accounts('ws://localhost:8545')
-      result = { accounts }
-    }
-
-    dispatch(actions.fetchAddressesSuccess(result))
-  }
 }
 
 export const fetchAccounts = () => {
@@ -39,65 +21,27 @@ export const fetchAccounts = () => {
     const web3 = new Web3(provider)
     if (typeof web3 === 'undefined') dispatch(actions.fetchingAccountsError())
     let accounts = await web3.eth.getAccounts()
-    let etherBalancesCalls = accounts.map((account) => { return web3.eth.getBalance(account) })
+
+    let cryptoDollar = getWeb3ContractInstance(web3, CryptoDollar)
+
+    let etherBalancesCalls = accounts.map((account) => web3.eth.getBalance(account))
     let etherBalances = await Promise.all(etherBalancesCalls)
+    etherBalances = formatEtherColumn(etherBalances)
 
-    let CryptoDollar = Contract(CryptoDollarInterface)
-    CryptoDollar.setProvider(web3.currentProvider)
-
-    CryptoDollar.currentProvider.sendAsync = function () {
-      return CryptoDollar.currentProvider.send.apply(CryptoDollar.currentProvider, arguments)
-    }
-
-    let cryptoDollar = await CryptoDollar.deployed()
-
-    let cryptoDollarBalancesCalls = accounts.map((account) => {
-      return cryptoDollar.balanceOf(account)
-    })
+    let cryptoDollarBalancesCalls = accounts.map((account) => cryptoDollar.methods.balanceOf(account).call())
     let cryptoDollarBalances = await Promise.all(cryptoDollarBalancesCalls)
+    cryptoDollarBalances = formatCUSDColumn(cryptoDollarBalances)
+
+    let reservedEtherCalls = accounts.map((account) => cryptoDollar.methods.reservedEther(account).call())
+    let reservedEtherBalances = await Promise.all(reservedEtherCalls)
+    reservedEtherBalances = formatEtherColumn(reservedEtherBalances)
 
     let results = accounts.map((account, i) => {
       return {
         address: account,
-        etherBalance: Number(etherBalances[i]),
-        cryptoDollarBalance: cryptoDollarBalances[i].toNumber()
-      }
-    })
-
-    dispatch(actions.fetchAccountsSuccess(results))
-  }
-}
-
-export const fetchAccountsWithoutWebsockets = () => {
-  return async dispatch => {
-    dispatch(actions.fetchingAccounts())
-
-    let web3 = store.getState().web3.web3Instance
-    if (typeof web3 === 'undefined') dispatch(actions.fetchingAccountsError())
-
-    let accounts = await web3.eth.getAccounts()
-    let etherBalancesCalls = accounts.map((account) => { return web3.eth.getBalance(account) })
-    let etherBalances = await Promise.all(etherBalancesCalls)
-
-    let CryptoDollar = Contract(CryptoDollarInterface)
-    CryptoDollar.setProvider(web3.currentProvider)
-
-    CryptoDollar.currentProvider.sendAsync = function () {
-      return CryptoDollar.currentProvider.send.apply(CryptoDollar.currentProvider, arguments)
-    }
-
-    let cryptoDollar = await CryptoDollar.deployed()
-
-    let cryptoDollarBalancesCalls = accounts.map((account) => {
-      return cryptoDollar.balanceOf(account)
-    })
-    let cryptoDollarBalances = await Promise.all(cryptoDollarBalancesCalls)
-
-    let results = accounts.map((account, i) => {
-      return {
-        address: account,
-        etherBalance: Number(etherBalances[i]),
-        cryptoDollarBalance: cryptoDollarBalances[i].toNumber()
+        etherBalance: etherBalances[i],
+        cryptoDollarBalance: cryptoDollarBalances[i],
+        reservedEtherBalance: reservedEtherBalances[i]
       }
     })
 

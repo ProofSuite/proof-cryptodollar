@@ -8,6 +8,7 @@ const AccountRow = (props) => {
       <Table.Cell>{props.address}</Table.Cell>
       <Table.Cell>{props.etherBalance}</Table.Cell>
       <Table.Cell>{props.cryptoDollarBalance}</Table.Cell>
+      <Table.Cell>{props.reservedEtherBalance}</Table.Cell>
     </Table.Row>
   )
 }
@@ -15,7 +16,8 @@ const AccountRow = (props) => {
 AccountRow.propTypes = {
   address: PropTypes.string,
   etherBalance: PropTypes.number,
-  cryptoDollarBalance: PropTypes.number
+  cryptoDollarBalance: PropTypes.string,
+  reservedEtherBalance: PropTypes.number
 }
 
 export default AccountRow

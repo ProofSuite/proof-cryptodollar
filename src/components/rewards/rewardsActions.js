@@ -2,6 +2,7 @@ import store from '../../redux-store'
 import Rewards from '../../../build/contracts/Rewards.json'
 import { getWeb3ContractInstance } from '../../helpers/contractHelpers'
 import { resolve } from 'catchify'
+import accounting from 'accounting-js'
 
 const actions = {
   callingRewardsContract: () => ({ type: 'CALL_REWARDS_CONTRACT' }),
@@ -21,13 +22,19 @@ export const fetchRewardsContractState = () => {
       if (typeof web3 === 'undefined') dispatch(actions.rewardsContractCallError())
 
       let rewards = getWeb3ContractInstance(web3, Rewards)
+      let rewardsData = await Promise.all([
+        rewards.methods.getCurrentPoolIndex().call(),
+        rewards.methods.getCurrentEpoch().call(),
+        rewards.methods.getCurrentPoolBalance().call()
+      ])
 
-      let data = {}
-      data.currentPoolIndex = await rewards.methods.getCurrentPoolIndex().call()
-      data.currentEpoch = await rewards.methods.getCurrentEpoch().call()
-      data.currentPoolBalance = await rewards.methods.getCurrentPoolBalance().call()
-      console.log('I am fetching rewards data')
-      console.log(data)
+      let [currentPoolIndex, currentEpoch, currentPoolBalance] = await Promise.all(rewardsData)
+      let data = {
+        currentPoolIndex: currentPoolIndex,
+        currentEpoch: currentEpoch,
+        currentPoolBalance: accounting.formatMoney(currentPoolBalance / 10e18, { symbol: 'ETH', format: '%v %s' })
+      }
+
       dispatch(actions.rewardsContractCallSuccess(data))
     } catch (error) {
       console.log(error)
