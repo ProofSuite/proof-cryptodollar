@@ -2,8 +2,9 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
-import { getWeiBalance } from '../scripts/helpers'
+import { getWeiBalance, expectRevert } from '../scripts/helpers'
 import { watchNextEvent } from '../scripts/events'
+
 
 chai.use(chaiAsPromised).use(require('chai-bignumber')(web3.BigNumber)).should()
 
@@ -30,6 +31,7 @@ contract('Cryptofiat Hub', accounts => {
   let defaultGasPrice = 10 * 10 ** 9
   let defaultOrder = { from: wallet1, value: 1 * ether, gasPrice: defaultGasPrice }
   let defaultSellOrder = { from: wallet1, gasPrice: defaultGasPrice }
+  let defaultParams = { from: wallet1 }
   let oraclizeFee = 5385000000000000
 
   /**
@@ -294,6 +296,12 @@ contract('Cryptofiat Hub', accounts => {
       reservedEther = await cryptoDollar.reservedEther(wallet1)
       variation = reservedEther.minus(initialReservedEther)
       variation.minus(expectedVariation).should.be.bignumber.lessThan(1) // rounded value should be equal
+    })
+
+    it('should fail if selling amount of tokens above balance', async () => {
+      let tokenBalance = await cryptoFiatHub.cryptoDollarBalance(wallet1)
+      let tokenAmount = tokenBalance.plus(1)
+      await expectRevert(cryptoFiatHub.sellCryptoDollar(tokenAmount, defaultSellOrder))
     })
   })
 

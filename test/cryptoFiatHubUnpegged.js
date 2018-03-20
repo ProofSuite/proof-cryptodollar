@@ -2,7 +2,7 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
-import { expectInvalidOpcode } from '../scripts/helpers'
+import { expectInvalidOpcode, expectRevert } from '../scripts/helpers'
 import { getState } from '../scripts/cryptoFiatHelpers'
 import { watchNextEvent } from '../scripts/events'
 
@@ -171,6 +171,12 @@ contract('Cryptofiat Hub', (accounts) => {
     it('should update the token supply', async () => {
       let tokenSupply = await cryptoFiatHub.cryptoDollarTotalSupply()
       tokenSupply.should.be.bignumber.equal(0)
+    })
+
+    it('should fail if selling amount of tokens above balance', async () => {
+      let tokenBalance = await cryptoFiatHub.cryptoDollarBalance(wallet1)
+      let tokenAmount = tokenBalance.plus(1)
+      await expectRevert(cryptoFiatHub.sellUnpeggedCryptoDollar(tokenAmount, defaultSellOrder))
     })
   })
 })
