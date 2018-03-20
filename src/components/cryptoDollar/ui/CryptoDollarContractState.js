@@ -1,21 +1,22 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { Header, List } from 'semantic-ui-react'
+import { Header, List, Table } from 'semantic-ui-react'
 
 class CryptoDollarContractState extends Component {
   renderContractState (data) {
-    const dataList = Object.keys(data).map(variable => (
-      <List.Item key={variable}>
-        {variable} : {data[variable]}
-      </List.Item>
+    const dataList = Object.keys(data).map((variable) => (
+      <Table.Row key={variable}>
+        <Table.Cell>{variable}</Table.Cell>
+        <Table.Cell>{data[variable]}</Table.Cell>
+      </Table.Row>
     ))
 
     return (
       <div>
         <Header>CryptoDollar Contract State</Header>
-        <List>
-          {dataList}
-        </List>
+        <Table basic='very'>
+          <Table.Body>{dataList}</Table.Body>
+        </Table>
       </div>
     )
   }

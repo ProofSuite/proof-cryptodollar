@@ -11,16 +11,18 @@ const AccountTable = (props) => {
       address={account.address}
       etherBalance={account.etherBalance}
       cryptoDollarBalance={account.cryptoDollarBalance}
+      reservedEtherBalance={account.reservedEtherBalance}
     />
   ))
 
   return (
-    <Table celled>
+    <Table celled selectable striped>
       <Table.Header>
         <Table.Row active>
           <Table.HeaderCell>Address</Table.HeaderCell>
           <Table.HeaderCell>Ethereum Balance</Table.HeaderCell>
-          <Table.HeaderCell>CryptoDollar Balance</Table.HeaderCell>
+          <Table.HeaderCell>Cryptodollar Balance</Table.HeaderCell>
+          <Table.HeaderCell>Reserved Ether Balance</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body>

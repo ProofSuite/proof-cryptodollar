@@ -1,14 +1,14 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Card, List, Header } from 'semantic-ui-react'
+import { Card, Header, Table } from 'semantic-ui-react'
 
-const ContractAddressesCard = (props) => {
-  const contracts = props.contracts
+const ContractAddressesCard = ({ contracts }) => {
   const contractList = Object.keys(contracts).map(name => (
      (
-      <List.Item key={name}>
-        <strong>{name}</strong> : {contracts[name]}
-      </List.Item>
+      <Table.Row key={name}>
+        <Table.Cell>{name}</Table.Cell>
+        <Table.Cell>{contracts[name]}</Table.Cell>
+      </Table.Row>
     )
   ))
 
@@ -19,9 +19,11 @@ const ContractAddressesCard = (props) => {
           <Header as='h3'>Contract Addresses</Header>
         </Card.Header>
         <Card.Description>
-          <List>
-            {contractList}
-          </List>
+          <Table basic='very'>
+            <Table.Body>
+              {contractList}
+            </Table.Body>
+          </Table>
         </Card.Description>
         </Card.Content>
       </Card>

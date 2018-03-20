@@ -56,6 +56,7 @@
   },
   "dependencies": {
     "@digix/truffle-lightwallet-provider": "~0.1.4",
+    "accounting-js": "~1.1.1",
     "babel-polyfill": "~6.26.0",
     "babel-preset-react": "~6.24.1",
     "babel-preset-stage-3": "~6.24.1",

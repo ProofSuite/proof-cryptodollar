@@ -14,7 +14,7 @@ class TransferCryptoDollarInput extends Component {
 
   handleSubmit = () => {
     const { sender, receiver, amount, gas, gasPrice } = this.state
-    this.props.transferCryptoDollar({ sender, receiver, amount, gas, gasPrice })
+    this.props.transferCryptoDollar({ amount, receiver, sender, gas, gasPrice })
   }
 
   render () {
