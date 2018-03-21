@@ -17,7 +17,7 @@ let config = {
     ETHER: 10 ** 18
   },
   ipfs: {
-    PRODUCTION: 'QmRKF8ctYqRnKbkeZUVsco2CWdRz5P7AWQqHu1cmtxA6jE',
+    PRODUCTION: 'QmUM5eT3vY9NfeJ9JBg8xcrom3jEZ3J86wRtNPsFBJ6QFo',
     TESTING_SUCCESS: 'QmVuyH2JtbTguZuC5HsefNBbu8SNSUdq6mrHHDhGeLob3V',
     TESTING_FAIL: 'QmUGo9mjcdc232p4YUgGf5mdZ5aAvVrVpp8AXiN4AuvBZd'
   },

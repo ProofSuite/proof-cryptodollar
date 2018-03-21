@@ -128,7 +128,8 @@ async function calculateAverage (rates) {
       const standardDeviation = Math.sqrt((1 / (rates.length - 1)) * rates.reduce((acc, cur) => acc + Math.pow(cur - sampleMean, 2), 0))
       const validRates = rates.filter(rate => Math.abs(rate - sampleMean) <= standardDeviation)
       const averagePrice = validRates.reduce((acc, cur) => acc + cur, 0) / validRates.length
-      return averagePrice.toFixed(2)
+      const averagePriceInCents = (averagePrice * 100).toFixed(0)
+      return averagePriceInCents
     } else {
       return '0'
     }
