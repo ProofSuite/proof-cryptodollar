@@ -246,7 +246,6 @@ contract CryptoFiatHub is usingOraclize {
     require(tokenAmount <= tokenBalance);
 
     uint256 tokenValue = tokenAmount.mul(reservedEther).div(tokenBalance);
-    // uint256 etherValue = tokenAmount.mul(reservedEther).div(tokenBalance);
     require(tokenValue > oraclizeFee);
 
     uint256 paymentValue = tokenValue - oraclizeFee;
@@ -312,6 +311,26 @@ contract CryptoFiatHub is usingOraclize {
    */
   function contractBalance() public constant returns (uint256) {
     return this.balance;
+  }
+
+  /**
+   * @notice Allows cryptoDollar buyers to withdraw the ether value sent to the contract
+   * before the callback function happens. This allows users to retrieve the funds sent
+   * to the CryptoDollar contract in case oraclize fails to send a callback transaction
+   * @param _queryId {bytes32} - Oraclize query ID
+   */
+  function withdrawEther(bytes32 _queryId) public {
+    require(callingAddress[_queryId] == msg.sender);
+    require(callingFunction[_queryId] == Func.Buy);
+
+    uint256 oraclizeFee = callingFee[_queryId];
+    uint256 value = callingValue[_queryId];
+    uint256 tokenHoldersFee = value.div(200);
+    uint256 paymentValue = value - tokenHoldersFee - oraclizeFee;
+    require(paymentValue > 0);
+
+    delete callingValue[_queryId];
+    msg.sender.transfer(paymentValue);
   }
 
   modifier onlyOraclize() {
