@@ -2,7 +2,7 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
-import { getWeiBalance, expectRevert } from '../scripts/helpers'
+import { getWeiBalance, expectRevert, waitUntilTransactionsMined } from '../scripts/helpers'
 import { watchNextEvent } from '../scripts/events'
 
 
@@ -373,6 +373,65 @@ contract('Cryptofiat Hub', accounts => {
       let buffer = await cryptoFiatHub.buffer(exchangeRate.asNumber)
       let expectedBuffer = contractBalance - totalOutstanding
       buffer.should.be.bignumber.equal(expectedBuffer)
+    })
+  })
+
+  describe('Withdrawing funds before oraclize callback', async() => {
+    it('should be able to withdraw ether before oraclize callback', async () => {
+      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
+
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      let initialEtherBalance = web3.eth.getBalance(defaultOrder.from)
+
+      let queryParameters = await Promise.all([
+        cryptoFiatHub.callingValue(queryId),
+        cryptoFiatHub.callingFee(queryId)])
+      let [ callingValue, callingFee ] = queryParameters
+
+      let txParams = { from: defaultOrder.from, gasPrice: defaultGasPrice }
+      let tx = await cryptoFiatHub.withdrawEther(queryId, txParams)
+      let txFee = txParams.gasPrice * tx.receipt.gasUsed
+      let expectedIncrement = callingValue - callingFee - callingValue * (0.005) - txFee
+
+      let etherBalance = web3.eth.getBalance(defaultOrder.from)
+      let increment = etherBalance.minus(initialEtherBalance)
+      increment.should.be.bignumber.equal(expectedIncrement)
+    })
+
+    it('should not be able to sell ether tokens after withdrawing ether', async () => {
+      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
+
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      let txParams = { from: defaultOrder.from, gasPrice: defaultGasPrice }
+      await cryptoFiatHub.withdrawEther(queryId, txParams)
+
+      let balanceAfterWithdraw = web3.eth.getBalance(defaultOrder.from)
+      await expectRevert(cryptoFiatHub.__callback(queryId, exchangeRate.asString, { from: oraclize }))
+      let balanceAfterCallback = web3.eth.getBalance(defaultOrder.from)
+      balanceAfterCallback.should.be.bignumber.equal(balanceAfterWithdraw)
+    })
+
+    it('should fail if the person attempting to withdraw did not make the query', async () => {
+      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      let txParams = { from: wallet2 }
+
+      await expectRevert(cryptoFiatHub.withdrawEther(queryId, txParams))
+    })
+
+    it('should fail if the query does not correspond to buying cryptoDollars', async () => {
+      let tokens = 1000
+
+      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
+      let { queryId: queryId1 } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId1, exchangeRate.asString, { from: oraclize })
+
+      await cryptoFiatHub.sellCryptoDollar(tokens, defaultOrder)
+      let { queryId: queryId2 } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId2, exchangeRate.asString, { from: oraclize })
+
+      let txParams = { from: defaultOrder.from, gasPrice: defaultGasPrice }
+      await expectRevert(cryptoFiatHub.withdrawEther(queryId2, txParams))
     })
   })
 
