@@ -53,13 +53,26 @@ npm install -g truffle
 truffle compile
 ```
 
-- Initialize testrpc (or geth)
+- Initialize Ganache-CLI (TestRPC) and Ethereum-Bridge
 
 ```
+cd ..
+chmod+x ./start_rpc.sh
 ./start_rpc.sh
 ```
 
-- Migrate contracts to chosen network
+**ethereum-bridge** is a utility for using the oraclize service on a test
+blockchain. Open another terminal and start the bridge process from within the ethereum-bridge folder
+
+```
+cd ethereum-bridge
+npm install
+node bridge -H localhost:8545 -a 1 --dev --update-ds
+```
+
+
+
+- Return to the root folder and migrate contracts to chosen network
 
 ```
 truffle migrate --network development
@@ -104,8 +117,6 @@ npm run lint
 
 - Run code coverage
 
-
-
 ```
 npm run coverage
 ```
@@ -119,8 +130,10 @@ npm run test-computation-script
 Some tests will be failing on code coverage as the solidity coverage tool instruments contracts and breaks some of the tests
 by adding an additional amount of gas. Currently there does not seem to be any workaround for this.
 
+---
 
-#### Debugging (with vs-code)
+
+### Debugging (with vs-code)
 
 Start the debugger listener
 node --inspect-brk $(which truffle) test ./file/name.js
@@ -136,9 +149,9 @@ Select the "Node Attach" process and add the following snippet to your launch.js
 }
 
 
+---
 
-
-### Contribution
+### Contributing
 
 Thank you for considering helping the Proof project !
 
