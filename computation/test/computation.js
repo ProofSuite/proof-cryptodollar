@@ -4,22 +4,22 @@ const computation = require('../computation-script/computation')
 
 describe('Average Price Test', async () => {
   describe('If the number of received rates is above the threshold', async () => {
-    it('averagePrice should be 866.38 for rates [864.09, 866.16, 867.3, 867.06, 863.82, 869.87, 894.50]', async () => {
+    it('averagePrice (in cents) should be 86638 for rates [864.09, 866.16, 867.3, 867.06, 863.82, 869.87, 894.50]', async () => {
       const inputRates = [864.09, 866.16, 867.30, 867.06, 863.82, 869.87, 894.50]
       const averagePrice = await computation.calculateAverage(inputRates)
-      averagePrice.should.equal('866.38')
+      averagePrice.should.equal('86638')
     })
 
-    it('averagePrice should be 866.84 for rates [844.09, 866.16, 867.30, 867.06, 863.82, 869.87, 894.50]', async () => {
+    it('averagePrice (in cents) should be 86684 for rates [844.09, 866.16, 867.30, 867.06, 863.82, 869.87, 894.50]', async () => {
       const inputRates = [844.09, 866.16, 867.30, 867.06, 863.82, 869.87, 894.50]
       const averagePrice = await computation.calculateAverage(inputRates)
-      averagePrice.should.equal('866.84')
+      averagePrice.should.equal('86684')
     })
 
-    it('averagePrice should be 867.78 for rates [844.09, 866.16, 867.30, 869.87]', async () => {
+    it('averagePrice (in cents) should be 86778 for rates [844.09, 866.16, 867.30, 869.87]', async () => {
       const inputRates = [844.09, 866.16, 867.30, 869.87]
       const averagePrice = await computation.calculateAverage(inputRates)
-      averagePrice.should.equal('867.78')
+      averagePrice.should.equal('86778')
     })
   })
 
