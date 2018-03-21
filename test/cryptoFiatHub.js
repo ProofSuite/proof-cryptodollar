@@ -302,6 +302,41 @@ contract('Cryptofiat Hub', accounts => {
       let tokenAmount = tokenBalance.plus(1)
       await expectRevert(cryptoFiatHub.sellCryptoDollar(tokenAmount, defaultSellOrder))
     })
+
+    it('should not allow user to double spend cryptodollar tokens', async() => {
+      let initialTokenBalance = await cryptoDollar.balanceOf(wallet1)
+
+      // sell tokens and simulate oraclize callback
+      await cryptoFiatHub.sellCryptoDollar(initialTokenBalance, defaultSellOrder)
+      let { queryId: queryId1 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.sellCryptoDollar(initialTokenBalance, defaultSellOrder)
+      let { queryId: queryId2 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.__callback(queryId1, exchangeRate.asString, { from: oraclize })
+      await expectRevert(cryptoFiatHub.__callback(queryId2, exchangeRate.asString, { from: oraclize }))
+
+      let tokenBalance = await cryptoDollar.balanceOf(wallet1)
+      let decrement = tokenBalance.minus(initialTokenBalance)
+      decrement.should.be.bignumber.equal(-initialTokenBalance)
+    })
+
+    it('should not allow user to double spend cryptodollar tokens (unordered oraclize callback)', async() => {
+      let initialTokenBalance = await cryptoDollar.balanceOf(wallet1)
+
+      await cryptoFiatHub.sellCryptoDollar(initialTokenBalance, defaultSellOrder)
+      let { queryId: queryId1 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.sellCryptoDollar(initialTokenBalance, defaultSellOrder)
+      let { queryId: queryId2 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.__callback(queryId2, exchangeRate.asString, { from: oraclize })
+      await expectRevert(cryptoFiatHub.__callback(queryId1, exchangeRate.asString, { from: oraclize }))
+
+      let tokenBalance = await cryptoDollar.balanceOf(wallet1)
+      let decrement = tokenBalance.minus(initialTokenBalance)
+      decrement.should.be.bignumber.equal(-initialTokenBalance)
+    })
   })
 
   describe('Proxy CryptoDollar State and Balances', async () => {
