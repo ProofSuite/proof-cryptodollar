@@ -36,8 +36,14 @@ contract('Oraclize', async(accounts) => {
   let blocksPerEpoch = 20
 
   /**
-  * In this series of tests, we use the testing archive that sends back a static value
-  * All the different functions are tested with a mock CryptoFiatHub contract.
+  * In this series of tests, we use the testing archive that sends back an arbitrary static value
+  * so that we can validate the expected result
+  * By default these tests are skipped as they require a real oraclize callback (from a testing oraclize instance)
+  * The average time before the callback transaction happens is usually ~100s which is too long to be played among
+  * the rest of the unit tests.
+  * As of now, I have found no way to listen to a transaction `to` a contract. Therefore the current way of validating
+  * whether the callback transaction was successful is to wait for 120s and inspect the event
+  * This works quite well and is enough for testing purposes.
   */
   describe.skip('Oraclize Buying CryptoDollars ', async() => {
     before(async() => {
