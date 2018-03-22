@@ -19,78 +19,78 @@ library RewardsStorageProxy {
 
     //getters
     function getCurrentPoolIndex(address _store) public view returns(uint256) {
-        return StoreInterface(_store).getUint(keccak256("dividends.currentPoolIndex"));
+        return StoreInterface(_store).getUint(keccak256("rewards.currentPoolIndex"));
     }
 
     function getCurrentEpoch(address _store) public view returns(uint256) {
-        return StoreInterface(_store).getUint(keccak256("dividends.currentEpoch"));
+        return StoreInterface(_store).getUint(keccak256("rewards.currentEpoch"));
     }
 
     function getCurrentPoolBalance(address _store) public view returns(uint256) {
-        return StoreInterface(_store).getUint(keccak256("dividends.currentPoolBalance"));
+        return StoreInterface(_store).getUint(keccak256("rewards.currentPoolBalance"));
     }
 
     function getNthPoolBalance(address _store, uint256 _index) public view returns(uint256) {
-        return StoreInterface(_store).getUint(keccak256("dividends.nthPoolBalance", _index));
+        return StoreInterface(_store).getUint(keccak256("rewards.nthPoolBalance", _index));
     }
 
     function getNthPoolRemainingDividends(address _store, uint256 _index) public view returns(uint256) {
-        return StoreInterface(_store).getUint(keccak256("dividends.nthPoolRemainingBalance", _index));
+        return StoreInterface(_store).getUint(keccak256("rewards.nthPoolRemainingBalance", _index));
     }
 
     function getAccountLastWithdrawal(address _store, address _account) public view returns(uint256) {
-        return StoreInterface(_store).getUint(keccak256("dividends.accounts.lastWithdrawal", _account));
+        return StoreInterface(_store).getUint(keccak256("rewards.accounts.lastWithdrawal", _account));
     }
 
     function getBlocksPerEpoch(address _store) public view returns(uint256) {
-        return StoreInterface(_store).getUint(keccak256("dividends.blocksPerEpoch"));
+        return StoreInterface(_store).getUint(keccak256("rewards.blocksPerEpoch"));
     }
 
 
 
     //setters
     function setCurrentPoolIndex(address _store, uint256 _value) public {
-        StoreInterface(_store).setUint(keccak256("dividends.currentPoolIndex"), _value);
+        StoreInterface(_store).setUint(keccak256("rewards.currentPoolIndex"), _value);
     }
 
     function setCurrentEpoch(address _store, uint256 _value) public {
-        StoreInterface(_store).setUint(keccak256("dividends.currentEpoch"), _value);
+        StoreInterface(_store).setUint(keccak256("rewards.currentEpoch"), _value);
     }
 
     function setCurrentPoolBalance(address _store, uint256 _value) public {
-        StoreInterface(_store).setUint(keccak256("dividends.currentPoolBalance"), _value);
+        StoreInterface(_store).setUint(keccak256("rewards.currentPoolBalance"), _value);
     }
 
     function setNthPoolBalance(address _store, uint256 _index, uint256 _value) public {
-        StoreInterface(_store).setUint(keccak256("dividends.nthPoolBalance", _index), _value);
+        StoreInterface(_store).setUint(keccak256("rewards.nthPoolBalance", _index), _value);
     }
 
     function setNthPoolRemainingDividends(address _store, uint256 _index, uint256 _value) public {
-        StoreInterface(_store).setUint(keccak256("dividends.nthPoolRemainingBalance", _index), _value);
+        StoreInterface(_store).setUint(keccak256("rewards.nthPoolRemainingBalance", _index), _value);
     }
 
     function setAccountLastWithdrawal(address _store, address _account, uint256 _value) public {
-        StoreInterface(_store).setUint(keccak256("dividends.accounts.lastWithdrawal", _account), _value);
+        StoreInterface(_store).setUint(keccak256("rewards.accounts.lastWithdrawal", _account), _value);
     }
 
     function setBlocksPerEpoch(address _store, uint256 _value) public {
-        StoreInterface(_store).setUint(keccak256("dividends.blocksPerEpoch"), _value);
+        StoreInterface(_store).setUint(keccak256("rewards.blocksPerEpoch"), _value);
     }
 
 
     //helpers
     function incrementCurrentPoolIndex(address _store, uint256 _amount) public {
-        uint256 newValue = StoreInterface(_store).getUint(keccak256("dividends.currentPoolIndex")).add(_amount);
-        StoreInterface(_store).setUint(keccak256("dividends.currentPoolIndex"), newValue);
+        uint256 newValue = StoreInterface(_store).getUint(keccak256("rewards.currentPoolIndex")).add(_amount);
+        StoreInterface(_store).setUint(keccak256("rewards.currentPoolIndex"), newValue);
     }
 
     function incrementCurrentEpoch(address _store, uint256 _amount) public {
-        uint256 newValue = StoreInterface(_store).getUint(keccak256("dividends.currentEpoch")).add(_amount);
-        StoreInterface(_store).setUint(keccak256("dividends.currentEpoch"), newValue);
+        uint256 newValue = StoreInterface(_store).getUint(keccak256("rewards.currentEpoch")).add(_amount);
+        StoreInterface(_store).setUint(keccak256("rewards.currentEpoch"), newValue);
     }
 
     function incrementCurrentPoolBalance(address _store, uint256 _amount) public {
-        uint256 newValue = StoreInterface(_store).getUint(keccak256("dividends.currentPoolBalance")).add(_amount);
-        StoreInterface(_store).setUint(keccak256("dividends.currentPoolBalance"), newValue);
+        uint256 newValue = StoreInterface(_store).getUint(keccak256("rewards.currentPoolBalance")).add(_amount);
+        StoreInterface(_store).setUint(keccak256("rewards.currentPoolBalance"), newValue);
     }
 }
