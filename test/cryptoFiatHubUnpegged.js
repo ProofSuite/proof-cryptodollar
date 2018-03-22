@@ -38,27 +38,26 @@ contract('Cryptofiat Hub', (accounts) => {
   let defaultSellOrder = { from: wallet1, gasPrice: defaultGasPrice }
 
   /*
-  The initial exchange rate is equal to 1 ETH = 100 USD (in cents, exchangeRate = 10000)
-  The contract is initially capitalized with 1 ether
-  The first user (wallet1) buys 1000 tokens therefore the contract state is initially:
-
-  buffer = contractbalance - outstanding = 2 ether - ~1000 cryptodollar tokens = 2 ether - 10 ether = 1 ether
-  Thus buffer > 0
-
-  The exchange rate drops and is now equal to 1 ETH = 10 USD (in cents, exchangeRate = 100)
-  Thus buffer = contractbalance - outstanding = 11 ether - 1000 cryptodollar tokens = 11 ether - 100 ether = - 89 ether
+  The initial exchange rate is equal to 1 ETH = 200 USD (in cents, exchangeRate = 20000)
+  1. The contract is initially capitalized with 1 ether
+  2. The first user (wallet1) buys 1 ether worth  tokens ~ 200 tokens
+  3. The initial buffer therefore is:
+  buffer = contractbalance - outstanding = 2 ether - ~200 tokens ~= 2 ether - 1 ether = 1 ether
+  4. The exchange rate drops and is now equal to 1 ETH = 20 USD (in cents, exchangeRate = 2000)
+  5. The new buffer value therefore is:
+  buffer = contractbalance - outstanding = 2 ether - ~200tokens ~= 2 ether - 10 ether ~= -8 ether
   **/
   describe('Selling unpegged dollars', async () => {
     before(async () => {
-      // In this scenario, the initial exchange rate is 1 ETH = 100 USD (exchangeRate = 10000)
-      // The updated exchange rate is 1 ETH = 10 USD (exchangeRate 1000)
+      // In this scenario, the initial exchange rate is 1 ETH = 200 USD (exchangeRate = 20000)
+      // The updated exchange rate is 1 ETH = 20 USD (exchangeRate 2000)
       // The exchange rate is actually representing ethers to cents
       // The exchange rates are kept in objects that references them both in strings and numbers since the
       // __callback function takes exchanges rate as a string value
       initialExchangeRate = { asString: '20000', asNumber: 20000 }
       updatedExchangeRate = { asString: '2000', asNumber: 2000 }
 
-            // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+      // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
       // state for each test so we redeploy all libraries an other contracts every time.
       let deployedLibraries = await Promise.all([
         RewardsStorageProxy.new(),
