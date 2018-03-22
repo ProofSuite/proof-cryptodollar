@@ -1,11 +1,12 @@
 pragma solidity ^0.4.19;
 import "./utils/Ownable.sol";
+import "./utils/Logger.sol";
 import "./interfaces/ProofTokenInterface.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/CryptoFiatStorageProxy.sol";
 import "./libraries/RewardsStorageProxy.sol";
 
-contract Rewards {
+contract Rewards is Logger {
 
   using SafeMath for uint256;
   using RewardsStorageProxy for address;
@@ -70,12 +71,14 @@ contract Rewards {
   function receiveRewards() public payable {
     require(msg.value > 0);
 
-    uint256 currentEpoch = store.getCurrentEpoch();
-    if (getCurrentEpoch() > currentEpoch) {
+    uint256 lastEpoch = store.getCurrentEpoch();
+    uint256 currentEpoch = getCurrentEpoch();
+
+    if (currentEpoch > lastEpoch) {
       uint256 currentPoolBalance = store.getCurrentPoolBalance();
-      store.setNthPoolBalance(currentEpoch, currentPoolBalance);
+      store.setNthPoolBalance(lastEpoch, currentPoolBalance);
       store.setCurrentPoolBalance(0);
-      store.incrementCurrentEpoch(1);
+      store.setCurrentEpoch(currentEpoch);
     }
 
     store.incrementCurrentPoolBalance(msg.value);
@@ -115,23 +118,21 @@ contract Rewards {
 
     uint256 withdrawalValue = 0;
     uint256 lastWithdrawal = store.getAccountLastWithdrawal(msg.sender);
-    lastEpoch = store.getCurrentEpoch();
-    require(lastWithdrawal != lastEpoch);
+    require(lastWithdrawal != currentEpoch);
 
-    for (uint256 i = lastWithdrawal; i < lastEpoch; i++) {
+    for (uint256 i = lastWithdrawal; i < currentEpoch; i++) {
       uint256 blockNumberAtEpochStart = getBlockNumberAtEpochStart(i);
       uint256 balanceAtEpochStart = proofToken.balanceOfAt(msg.sender, blockNumberAtEpochStart);
       uint256 totalSupply = proofToken.totalSupply();
-      currentPoolBalance = (store.getNthPoolBalance(i) * balanceAtEpochStart) / totalSupply;
-      withdrawalValue = withdrawalValue + currentPoolBalance;
+      uint256 currentPoolValue = (store.getNthPoolBalance(i) * balanceAtEpochStart) / totalSupply;
+      withdrawalValue = withdrawalValue + currentPoolValue;
     }
 
     require(withdrawalValue != 0);
     require(withdrawalValue < this.balance);
-    store.setAccountLastWithdrawal(msg.sender, lastEpoch);
+    store.setAccountLastWithdrawal(msg.sender, currentEpoch);
     msg.sender.transfer(withdrawalValue);
   }
-
 
   /**
    * Epochs separate the different pools of rewards (see description of withdrawRewards() and receiveRewards())

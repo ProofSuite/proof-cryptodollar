@@ -47,7 +47,7 @@ contract('Cryptofiat Hub', (accounts) => {
   5. The new buffer value therefore is:
   buffer = contractbalance - outstanding = 2 ether - ~200tokens ~= 2 ether - 10 ether ~= -8 ether
   **/
-  describe('Selling unpegged dollars', async () => {
+  describe.only('Selling unpegged dollars', async () => {
     before(async () => {
       // In this scenario, the initial exchange rate is 1 ETH = 200 USD (exchangeRate = 20000)
       // The updated exchange rate is 1 ETH = 20 USD (exchangeRate 2000)
