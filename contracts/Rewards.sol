@@ -1,12 +1,11 @@
 pragma solidity ^0.4.19;
 import "./utils/Ownable.sol";
-import "./utils/Logger.sol";
 import "./interfaces/ProofTokenInterface.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/CryptoFiatStorageProxy.sol";
 import "./libraries/RewardsStorageProxy.sol";
 
-contract Rewards is Logger {
+contract Rewards {
 
   using SafeMath for uint256;
   using RewardsStorageProxy for address;
