@@ -48,7 +48,7 @@ contract('Cryptofiat Hub', (accounts) => {
   The exchange rate drops and is now equal to 1 ETH = 10 USD (in cents, exchangeRate = 100)
   Thus buffer = contractbalance - outstanding = 11 ether - 1000 cryptodollar tokens = 11 ether - 100 ether = - 89 ether
   **/
-  describe('Selling unpegged dollars', async () => {
+  describe.only('Selling unpegged dollars', async () => {
     before(async () => {
       // In this scenario, the initial exchange rate is 1 ETH = 100 USD (exchangeRate = 10000)
       // The updated exchange rate is 1 ETH = 10 USD (exchangeRate 1000)
