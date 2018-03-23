@@ -15,7 +15,7 @@ module.exports = function(deployer) {
 
   let IPFSHash = config.ipfs.TESTING_SUCCESS
 
-  //deploy libraries
+  //deploy librariess
   deployer.deploy(SafeMath)
   deployer.deploy(RewardsStorageProxy)
   deployer.deploy(CryptoFiatStorageProxy)
@@ -88,5 +88,6 @@ module.exports = function(deployer) {
       let cryptoFiatHub = await CryptoFiatHub.deployed()
       await cryptoFiatHub.initialize(20)
       await cryptoFiatHub.initializeOraclize(IPFSHash, true)
+      await cryptoFiatHub.capitalize({ value: 10 * 10 ** 18 })
     })
 };
