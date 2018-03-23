@@ -1,4 +1,9 @@
-const web3Reducer = (state = { web3Instance: null }, action) => {
+const initialState = {
+  web3Instance: null,
+  error: null
+}
+
+const web3Reducer = (state = initialState, action) => {
   switch (action.type) {
     case 'INITIALIZE_WEB3_SUCCESS':
       return {

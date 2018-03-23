@@ -37,13 +37,15 @@ export default function (state = initialState, action) {
         ...state,
         contractState: {
           loading: true,
-          data: null
+          data: null,
+          ...state.contractState
         }
       }
     case 'FETCH_CRYPTODOLLAR_STATE_SUCCESS':
       return {
         ...state,
         contractState: {
+          ...state.contractState,
           loading: false,
           data: action.payload
         }
@@ -52,6 +54,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         contractState: {
+          ...state.contractState,
           loading: false,
           data: null
         }
@@ -60,6 +63,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         buy: {
+          ...state.buy,
           loading: true,
           error: null,
           receipt: null,
@@ -70,6 +74,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         buy: {
+          ...state.buy,
           loading: false,
           error: action.payload.error,
           receipt: action.payload.receipt,
@@ -80,6 +85,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         buy: {
+          ...state.buy,
           loading: false,
           error: null,
           receipt: null,
@@ -90,6 +96,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         buy: {
+          ...state.buy,
           loading: false,
           error: null,
           receipt: action.payload,
@@ -100,6 +107,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         buy: {
+          ...state.buy,
           loading: false,
           error: null
         }
@@ -108,6 +116,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         sell: {
+          ...state.sell,
           loading: true,
           error: null,
           receipt: null,
@@ -118,6 +127,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         sell: {
+          ...state.sell,
           loading: false,
           error: action.payload.error,
           receipt: action.payload.receipt,
@@ -128,6 +138,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         sell: {
+          ...state.sell,
           loading: false,
           error: null,
           txHash: action.payload,
@@ -138,6 +149,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         sell: {
+          ...state.sell,
           loading: false,
           error: null,
           receipt: action.payload,
@@ -148,6 +160,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         sell: {
+          ...state.sell,
           loading: false,
           error: null
         }
@@ -156,6 +169,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         sellUnpegged: {
+          ...state.sellUnpegged,
           loading: true,
           error: null,
           receipt: null,
@@ -166,6 +180,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         sellUnpegged: {
+          ...state.sellUnpegged,
           loading: false,
           error: action.payload.error,
           receipt: action.payload.receipt
@@ -175,6 +190,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         sellUnpegged: {
+          ...state.sellUnpegged,
           loading: false,
           error: null,
           receipt: action.payload,
@@ -185,6 +201,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         sellUnpegged: {
+          ...state.sellUnpegged,
           loading: false,
           error: null,
           receipt: action.payload
@@ -194,6 +211,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         transfer: {
+          ...state.transfer,
           loading: false,
           error: null,
           receipt: null
@@ -203,6 +221,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         transfer: {
+          ...state.transfer,
           loading: false,
           error: null,
           receipt: null,
@@ -213,6 +232,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         transfer: {
+          ...state.transfer,
           loading: false,
           error: null,
           receipt: action.payload,
@@ -223,6 +243,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         transfer: {
+          ...state.transfer,
           loading: false,
           error: action.payload.error,
           receipt: action.payload.receipt,
