@@ -160,4 +160,9 @@ contract Rewards {
     return blockNumber;
   }
 
+
+  function getCurrentPoolIndex() public view returns(uint256 poolIndex) {
+    return store.getCurrentPoolIndex();
+  }
+
 }

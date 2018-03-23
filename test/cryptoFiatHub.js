@@ -5,7 +5,6 @@ import { ether } from '../scripts/constants'
 import { getWeiBalance, expectRevert } from '../scripts/helpers'
 import { watchNextEvent } from '../scripts/events'
 
-
 chai.use(chaiAsPromised).use(require('chai-bignumber')(web3.BigNumber)).should()
 
 const should = chai.should()
@@ -305,7 +304,7 @@ contract('Cryptofiat Hub', accounts => {
   })
 
   describe('Proxy CryptoDollar State and Balances', async () => {
-    before(async () => {
+    beforeEach(async () => {
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
       let { queryId } = await watchNextEvent(cryptoFiatHub)
       await cryptoFiatHub.__callback(queryId, exchangeRate.asString, { from: oraclize })
@@ -331,12 +330,12 @@ contract('Cryptofiat Hub', accounts => {
       expectedTotalOutstanding.should.be.bignumber.equal(totalOutstanding)
     })
 
-    it('should return correct buffer value', async () => {
-      let contractBalance = web3.eth.getBalance(CryptoFiatHub.address)
+    it.only('should return correct buffer value', async () => {
+      let contractBalance = await cryptoFiatHub.contractBalance()
       let totalOutstanding = await cryptoFiatHub.totalOutstanding(exchangeRate.asNumber)
       let buffer = await cryptoFiatHub.buffer(exchangeRate.asNumber)
       let expectedBuffer = contractBalance - totalOutstanding
-      expectedBuffer.should.be.bignumber.equal(buffer)
+      buffer.should.be.bignumber.equal(expectedBuffer)
     })
   })
 })

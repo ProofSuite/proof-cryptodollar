@@ -13,9 +13,9 @@ const Rewards = artifacts.require("./Rewards.sol")
 //for some reason async/await makes this file crash
 module.exports = function(deployer) {
 
-  let IPFSHash = config.ipfs.testing
+  let IPFSHash = config.ipfs.TESTING_SUCCESS
 
-  //deploy libraries
+  //deploy librariess
   deployer.deploy(SafeMath)
   deployer.deploy(RewardsStorageProxy)
   deployer.deploy(CryptoFiatStorageProxy)
@@ -87,5 +87,7 @@ module.exports = function(deployer) {
     .then(async() => {
       let cryptoFiatHub = await CryptoFiatHub.deployed()
       await cryptoFiatHub.initialize(20)
+      await cryptoFiatHub.initializeOraclize(IPFSHash, true)
+      await cryptoFiatHub.capitalize({ value: 10 * 10 ** 18 })
     })
 };
