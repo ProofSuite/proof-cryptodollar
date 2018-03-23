@@ -36,9 +36,9 @@ export default function (state = initialState, action) {
       return {
         ...state,
         contractState: {
+          ...state.contractState,
           loading: true,
-          data: null,
-          ...state.contractState
+          data: null
         }
       }
     case 'FETCH_CRYPTODOLLAR_STATE_SUCCESS':
