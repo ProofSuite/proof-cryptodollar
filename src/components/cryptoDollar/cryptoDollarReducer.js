@@ -37,7 +37,9 @@ export default function (state = initialState, action) {
         ...state,
         contractState: {
           loading: true,
-          data: null
+          error: null,
+          data: null,
+          ...state.contractState
         }
       }
     case 'FETCH_CRYPTODOLLAR_STATE_SUCCESS':
@@ -45,7 +47,8 @@ export default function (state = initialState, action) {
         ...state,
         contractState: {
           loading: false,
-          data: action.payload
+          data: action.payload,
+          ...state.contractState
         }
       }
     case 'FETCH_CRYPTODOLLAR_STATE_ERROR':
@@ -53,7 +56,8 @@ export default function (state = initialState, action) {
         ...state,
         contractState: {
           loading: false,
-          data: null
+          data: null,
+          ...state.contractState
         }
       }
     case 'BUY_CRYPTODOLLAR_TX_STARTED':
@@ -63,7 +67,8 @@ export default function (state = initialState, action) {
           loading: true,
           error: null,
           receipt: null,
-          txHash: ''
+          txHash: '',
+          ...state.buy
         }
       }
     case 'BUY_CRYPTODOLLAR_TX_ERROR':
@@ -73,7 +78,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: action.payload.error,
           receipt: action.payload.receipt,
-          txHash: ''
+          txHash: '',
+          ...state.buy
         }
       }
     case 'BUY_CRYPTODOLLAR_TX_SENT':
@@ -83,7 +89,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: null,
           receipt: null,
-          txHash: action.payload
+          txHash: action.payload,
+          ...state.buy
         }
       }
     case 'BUY_CRYPTODOLLAR_TX_RECEIPT':
@@ -93,7 +100,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: null,
           receipt: action.payload,
-          txHash: state.buy.txHash
+          txHash: state.buy.txHash,
+          ...state.buy
         }
       }
     case 'BUY_CRYPTODOLLAR_TX_CONFIRMED':
@@ -101,7 +109,8 @@ export default function (state = initialState, action) {
         ...state,
         buy: {
           loading: false,
-          error: null
+          error: null,
+          ...state.buy
         }
       }
     case 'SELL_CRYPTODOLLAR_TX_STARTED':
@@ -111,7 +120,8 @@ export default function (state = initialState, action) {
           loading: true,
           error: null,
           receipt: null,
-          txHash: ''
+          txHash: '',
+          ...state.sell
         }
       }
     case 'SELL_CRYPTODOLLAR_TX_ERROR':
@@ -121,7 +131,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: action.payload.error,
           receipt: action.payload.receipt,
-          txHash: ''
+          txHash: '',
+          ...state.sell
         }
       }
     case 'SELL_CRYPTODOLLAR_TX_SENT':
@@ -131,7 +142,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: null,
           txHash: action.payload,
-          receipt: null
+          receipt: null,
+          ...state.sell
         }
       }
     case 'SELL_CRYPTODOLLAR_TX_RECEIPT':
@@ -141,7 +153,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: null,
           receipt: action.payload,
-          txHash: state.sell.txHash
+          txHash: state.sell.txHash,
+          ...state.sell
         }
       }
     case 'SELL_CRYPTODOLLAR_TX_CONFIRMED':
@@ -149,7 +162,8 @@ export default function (state = initialState, action) {
         ...state,
         sell: {
           loading: false,
-          error: null
+          error: null,
+          ...state.sell
         }
       }
     case 'SELL_UNPEGGED_CRYPTODOLLAR_TX_STARTED':
@@ -159,7 +173,8 @@ export default function (state = initialState, action) {
           loading: true,
           error: null,
           receipt: null,
-          txHash: ''
+          txHash: '',
+          ...state.sellUnpegged
         }
       }
     case 'SELL_UNPEGGED_CRYPTODOLLAR_TX_ERROR':
@@ -168,7 +183,8 @@ export default function (state = initialState, action) {
         sellUnpegged: {
           loading: false,
           error: action.payload.error,
-          receipt: action.payload.receipt
+          receipt: action.payload.receipt,
+          ...state.sellUnpegged
         }
       }
     case 'SELL_UNPEGGED_CRYPTODOLLAR_TX_RECEIPT':
@@ -178,7 +194,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: null,
           receipt: action.payload,
-          txHash: state.sellUnpegged.txHash
+          txHash: state.sellUnpegged.txHash,
+          ...state.sellUnpegged
         }
       }
     case 'SELL_UNPEGGED_CRYPTODOLLAR_TX_CONFIRMED':
@@ -187,7 +204,8 @@ export default function (state = initialState, action) {
         sellUnpegged: {
           loading: false,
           error: null,
-          receipt: action.payload
+          receipt: action.payload,
+          ...state.sellUnpegged
         }
       }
     case 'TRANSFER_CRYPTODOLLAR_TX_STARTED':
@@ -196,7 +214,8 @@ export default function (state = initialState, action) {
         transfer: {
           loading: false,
           error: null,
-          receipt: null
+          receipt: null,
+          ...state.sellUnpegged
         }
       }
     case 'TRANSFER_CRYPTODOLLAR_TX_SENT':
@@ -206,7 +225,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: null,
           receipt: null,
-          txHash: action.payload
+          txHash: action.payload,
+          ...state.transfer
         }
       }
     case 'TRANSFER_CRYPTODOLLAR_TX_RECEIPT':
@@ -216,7 +236,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: null,
           receipt: action.payload,
-          txHash: state.transfer.txHash
+          txHash: state.transfer.txHash,
+          ...state.transfer
         }
       }
     case 'TRANSFER_CRYPTODOLLAR_TX_ERROR':
@@ -226,7 +247,8 @@ export default function (state = initialState, action) {
           loading: false,
           error: action.payload.error,
           receipt: action.payload.receipt,
-          txHash: ''
+          txHash: '',
+          ...state.transfer
         }
       }
     default:

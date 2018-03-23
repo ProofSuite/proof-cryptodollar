@@ -23,7 +23,12 @@ export default function (state = initialState, action) {
         contractState: {
           loading: false,
           error: null,
-          data: {}
+          data: {
+            currentPoolIndex: '',
+            currentEpoch: '',
+            currentPoolBalance: ''
+          },
+          ...state.contractState
         }
       }
     case 'CALL_REWARDS_CONTRACT_ERROR':
@@ -32,7 +37,12 @@ export default function (state = initialState, action) {
         contractState: {
           loading: false,
           error: action.payload,
-          data: {}
+          data: {
+            currentPoolIndex: '',
+            currentEpoch: '',
+            currentPoolBalance: ''
+          },
+          ...state.contractState
         }
       }
     case 'CALL_REWARDS_CONTRACT_SUCCESS':
@@ -41,7 +51,8 @@ export default function (state = initialState, action) {
         contractState: {
           loading: false,
           error: null,
-          data: action.payload
+          data: action.payload,
+          ...state.contractState
         }
       }
     case 'WITHDRAWING_REWARDS':
@@ -50,7 +61,8 @@ export default function (state = initialState, action) {
         withdraw: {
           loading: false,
           error: null,
-          receipt: {}
+          receipt: {},
+          ...state.withdraw
         }
       }
     case 'WITHDRAW_REWARDS_ERROR':
@@ -59,7 +71,8 @@ export default function (state = initialState, action) {
         withdraw: {
           loading: false,
           error: null,
-          receipt: {}
+          receipt: {},
+          ...state.withdraw
         }
       }
     default:

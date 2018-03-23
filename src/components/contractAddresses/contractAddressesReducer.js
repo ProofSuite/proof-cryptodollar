@@ -1,4 +1,9 @@
-export default function (state = { loading: true, contracts: {} }, action) {
+let initialState = {
+  loading: true,
+  contracts: {}
+}
+
+export default function (state = initialState, action) {
   switch (action.type) {
     case 'FETCHING_CONTRACT_ADDRESSES':
       return {
