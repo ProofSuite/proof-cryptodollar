@@ -1,11 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Table, Header, List } from 'semantic-ui-react'
+import { Table, Header } from 'semantic-ui-react'
 
 const RewardsContractState = ({ data }) => {
   const dataList = Object.keys(data).map(variable => (
       (
-        <Table.Row key={name}>
+        <Table.Row key={variable}>
           <Table.Cell>{variable}</Table.Cell>
           <Table.Cell>{data[variable]}</Table.Cell>
         </Table.Row>

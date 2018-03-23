@@ -25,14 +25,13 @@ export const fetchRewardsContractState = () => {
       let rewardsData = await Promise.all([
         rewards.methods.getCurrentPoolIndex().call(),
         rewards.methods.getCurrentEpoch().call(),
-        rewards.methods.getCurrentPoolBalance().call()
-      ])
+        rewards.methods.getCurrentPoolBalance().call()])
+      let [currentPoolIndex, currentEpoch, currentPoolBalance] = rewardsData
 
-      let [currentPoolIndex, currentEpoch, currentPoolBalance] = await Promise.all(rewardsData)
       let data = {
         currentPoolIndex: currentPoolIndex,
         currentEpoch: currentEpoch,
-        currentPoolBalance: accounting.formatMoney(currentPoolBalance / 10e18, { symbol: 'ETH', format: '%v %s' })
+        currentPoolBalance: accounting.formatMoney(currentPoolBalance / 1e18, { symbol: 'ETH', format: '%v %s' })
       }
 
       dispatch(actions.rewardsContractCallSuccess(data))

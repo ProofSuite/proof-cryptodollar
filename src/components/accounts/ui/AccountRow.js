@@ -15,9 +15,9 @@ const AccountRow = (props) => {
 
 AccountRow.propTypes = {
   address: PropTypes.string,
-  etherBalance: PropTypes.number,
+  etherBalance: PropTypes.string,
   cryptoDollarBalance: PropTypes.string,
-  reservedEtherBalance: PropTypes.number
+  reservedEtherBalance: PropTypes.string
 }
 
 export default AccountRow

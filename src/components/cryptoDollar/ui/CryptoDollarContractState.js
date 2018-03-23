@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { Header, List, Table } from 'semantic-ui-react'
+import { Header, Table } from 'semantic-ui-react'
 
 class CryptoDollarContractState extends Component {
   renderContractState (data) {

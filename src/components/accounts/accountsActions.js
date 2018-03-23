@@ -1,5 +1,3 @@
-
-import store from '../../redux-store'
 import Web3 from 'web3'
 import CryptoDollar from '../../../build/contracts/CryptoDollar.json'
 import { getWeb3ContractInstance } from '../../helpers/contractHelpers'

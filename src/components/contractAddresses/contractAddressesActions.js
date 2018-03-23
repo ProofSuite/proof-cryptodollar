@@ -18,18 +18,15 @@ export const fetchContractAddresses = () => {
     let web3 = store.getState().web3.web3Instance
     if (typeof web3 === 'undefined') return dispatch(actions.fetchingContractAddressesError())
 
-    let cryptoFiatHubAddress = getTruffleContractAddress(CryptoFiatHubInterface)
-    let cryptoDollarAddress = getTruffleContractAddress(CryptoDollarInterface)
-    let rewardsAddress = getTruffleContractAddress(RewardsInterface)
-    let keyValueStoreAddress = getTruffleContractAddress(StoreInterface)
-
-    console.log(keyValueStoreAddress)
+    let contracts = [ CryptoFiatHubInterface, CryptoDollarInterface, RewardsInterface, StoreInterface ]
+    let addresses = contracts.map(contract => (getTruffleContractAddress(contract)))
+    let [ cryptoDollarAddress, cryptoFiatHubAddress, rewardsAddress, storeAddress ] = addresses
 
     let results = {
       cryptoDollar: cryptoDollarAddress,
       cryptoFiatHub: cryptoFiatHubAddress,
       rewards: rewardsAddress,
-      store: keyValueStoreAddress
+      store: storeAddress
     }
 
     dispatch(actions.fetchContractAddressesSuccess(results))
