@@ -55,6 +55,7 @@
     "webpack-dev-server": "~2.9.7"
   },
   "dependencies": {
+    "@0xproject/subproviders": "~0.8.2",
     "@digix/truffle-lightwallet-provider": "~0.1.4",
     "accounting-js": "~1.1.1",
     "babel-polyfill": "~6.26.0",
@@ -94,6 +95,7 @@
     "semantic-ui-react": "~0.78.3",
     "url-loader": "~1.0.1",
     "web3": "~1.0.0-beta.30",
+    "web3-provider-engine": "~13.6.6",
     "webpack-html-plugin": "~0.1.1",
     "webpack-manifest-plugin": "~1.1.2"
   }
