@@ -1,8 +1,8 @@
-import store from '../../redux-store'
 import Rewards from '../../../build/contracts/Rewards.json'
 import { getWeb3ContractInstance } from '../../helpers/contractHelpers'
 import { resolve } from 'catchify'
 import accounting from 'accounting-js'
+import * as web3Service from '../../services/web3/web3'
 
 const actions = {
   callingRewardsContract: () => ({ type: 'CALL_REWARDS_CONTRACT' }),
@@ -18,7 +18,7 @@ export const fetchRewardsContractState = () => {
     try {
       dispatch(actions.callingRewardsContract())
 
-      let web3 = store.getState().web3.web3Instance
+      let web3 = web3Service.getLocalWeb3({ websockets: true })
       if (typeof web3 === 'undefined') dispatch(actions.rewardsContractCallError())
 
       let rewards = getWeb3ContractInstance(web3, Rewards)
@@ -48,7 +48,7 @@ export const withdrawRewards = ({ sender }) => {
     try {
       dispatch(actions.withdrawingRewards())
 
-      let web3 = store.getState().web3.web3Instance
+      let web3 = web3Service.getLocalWeb3({ websockets: true })
       if (typeof web3 === 'undefined') throw new Error('Provider not found')
 
       let rewards = getWeb3ContractInstance(web3, Rewards)

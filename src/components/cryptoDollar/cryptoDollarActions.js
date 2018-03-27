@@ -1,8 +1,7 @@
-import store from '../../redux-store'
 import CryptoFiatHub from '../../../build/contracts/CryptoFiatHub.json'
 import CryptoDollar from '../../../build/contracts/CryptoDollar.json'
 import { getWeb3ContractInstance, getTruffleContractAddress } from '../../helpers/contractHelpers'
-import oraclizeActions from '../../services/oraclize/callbackActions'
+import * as web3Service from '../../services/web3/web3'
 import { formatEtherColumn } from '../../helpers/formatHelpers'
 
 const actions = {
@@ -102,7 +101,7 @@ export const fetchCryptoDollarContractState = () => {
     try {
       dispatch(actions.fetchingCryptoDollarState())
 
-      let web3 = store.getState().web3.web3Instance
+      let web3 = web3Service.getLocalWeb3({ websockets: true })
       if (typeof web3 === 'undefined') dispatch(actions.fetchCryptoDollarStateError())
 
       let cryptoDollar = getWeb3ContractInstance(web3, CryptoDollar)
@@ -128,7 +127,7 @@ export const fetchCryptoDollarContractState = () => {
 export const buyCryptoDollar = ({ sender, value, gas, gasPrice = 2 * 10e9 }) => {
   return async dispatch => {
     try {
-      let web3 = store.getState().web3.web3Instance
+      let web3 = web3Service.getLocalWeb3({ websockets: true })
       if (typeof web3 === 'undefined') throw new Error('Provider not found')
       if (!sender) throw new Error('Sender Address not provided')
       if (!value) throw new Error('Token Amount not provided')
@@ -173,7 +172,7 @@ export const buyCryptoDollar = ({ sender, value, gas, gasPrice = 2 * 10e9 }) => 
 export const sellCryptoDollar = ({ sender, tokens, gas, gasPrice = 2 * 10e9, value }) => {
   return async dispatch => {
     try {
-      let web3 = store.getState().web3.web3Instance
+      let web3 = web3Service.getLocalWeb3({ websockets: true })
       if (typeof web3 === 'undefined') throw new Error('Provider not found')
       if (!sender) throw new Error('Sender Address not provided')
       if (!tokens) throw new Error('Token Amount not provided')
@@ -216,7 +215,7 @@ export const sellCryptoDollar = ({ sender, tokens, gas, gasPrice = 2 * 10e9, val
 export const sellUnpeggedCryptoDollar = ({ sender, tokens, gas, gasPrice, value }) => {
   return async dispatch => {
     try {
-      let web3 = store.getState().web3.web3Instance
+      let web3 = web3Service.getLocalWeb3({ websockets: true })
       if (typeof web3 === 'undefined') throw new Error('Provider not found')
       if (!sender) throw new Error('Sender Address not provided')
       if (!tokens) throw new Error('Token amount not provided')
@@ -259,7 +258,7 @@ export const sellUnpeggedCryptoDollar = ({ sender, tokens, gas, gasPrice, value 
 export const transferCryptoDollar = ({ amount, receiver, sender, gas, gasPrice }) => {
   return async dispatch => {
     try {
-      let web3 = store.getState().web3.web3Instance
+      let web3 = web3Service.getLocalWeb3({ websockets: true })
       if (typeof web3 === 'undefined') dispatch(actions.transferCryptoDollarTxError())
       if (!sender) throw new Error('Sender Address not provided')
       if (!amount) throw new Error('Token Amount not provided')
