@@ -26,7 +26,7 @@ export const getRemoteProvider = ({ websockets, url }) => {
 export const getLocalProvider = ({ websockets }) => {
   let provider
   if (!websockets) {
-    provider = new Web3.providers.HttpProvider('http://localhost:8546')
+    provider = new Web3.providers.HttpProvider('http://localhost:8545')
   } else {
     provider = new Web3.providers.WebsocketProvider('ws://localhost:8546')
   }
