@@ -367,7 +367,7 @@ contract('Cryptofiat Hub', accounts => {
       expectedTotalOutstanding.should.be.bignumber.equal(totalOutstanding)
     })
 
-    it.only('should return correct buffer value', async () => {
+    it('should return correct buffer value', async () => {
       let contractBalance = await cryptoFiatHub.contractBalance()
       let totalOutstanding = await cryptoFiatHub.totalOutstanding(exchangeRate.asNumber)
       let buffer = await cryptoFiatHub.buffer(exchangeRate.asNumber)
