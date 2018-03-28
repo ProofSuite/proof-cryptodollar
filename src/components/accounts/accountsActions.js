@@ -15,36 +15,40 @@ const actions = {
 
 export const fetchAccounts = () => {
   return async dispatch => {
-    dispatch(actions.fetchingAccounts())
+    try {
+      dispatch(actions.fetchingAccounts())
 
-    const provider = new Web3.providers.HttpProvider('http://localhost:8545')
-    const web3 = new Web3(provider)
-    if (typeof web3 === 'undefined') dispatch(actions.fetchingAccountsError())
-    let accounts = await web3.eth.getAccounts()
+      const provider = new Web3.providers.HttpProvider('http://localhost:8545')
+      const web3 = new Web3(provider)
+      if (typeof web3 === 'undefined') dispatch(actions.fetchAccountsError())
+      let accounts = await web3.eth.getAccounts()
 
-    let cryptoDollar = getWeb3ContractInstance(web3, CryptoDollar)
+      let cryptoDollar = getWeb3ContractInstance(web3, CryptoDollar)
 
-    let etherBalancesCalls = accounts.map((account) => web3.eth.getBalance(account))
-    let etherBalances = await Promise.all(etherBalancesCalls)
-    etherBalances = formatEtherColumn(etherBalances)
+      let etherBalancesCalls = accounts.map((account) => web3.eth.getBalance(account))
+      let etherBalances = await Promise.all(etherBalancesCalls)
+      etherBalances = formatEtherColumn(etherBalances)
 
-    let cryptoDollarBalancesCalls = accounts.map((account) => cryptoDollar.methods.balanceOf(account).call())
-    let cryptoDollarBalances = await Promise.all(cryptoDollarBalancesCalls)
-    cryptoDollarBalances = formatCUSDColumn(cryptoDollarBalances)
+      let cryptoDollarBalancesCalls = accounts.map((account) => cryptoDollar.methods.balanceOf(account).call())
+      let cryptoDollarBalances = await Promise.all(cryptoDollarBalancesCalls)
+      cryptoDollarBalances = formatCUSDColumn(cryptoDollarBalances)
 
-    let reservedEtherCalls = accounts.map((account) => cryptoDollar.methods.reservedEther(account).call())
-    let reservedEtherBalances = await Promise.all(reservedEtherCalls)
-    reservedEtherBalances = formatEtherColumn(reservedEtherBalances)
+      let reservedEtherCalls = accounts.map((account) => cryptoDollar.methods.reservedEther(account).call())
+      let reservedEtherBalances = await Promise.all(reservedEtherCalls)
+      reservedEtherBalances = formatEtherColumn(reservedEtherBalances)
 
-    let results = accounts.map((account, i) => {
-      return {
-        address: account,
-        etherBalance: etherBalances[i],
-        cryptoDollarBalance: cryptoDollarBalances[i],
-        reservedEtherBalance: reservedEtherBalances[i]
-      }
-    })
+      let results = accounts.map((account, i) => {
+        return {
+          address: account,
+          etherBalance: etherBalances[i],
+          cryptoDollarBalance: cryptoDollarBalances[i],
+          reservedEtherBalance: reservedEtherBalances[i]
+        }
+      })
 
-    dispatch(actions.fetchAccountsSuccess(results))
+      dispatch(actions.fetchAccountsSuccess(results))
+    } catch (error) {
+      dispatch(actions.fetchAccountsError())
+    }
   }
 }
