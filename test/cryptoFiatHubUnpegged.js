@@ -126,7 +126,7 @@ contract('Cryptofiat Hub', (accounts) => {
       currentState.should.be.equal('UNPEGGED')
     })
 
-    it('__callback after an calling the (pegged) cryptoDollar function', async () => {
+    it('__callback after an calling the (pegged) cryptoDollar function should fail', async () => {
       await cryptoFiatHub.sellCryptoDollar(1, { from: wallet1, value: ether })
       let { queryId } = await watchNextEvent(cryptoFiatHub)
       await expectInvalidOpcode(cryptoFiatHub.__callback(queryId, updatedExchangeRate.asNumber))
@@ -176,6 +176,112 @@ contract('Cryptofiat Hub', (accounts) => {
       let tokenBalance = await cryptoFiatHub.cryptoDollarBalance(wallet1)
       let tokenAmount = tokenBalance.plus(1)
       await expectRevert(cryptoFiatHub.sellUnpeggedCryptoDollar(tokenAmount, defaultSellOrder))
+    })
+  })
+
+  describe('Selling unpegged dollars (attempt to double-spend)', async () => {
+    beforeEach(async () => {
+      // In this scenario, the initial exchange rate is 1 ETH = 100 USD (exchangeRate = 10000)
+      // The updated exchange rate is 1 ETH = 10 USD (exchangeRate 1000)
+      // The exchange rate is actually representing ethers to cents
+      // The exchange rates are kept in objects that references them both in strings and numbers since the
+      // __callback function takes exchanges rate as a string value
+      initialExchangeRate = { asString: '20000', asNumber: 20000 }
+      updatedExchangeRate = { asString: '2000', asNumber: 2000 }
+
+            // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+      // state for each test so we redeploy all libraries an other contracts every time.
+      let deployedLibraries = await Promise.all([
+        RewardsStorageProxy.new(),
+        CryptoFiatStorageProxy.new(),
+        CryptoDollarStorageProxy.new(),
+        SafeMath.new()
+      ])
+
+      rewardsStorageProxy = deployedLibraries[0]
+      cryptoFiatStorageProxy = deployedLibraries[1]
+      cryptoDollarStorageProxy = deployedLibraries[2]
+      safeMath = deployedLibraries[3]
+
+      // Libraries are linked to each contract
+      await Promise.all([
+        ProofToken.link(SafeMath, safeMath.address),
+        CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address),
+        CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoDollar.link(SafeMath, safeMath.address),
+        CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        CryptoFiatHub.link(SafeMath, safeMath.address),
+        Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address),
+        Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address),
+        Rewards.link(SafeMath, safeMath.address)
+      ])
+
+      store = await Store.new()
+      proofToken = await ProofToken.new()
+      cryptoDollar = await CryptoDollar.new(store.address)
+      rewards = await Rewards.new(store.address, proofToken.address)
+      cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
+
+      /**
+       * allow store access and initialize the cryptofiat system and initialize the CryptoFiatHub
+       * with a 20 blocks epoch.
+       * The number of blocks per epoch should be increased to reflect the production behavior.
+       * The choice of 20 blocks has been made solely for testing purposes as mining the test EVM
+       * requires a significant amount of time (40 blocks ~ 5-10 seconds). Final tests should be run
+       * with bigger epochs.
+       */
+      await Promise.all([
+        store.authorizeAccess(cryptoFiatHub.address),
+        store.authorizeAccess(cryptoDollar.address),
+        store.authorizeAccess(rewards.address),
+        cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+      ])
+
+      await Promise.all([
+        cryptoFiatHub.initialize(20),
+        cryptoFiatHub.capitalize({ from: fund, value: collateral })
+      ])
+
+      //buy tokens and simulate oraclize callback
+      await cryptoFiatHub.buyCryptoDollar(defaultBuyOrder)
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId, initialExchangeRate.asString)
+
+      tokens = await cryptoFiatHub.cryptoDollarBalance(wallet1)
+      tokens = tokens.toNumber()
+    })
+
+    it('should not allow user to double spend cryptodollar tokens', async () => {
+      let initialTokenBalance = await cryptoDollar.balanceOf(wallet1)
+
+      await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, defaultSellOrder)
+      let { queryId: queryId1 } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, defaultSellOrder)
+      let { queryId: queryId2 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.__callback(queryId1, updatedExchangeRate.asString, { from: oraclize }).should.be.fulfilled
+      await expectRevert(cryptoFiatHub.__callback(queryId2, updatedExchangeRate.asString, { from: oraclize }))
+
+      let tokenBalance = await cryptoDollar.balanceOf(wallet1)
+      let decrement = tokenBalance.minus(initialTokenBalance)
+      decrement.should.be.bignumber.equal(-initialTokenBalance)
+    })
+
+    it('should not allow user to double spend cryptodollar tokens (unordered oraclize callback)', async() => {
+      let initialTokenBalance = await cryptoDollar.balanceOf(wallet1)
+
+      await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, defaultSellOrder)
+      let { queryId: queryId1 } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.sellUnpeggedCryptoDollar(tokens, defaultSellOrder)
+      let { queryId: queryId2 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.__callback(queryId2, updatedExchangeRate.asString, { from: oraclize }).should.be.fulfilled
+      await expectRevert(cryptoFiatHub.__callback(queryId1, updatedExchangeRate.asString, { from: oraclize }))
+
+      let tokenBalance = await cryptoDollar.balanceOf(wallet1)
+      let decrement = tokenBalance.minus(initialTokenBalance)
+      decrement.should.be.bignumber.equal(-initialTokenBalance)
     })
   })
 })
