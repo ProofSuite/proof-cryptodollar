@@ -19,7 +19,7 @@ addons:
 before_install:
   - export CXX="g++-4.8"
   - npm install -g npm@latest
-  - npm install -g ganache-cli@latest truffle@4.0.6
+  - npm install -g ganache-cli@6.1.0 truffle@4.0.6
   - npm install -g codecov
 
 install:
