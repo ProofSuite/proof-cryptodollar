@@ -14,7 +14,7 @@ const TxErrorNotification = ({ error, txHash, receipt }) => (
 TxErrorNotification.propTypes = {
   error: PropTypes.string,
   txHash: PropTypes.string,
-  receipt: PropTypes.string
+  receipt: PropTypes.object
 }
 
 export default TxErrorNotification

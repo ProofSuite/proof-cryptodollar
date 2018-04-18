@@ -1,4 +1,4 @@
 node_modules
-config/instance/oracle_instance_*.json
+config/instance/*.json
 database/tingodb/CallbackTxs
 database/tingodb/Queries

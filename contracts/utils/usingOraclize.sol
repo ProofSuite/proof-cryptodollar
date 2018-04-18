@@ -216,11 +216,11 @@ contract usingOraclize {
     //     dynargs[0] = args[0];
     //     return oraclize_query(timestamp, datasource, dynargs, gaslimit);
     // }
-    // function oraclize_query(string datasource, string[1] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {
-    //     string[] memory dynargs = new string[](1);
-    //     dynargs[0] = args[0];
-    //     return oraclize_query(datasource, dynargs, gaslimit);
-    // }
+    function oraclize_query(string datasource, string[1] args, uint gaslimit) oraclizeAPI internal returns (bytes32 id) {
+        string[] memory dynargs = new string[](1);
+        dynargs[0] = args[0];
+        return oraclize_query(datasource, dynargs, gaslimit);
+    }
 
     // function oraclize_query(string datasource, string[2] args) oraclizeAPI internal returns (bytes32 id) {
     //     string[] memory dynargs = new string[](2);

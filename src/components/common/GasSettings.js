@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import { Accordion, Form, Icon } from 'semantic-ui-react'
 import PropTypes from 'prop-types'
 
-class GasSettings extends Component {
+class GasSettings extends PureComponent {
   state = { visible: false }
 
   toggleGasSettings = e => {
@@ -11,7 +11,7 @@ class GasSettings extends Component {
 
   render () {
     const { visible } = this.state
-    const { gas, gasPrice, handleChange } = this.props
+    const { gas, gasPrice, requiredGas, handleChange } = this.props
 
     return (
       <Accordion>
@@ -22,7 +22,7 @@ class GasSettings extends Component {
         <Accordion.Content active={visible}>
           <Form.Group>
             <Form.Input
-              placeholder='Gas'
+              placeholder={requiredGas || 'Gas'}
               name='gas'
               value={gas}
               onChange={handleChange} />
@@ -41,6 +41,7 @@ class GasSettings extends Component {
 
 GasSettings.propTypes = {
   gas: PropTypes.string,
+  requiredGas: PropTypes.number,
   gasPrice: PropTypes.string,
   handleChange: PropTypes.func
 }

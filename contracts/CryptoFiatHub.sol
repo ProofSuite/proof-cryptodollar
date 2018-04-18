@@ -58,7 +58,6 @@ contract CryptoFiatHub is usingOraclize {
     usingOraclize = true;
     ipfsHash = _ipfsHash;
     if (_test) {
-      oraclize_setCustomGasPrice(4000000000 wei);
       OAR = OraclizeAddrResolverI(0x6f485c8bf6fc43ea212e93bbf8ce046c7f1cb475); //only test mode
     }
   }
@@ -84,7 +83,7 @@ contract CryptoFiatHub is usingOraclize {
       bytes32 queryId;
 
       if (usingOraclize) {
-        queryId = oraclize_query("computation", [ipfsHash]);
+        queryId = oraclize_query("computation", [ipfsHash], 300000);
       } else {
         queryId = keccak256(block.number); //for testing purposes only
       }
@@ -115,7 +114,7 @@ contract CryptoFiatHub is usingOraclize {
     require(_tokenAmount <= tokenBalance);
 
     if (usingOraclize) {
-      queryId = oraclize_query("computation", [ipfsHash]);
+      queryId = oraclize_query("computation", [ipfsHash], 300000);
     } else {
       queryId = keccak256(block.number); //for testing purposes only
     }
@@ -140,7 +139,7 @@ contract CryptoFiatHub is usingOraclize {
     require(_tokenAmount <= tokenBalance);
 
     if (usingOraclize) {
-      queryId = oraclize_query("computation", [ipfsHash]);
+      queryId = oraclize_query("computation", [ipfsHash], 300000);
     } else {
       queryId = keccak256(block.number);
     }
