@@ -14,10 +14,32 @@ class NavBar extends Component {
       <Segment inverted>
         <Menu secondary borderless inverted>
           <Link to='/'>
-            <Menu.Item name='Cryptofiat' active={activeItem === 'Cryptofiat'} onClick={this.handleItemClick} />
+            <Menu.Item
+              name='Cryptofiat'
+              active={activeItem === 'Cryptofiat'}
+              onClick={this.handleItemClick}
+            />
           </Link>
           <Link to='/dex'>
-            <Menu.Item name='DEX' active={activeItem === 'DEX'} onClick={this.handleItemClick} />
+            <Menu.Item
+              name='DEX'
+              active={activeItem === 'DEX'}
+              onClick={this.handleItemClick}
+            />
+          </Link>
+          <Link to='/settings'>
+            <Menu.Item
+              name='Settings'
+              active={activeItem === 'Settings'}
+              onClick={this.handleItemClick}
+            />
+          </Link>
+          <Link to='/test'>
+            <Menu.Item
+              name='Test'
+              active={activeItem === 'Test'}
+              onClick={this.handleItemClick}
+            />
           </Link>
         </Menu>
       </Segment>

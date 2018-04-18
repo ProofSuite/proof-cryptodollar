@@ -1,55 +1,92 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import AccountsContainer from '../components/accounts/AccountsContainer'
+import AccountBalancesContainer from '../components/accountBalances/AccountBalancesContainer'
+import WalletBalancesContainer from '../components/walletBalances/WalletBalancesContainer'
 import CryptoDollarContainer from '../components/cryptoDollar/CryptoDollarContainer'
-import ContractAddressesContainer from '../components/contractAddresses/ContractAddressesContainer'
-import RewardsFormContainer from '../components/rewards/rewardsFormContainer'
+import ContractAddressesWidgetContainer from '../components/contractAddresses/ContractAddressesWidgetContainer'
+import RewardsFormContainer from '../components/rewards/RewardsContainer'
 import PropTypes from 'prop-types'
+import LoaderLayout from './LoaderLayout'
 
-import { initializeWeb3 } from '../services/web3/web3Actions.js'
-import 'semantic-ui-css/semantic.min.css?global'
+import { queryAccounts } from '../actions/accountActions'
+import { queryWalletBalances } from '../components/walletBalances/actions'
+
 import styles from './CryptoFiatLayout.css'
 
-class CryptoFiat extends Component {
-  componentDidMount () {
-    this.props.initializeWeb3({ websockets: true })
+class CryptoFiatLayout extends Component {
+
+  state = {
+    renderLoading: true
   }
 
-  renderApplication () {
+  componentWillMount () {
+    this.props.queryAccounts()
+    this.props.queryWalletBalances()
+  }
+
+  renderCryptoFiatLayout () {
     return (
       <div className={styles.app}>
-        <CryptoDollarContainer />
-        <RewardsFormContainer />
-        <AccountsContainer />
-        <ContractAddressesContainer />
+          <div className={styles.cryptoDollar}>
+            <CryptoDollarContainer />
+          </div>
+          <div className={styles.rewards}>
+            <RewardsFormContainer />
+          </div>
+          <div className={styles.accountBalances}>
+            <AccountBalancesContainer />
+          </div>
+          <div className={styles.walletBalances}>
+          <WalletBalancesContainer />
+        </div>
+        <div className={styles.contractAddresses}>
+          <ContractAddressesWidgetContainer />
+        </div>
       </div>
     )
   }
 
   renderLoading () {
-    return <div className={styles.app}>Loading</div>
+    return <LoaderLayout />
+  }
+
+  componentWillReceiveProps (newProps) {
+    let { web3Loading, web3Error, accountsLoading } = newProps
+    let loading = web3Loading || web3Error || accountsLoading
+    this.setState({ loading })
   }
 
   render () {
-    if (this.props.web3Instance) {
-      return this.renderApplication()
-    } else {
-      return this.renderLoading()
-    }
+    return (
+      <div>
+      {
+        this.state.loading
+        ? this.renderLoading()
+        : this.renderCryptoFiatLayout()
+      }
+      </div>
+
+    )
   }
-}
+  }
 
 const mapStateToProps = state => ({
-  web3Instance: state.web3.web3Instance
+  web3Loading: state.data.web3.loading,
+  web3Error: state.data.web3.error,
+  accountsLoading: state.data.accounts.status.loading
 })
 
 const mapDispatchToProps = {
-  initializeWeb3
+  queryAccounts,
+  queryWalletBalances
 }
 
-CryptoFiat.propTypes = {
-  initializeWeb3: PropTypes.func,
-  web3Instance: PropTypes.object
+CryptoFiatLayout.propTypes = {
+  web3Loading: PropTypes.bool,
+  web3Error: PropTypes.string,
+  accountsLoading: PropTypes.bool,
+  queryAccounts: PropTypes.func,
+  queryWalletBalances: PropTypes.func
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(CryptoFiat)
+export default connect(mapStateToProps, mapDispatchToProps)(CryptoFiatLayout)

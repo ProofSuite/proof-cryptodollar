@@ -1,14 +1,14 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import { Loader, Dimmer } from 'semantic-ui-react'
 import PropTypes from 'prop-types'
 import TxSuccessNotification from './TxSucessNotification'
 import TxErrorNotification from './TxErrorNotification'
 import TxPendingNotification from './TxPendingNotification'
 
-class TxNotification extends Component {
+class TxNotification extends PureComponent {
 
-  renderErrorNotification (error, txHash, receipt) {
-    return <TxErrorNotification error={error} txHash={txHash} receipt={receipt} />
+  renderErrorNotification (error, hash, receipt) {
+    return <TxErrorNotification error={error} hash={hash} receipt={receipt} />
   }
 
   renderLoader () {
@@ -19,25 +19,25 @@ class TxNotification extends Component {
     )
   }
 
-  renderTxPendingNotification (txHash) {
-    return <TxPendingNotification txHash={txHash} />
+  renderTxPendingNotification (hash) {
+    return <TxPendingNotification hash={hash} />
   }
 
-  renderTxSuccessNotification (txHash, receipt) {
-    return <TxSuccessNotification txHash={txHash} receipt={receipt} />
+  renderTxSuccessNotification (hash, receipt) {
+    return <TxSuccessNotification hash={hash} receipt={receipt} />
   }
 
   render () {
-    const { loading, error, txHash, receipt } = this.props
+    const { loading, error, hash, receipt } = this.props
 
     if (error) {
-      return this.renderErrorNotification(error, txHash, receipt)
+      return this.renderErrorNotification(error, hash, receipt)
     } else if (loading) {
       return this.renderLoader()
-    } else if (txHash && !receipt) {
-      return this.renderTxPendingNotification(txHash)
-    } else if (txHash && receipt) {
-      return this.renderTxSuccessNotification(txHash, receipt)
+    } else if (hash && !receipt) {
+      return this.renderTxPendingNotification(hash)
+    } else if (hash && receipt) {
+      return this.renderTxSuccessNotification(hash, receipt)
     } else {
       return null
     }
@@ -47,7 +47,7 @@ class TxNotification extends Component {
 TxNotification.propTypes = {
   loading: PropTypes.bool,
   error: PropTypes.string,
-  txHash: PropTypes.string,
+  hash: PropTypes.string,
   receipt: PropTypes.object
 }
 
