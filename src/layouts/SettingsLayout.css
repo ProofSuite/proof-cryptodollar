@@ -1,0 +1,28 @@
+.content {
+  padding-top: 20px;
+  padding-bottom: 20px;
+  display: grid;
+  grid-gap: 1em;
+  justify-content: center;
+  align-items: stretch;
+  height: 100%;
+
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 50% 50%;
+  grid-template-areas:
+  ". providerSettings walletManager ."
+  ". providerSettings walletList ."
+}
+
+.providerSettings {
+  grid-area: providerSettings;
+  height: 100%;
+}
+
+.walletManager {
+  grid-area: walletManager;
+}
+
+.walletList {
+  grid-area: walletList;
+}
