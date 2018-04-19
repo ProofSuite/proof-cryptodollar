@@ -108,7 +108,7 @@ contract('Cryptofiat Hub', (accounts) => {
       ])
 
       await Promise.all([
-        cryptoFiatHub.initialize(20),
+        cryptoFiatHub.initialize(20, '', 0x0),
         cryptoFiatHub.capitalize({ from: fund, value: collateral })
       ])
 
@@ -240,7 +240,7 @@ contract('Cryptofiat Hub', (accounts) => {
       ])
 
       await Promise.all([
-        cryptoFiatHub.initialize(20),
+        cryptoFiatHub.initialize(20, '', 0x0),
         cryptoFiatHub.capitalize({ from: fund, value: collateral })
       ])
 

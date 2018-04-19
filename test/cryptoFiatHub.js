@@ -2,7 +2,7 @@
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
 import { ether } from '../scripts/constants'
-import { getWeiBalance, expectRevert, waitUntilTransactionsMined } from '../scripts/helpers'
+import { getWeiBalance, expectRevert } from '../scripts/helpers'
 import { watchNextEvent } from '../scripts/events'
 
 chai.use(chaiAsPromised).use(require('chai-bignumber')(web3.BigNumber)).should()
@@ -29,7 +29,6 @@ contract('Cryptofiat Hub', accounts => {
   let bufferFee = 0.005 * payment
   let rewardsFee = 0.005 * payment
   let defaultGasPrice = 10 * 10 ** 9
-  let defaultParams = { from: wallet }
   let defaultOrder = { from: wallet, value: 1 * ether, gasPrice: defaultGasPrice }
   let defaultSellOrder = { from: wallet, gasPrice: defaultGasPrice }
   let oraclizeFee = 5385000000000000
@@ -88,10 +87,10 @@ contract('Cryptofiat Hub', accounts => {
       store.authorizeAccess(cryptoFiatHub.address),
       store.authorizeAccess(cryptoDollar.address),
       store.authorizeAccess(rewards.address),
-      cryptoDollar.authorizeAccess(cryptoFiatHub.address),
+      cryptoDollar.authorizeAccess(cryptoFiatHub.address)
     ])
 
-    await cryptoFiatHub.initialize(20)
+    await cryptoFiatHub.initialize(20, '', 0x0)
   })
 
   describe('State variables', async () => {

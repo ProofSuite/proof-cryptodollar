@@ -86,7 +86,7 @@ contract('Buffer', (accounts) => {
 
     await Promise.all([
       cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-      cryptoFiatHub.initialize(blocksPerEpoch),
+      cryptoFiatHub.initialize(blocksPerEpoch, '', 0x0),
       cryptoFiatHub.capitalize({ from: fund, value: collateral })
     ])
   })
