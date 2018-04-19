@@ -17,7 +17,8 @@
 
 pragma solidity ^0.4.18;
 
-contract Medianizer {
+contract MedianizerInterface
+{
     event LogValue(bytes32 val);
     mapping (bytes12 => address) public values;
     mapping (address => bytes12) public indexes;

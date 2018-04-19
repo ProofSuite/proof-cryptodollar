@@ -7,8 +7,8 @@ pragma solidity ^0.4.15;
  * Based on code by FirstBlood:
  * https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
-contract ProofTokenInterface {
-
+contract ProofTokenInterface
+{
   event Mint(address indexed to, uint256 amount);
   event MintFinished();
   event ClaimedTokens(address indexed _token, address indexed _owner, uint _amount);
