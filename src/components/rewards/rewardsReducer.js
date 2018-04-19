@@ -21,24 +21,35 @@ export default function (state = initialState, action) {
       return {
         ...state,
         contractState: {
+          ...state.contractState,
           loading: false,
           error: null,
-          data: {}
+          data: {
+            currentPoolIndex: '',
+            currentEpoch: '',
+            currentPoolBalance: ''
+          }
         }
       }
     case 'CALL_REWARDS_CONTRACT_ERROR':
       return {
         ...state,
         contractState: {
+          ...state.contractState,
           loading: false,
           error: action.payload,
-          data: {}
+          data: {
+            currentPoolIndex: '',
+            currentEpoch: '',
+            currentPoolBalance: ''
+          }
         }
       }
     case 'CALL_REWARDS_CONTRACT_SUCCESS':
       return {
         ...state,
         contractState: {
+          ...state.contractState,
           loading: false,
           error: null,
           data: action.payload
@@ -48,6 +59,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         withdraw: {
+          ...state.withdraw,
           loading: false,
           error: null,
           receipt: {}
@@ -57,6 +69,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         withdraw: {
+          ...state.withdraw,
           loading: false,
           error: null,
           receipt: {}

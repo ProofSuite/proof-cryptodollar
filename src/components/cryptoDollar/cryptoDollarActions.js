@@ -1,9 +1,8 @@
 import store from '../../redux-store'
 import CryptoFiatHub from '../../../build/contracts/CryptoFiatHub.json'
 import CryptoDollar from '../../../build/contracts/CryptoDollar.json'
-import { getWeb3ContractInstance, getTruffleContractAddress } from '../../helpers/contractHelpers'
-import oraclizeActions from '../../services/oraclize/callbackActions'
-import { formatEtherColumn } from '../../helpers/formatHelpers'
+import { getWeb3ContractInstance } from '../../helpers/contractHelpers'
+import accounting from 'accounting-js'
 
 const actions = {
   fetchingCryptoDollarState: () => ({
@@ -115,9 +114,21 @@ export const fetchCryptoDollarContractState = () => {
         cryptoFiatHub.methods.buffer(exchangeRate).call(),
         cryptoFiatHub.methods.contractBalance().call()
       ])
+      let [ totalSupply, totalOutstanding, buffer, contractBalance ] = contractData
 
-      let [ totalSupply, totalOutstanding, buffer, contractBalance ] = formatEtherColumn(contractData)
-      let data = { totalSupply, totalOutstanding, buffer, contractBalance }
+      console.log('I am here')
+
+      let data = {
+        totalSupply: accounting.formatMoney(totalSupply / 1e2, { symbol: 'CUSD', format: '%v %s' }),
+        totalOutstanding: accounting.formatMoney(totalOutstanding / 1e18, { symbol: 'ETH', format: '%v %s' }),
+        buffer: accounting.formatMoney(buffer / 1e18, { symbol: 'ETH', format: '%v %s' }),
+        contractBalance: accounting.formatMoney(contractBalance / 1e18, { symbol: 'ETH', format: '%v %s' })
+      }
+
+      console.log('I am there')
+
+      console.log(data)
+
       dispatch(actions.fetchCryptoDollarStateSuccess(data))
     } catch (error) {
       dispatch(actions.fetchCryptoDollarStateError(error))
@@ -140,11 +151,9 @@ export const buyCryptoDollar = ({ sender, value, gas, gasPrice = 2 * 10e9 }) => 
 
       let params = {
         from: sender,
-        value: value * 10e18,
+        value: value * 1e18,
         gasPrice: gasPrice
       }
-
-      let address = getTruffleContractAddress(CryptoFiatHub)
 
       if (!gas) gas = await rawTx.estimateGas(params)
       params.gas = gas
@@ -223,8 +232,9 @@ export const sellUnpeggedCryptoDollar = ({ sender, tokens, gas, gasPrice, value 
 
       dispatch(actions.sellUnpeggedCryptoDollarTxStarted())
 
+      let tokensInCents = tokens * 1e2
       let cryptoFiatHub = getWeb3ContractInstance(web3, CryptoFiatHub)
-      let rawTx = cryptoFiatHub.methods.sellUnpeggedCryptoDollar(tokens)
+      let rawTx = cryptoFiatHub.methods.sellUnpeggedCryptoDollar(tokensInCents)
 
       let params = {
         from: sender,
@@ -266,8 +276,9 @@ export const transferCryptoDollar = ({ amount, receiver, sender, gas, gasPrice }
 
       dispatch(actions.transferCryptoDollarTxStarted())
 
+      let amountInCents = amount * 1e2
       let cryptoDollar = getWeb3ContractInstance(web3, CryptoDollar)
-      let rawTx = cryptoDollar.methods.transfer(receiver, amount)
+      let rawTx = cryptoDollar.methods.transfer(receiver, amountInCents)
 
       let params = {
         from: sender,

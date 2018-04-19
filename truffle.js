@@ -42,6 +42,8 @@ module.exports = {
         password: private.ropsten.password,
         rpcUrl: config.infura.ropsten
       }),
+      gas: config.constants.MAX_GAS,
+      gasPrice: config.constants.DEFAULT_GAS_PRICE,
       network_id: '3'
     },
     rinkeby: {
@@ -50,6 +52,8 @@ module.exports = {
         password: private.rinkeby.password,
         rpcUrl: config.infura.rinkeby
       }),
+      gas: config.constants.MAX_GAS,
+      gasPrice: config.constants.DEFAULT_GAS_PRICE,
       network_id: '4'
     },
     coverage: {
