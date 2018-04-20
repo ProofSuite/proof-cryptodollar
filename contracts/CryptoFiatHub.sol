@@ -77,13 +77,12 @@ contract CryptoFiatHub is usingOraclize
 
     /**
      * @notice Change the feed type to Oraclize. Oraclize is an provable oracle
-     * infrastructure compatible with Etheruem.
-     * @param _mock {bool} If set to true oraclize will not be called
+     * infrastructure compatible with Ethereum.
      */
-    function useOraclize(bool _mock) public
+    function useOraclize() public
     {
         feed = Feed.ORACLIZE;
-        mockOraclize = _mock;
+        mockOraclize = false;
     }
 
     /**

@@ -87,6 +87,6 @@ module.exports = function(deployer) {
     .then(async() => {
       let cryptoFiatHub = await CryptoFiatHub.deployed()
       await cryptoFiatHub.initialize(20, IPFSHash, 0x0)
-      await cryptoFiatHub.useOraclize(true)
+      await cryptoFiatHub.useOraclize()
     })
 };

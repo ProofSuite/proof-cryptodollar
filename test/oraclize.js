@@ -89,7 +89,7 @@ contract('Oraclize', async(accounts) => {
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
         cryptoFiatHub.initialize(blocksPerEpoch, IPFSHash, 0x0),
-        cryptoFiatHub.useOraclize(true)
+        cryptoFiatHub.useOraclize(false)
       ])
     })
 
@@ -183,7 +183,7 @@ contract('Oraclize', async(accounts) => {
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
         cryptoFiatHub.initialize(blocksPerEpoch, IPFSHash, 0x0),
-        cryptoFiatHub.useOraclize(true),
+        cryptoFiatHub.useOraclize(false),
         cryptoFiatHub.capitalize({ value: collateral })
       ])
 
