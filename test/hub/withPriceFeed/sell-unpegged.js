@@ -1,9 +1,9 @@
 /* global  artifacts:true, web3: true, contract: true */
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
-import { ether } from '../scripts/constants'
-import { expectRevert } from '../scripts/helpers'
-import { getState } from '../scripts/cryptoFiatHelpers'
+import { ether } from '../../../scripts/constants'
+import { expectRevert } from '../../../scripts/helpers'
+import { getState } from '../../../scripts/cryptoFiatHelpers'
 
 chai.use(chaiAsPromised)
     .use(require('chai-bignumber')(web3.BigNumber))
@@ -20,7 +20,7 @@ const Store = artifacts.require('./Store.sol')
 const Rewards = artifacts.require('./Rewards.sol')
 const Medianizer = artifacts.require('./Medianizer.sol')
 
-contract('Cryptofiat Hub', (accounts) => {
+contract('Cryptofiat Hub (with medianizer price feed setup)', (accounts) => {
   let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath
   let store, proofToken, cryptoDollar, rewards, cryptoFiatHub, medianizer
   let initialExchangeRate
@@ -46,7 +46,7 @@ contract('Cryptofiat Hub', (accounts) => {
   The exchange rate drops and is now equal to 1 ETH = 10 USD (in cents, exchangeRate = 100)
   Thus buffer = contractbalance - outstanding = 11 ether - 1000 cryptodollar tokens = 11 ether - 100 ether = - 89 ether
   **/
-  describe('Selling unpegged dollars', async () => {
+  describe('Selling Unpegged dollars (with Price Feed setup)', async () => {
     before(async () => {
       // In this scenario, the initial exchange rate is 1 ETH = 100 USD (exchangeRate = 10000)
       // The updated exchange rate is 1 ETH = 10 USD (exchangeRate 1000)

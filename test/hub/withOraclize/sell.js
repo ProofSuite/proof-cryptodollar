@@ -1,8 +1,9 @@
 /* global  artifacts:true, web3: true, contract: true */
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
-import { ether } from '../scripts/constants'
-import { getWeiBalance, expectRevert } from '../scripts/helpers'
+import { ether } from '../../../scripts/constants'
+import { expectRevert } from '../../../scripts/helpers'
+import { watchNextEvent } from '../../../scripts/events'
 
 chai.use(chaiAsPromised).use(require('chai-bignumber')(web3.BigNumber)).should()
 
@@ -10,7 +11,6 @@ const should = chai.should()
 const RewardsStorageProxy = artifacts.require('./libraries/RewardsStorageProxy.sol')
 const CryptoFiatStorageProxy = artifacts.require('./libraries/CryptoFiatStorageProxy.sol')
 const CryptoDollarStorageProxy = artifacts.require('./libraries/CryptoDollarStorageProxy.sol')
-const Medianizer = artifacts.require('./mocks/Medianizer.sol')
 const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
@@ -18,17 +18,16 @@ const ProofToken = artifacts.require('./mocks/ProofToken.sol')
 const Store = artifacts.require('./Store.sol')
 const Rewards = artifacts.require('./Rewards.sol')
 
-contract('Cryptofiat Hub', accounts => {
-  let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath, medianizer
+contract('Cryptofiat Hub (with Oraclize setup)', accounts => {
+  let rewardsStorageProxy, cryptoFiatStorageProxy, cryptoDollarStorageProxy, safeMath
   let store, proofToken, cryptoDollar, rewards, cryptoFiatHub
   let wallet = accounts[1]
+  let oraclize = accounts[3]
   let exchangeRate = { asString: '100000', asNumber: 100000 }
-  let payment = 1 * ether
-  let bufferFee = 0.005 * payment
-  let rewardsFee = 0.005 * payment
   let defaultGasPrice = 10 * 10 ** 9
   let defaultOrder = { from: wallet, value: 1 * ether, gasPrice: defaultGasPrice }
   let defaultSellOrder = { from: wallet, gasPrice: defaultGasPrice }
+  let oraclizeFee = 5385000000000000
 
   /**
    * The following tests are an attempt at correctly modeling the behavior of the CryptoFiatHub smart-contract.
@@ -71,7 +70,6 @@ contract('Cryptofiat Hub', accounts => {
     cryptoDollar = await CryptoDollar.new(store.address)
     rewards = await Rewards.new(store.address, proofToken.address)
     cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
-    medianizer = await Medianizer.new(exchangeRate.asNumber)
 
     /**
      * allow store access and initialize the cryptofiat system and initialize the CryptoFiatHub
@@ -88,111 +86,17 @@ contract('Cryptofiat Hub', accounts => {
       cryptoDollar.authorizeAccess(cryptoFiatHub.address)
     ])
 
-    await cryptoFiatHub.initialize(20, '', medianizer.address)
-    await cryptoFiatHub.useMedianizer()
+    await cryptoFiatHub.initialize(20, '', 0x0)
   })
 
-  describe('State variables', async () => {
-    it('should set the initial blocknumber', async () => {
-      let blockNumber = await cryptoFiatStorageProxy.getCreationBlockNumber(store.address)
-      blockNumber.should.be.not.equal(0)
-    })
-
-    it('should set the Proof Token reference', async () => {
-      let address = await cryptoFiatHub.proofToken.call()
-      address.should.not.equal(0x0)
-    })
-
-    it('should set the CryptoDollar Token reference', async () => {
-      let address = await cryptoFiatHub.cryptoDollar.call()
-      address.should.not.equal(0x0)
-    })
-
-    it('should set the Store reference', async () => {
-      let address = await cryptoFiatHub.store.call()
-      address.should.not.equal(0x0)
-    })
-  })
-
-  describe('Buying Tokens', async () => {
-    it('should be able to buy CryptoDollar tokens', async () => {
-      await cryptoFiatHub.buyCryptoDollar(defaultOrder).should.be.fulfilled
-    })
-
-    it('should increase the rewards contract balance by 0.5% of investment value', async () => {
-      let initialBalance = await getWeiBalance(rewards.address)
-      let expectedPoolBalance = initialBalance + rewardsFee
-
-      // buy tokens and simulate oraclize callback
-      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-
-      let balance = await getWeiBalance(rewards.address)
-      balance.should.be.bignumber.equal(expectedPoolBalance)
-    })
-
-    it('should increase the rewards current pool balance by 0.5% of investment value', async () => {
-      let initialBalance = await rewards.getCurrentPoolBalance()
-      let expectedPoolBalance = initialBalance.plus(rewardsFee)
-
-      // buy tokens and simulate oraclize callback
-      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-
-      let balance = await rewards.getCurrentPoolBalance()
-      balance.should.be.bignumber.equal(expectedPoolBalance)
-    })
-
-    it('should increase the total cryptodollar supply by 99% of payment value', async () => {
-      let initialSupply, supply, expectedIncrement, increment, paymentValue
-
-      initialSupply = await cryptoDollar.totalSupply()
-      paymentValue = new web3.BigNumber(defaultOrder.value - rewardsFee - bufferFee)
-      expectedIncrement = paymentValue.times(exchangeRate.asNumber).div(ether)
-      expectedIncrement = Math.floor(expectedIncrement.toNumber())
-
-      // buy tokens and simulate oraclize callback
-      let { receipt } = await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-      let txnFee = receipt.gasUsed * defaultOrder.gasPrice
-
-      supply = await cryptoDollar.totalSupply()
-      increment = supply.minus(initialSupply)
-      increment.should.be.bignumber.equal(expectedIncrement)
-    })
-
-    it('should increment the buyer cryptoDollar token balance by 99% of payment value', async () => {
-      let initialBalance, balance, expectedIncrement, increment, paymentValue
-      initialBalance = await cryptoDollar.balanceOf(wallet)
-      paymentValue = new web3.BigNumber(defaultOrder.value - rewardsFee - bufferFee)
-      expectedIncrement = paymentValue.times(exchangeRate.asNumber).div(ether)
-      expectedIncrement = Math.floor(expectedIncrement.toNumber())
-
-      // buy tokens and simulate oraclize callback
-      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-
-      balance = await cryptoDollar.balanceOf(wallet)
-      increment = balance.minus(initialBalance)
-      increment.should.be.bignumber.equal(expectedIncrement)
-    })
-
-    it('should increment the buyer reserved ether balance by 99% of payment value', async () => {
-      let initialReservedEther, reservedEther, expectedIncrement, increment
-      initialReservedEther = await cryptoDollar.reservedEther(wallet)
-      expectedIncrement = new web3.BigNumber(defaultOrder.value - rewardsFee - bufferFee)
-
-      // buy tokens and simulate oraclize callback
-      await cryptoFiatHub.buyCryptoDollar(defaultOrder)
-
-      reservedEther = await cryptoDollar.reservedEther(wallet)
-      increment = reservedEther.minus(initialReservedEther)
-      increment.should.be.bignumber.equal(expectedIncrement)
-    })
-  })
-
-  describe('Selling Cryptodollar tokens', async () => {
+  describe('Selling Cryptodollar tokens (with Oraclize setup)', async () => {
     let tokens = 10000 // (= 100 dollars)
 
     beforeEach(async () => {
       // buy and sell scrap queries to remove free oraclize computationd
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
+      var { queryId } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId, exchangeRate.asString, { from: oraclize })
     })
 
     it('should be able to sell CryptoDollar tokens', async () => {
@@ -204,6 +108,8 @@ contract('Cryptofiat Hub', accounts => {
 
       // sell tokens and simulate oraclize callback
       await cryptoFiatHub.sellCryptoDollar(tokens, defaultSellOrder)
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId, exchangeRate.asString, { from: oraclize })
 
       let supply = await cryptoDollar.totalSupply()
       let increment = supply.minus(initialSupply)
@@ -215,6 +121,8 @@ contract('Cryptofiat Hub', accounts => {
 
       // sell tokens and simulate oraclize callback
       await cryptoFiatHub.sellCryptoDollar(tokens, defaultSellOrder)
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId, exchangeRate.asString, { from: oraclize })
 
       let supply = await cryptoDollar.balanceOf(wallet)
       let increment = supply.minus(initialSupply)
@@ -227,10 +135,24 @@ contract('Cryptofiat Hub', accounts => {
       // sell tokens and simulate oraclize callback
       let txn = await cryptoFiatHub.sellCryptoDollar(tokens, defaultSellOrder)
       let txFee = defaultSellOrder.gasPrice * txn.receipt.gasUsed
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId, exchangeRate.asString, { from: oraclize })
+
+      // check that callback parameters correspond to initial query
+      let queryParameters = [
+        cryptoFiatHub.callingValue(queryId),
+        cryptoFiatHub.callingAddress(queryId),
+        cryptoFiatHub.callingFee(queryId)
+      ]
+
+      let [ callingValue, callingAddress, callingFee ] = await Promise.all(queryParameters)
+      callingValue.should.be.bignumber.equal(tokens)
+      callingAddress.should.be.equal(wallet)
+      callingFee.should.be.bignumber.equal(oraclizeFee) // should be equal to 0 only in testing mode
 
       // verify account ether balance
       let balance = web3.eth.getBalance(wallet)
-      let payment = tokens * ether / exchangeRate.asNumber
+      let payment = tokens * ether / exchangeRate.asNumber - oraclizeFee
       let expectedIncrement = payment - txFee
       let increment = balance.minus(initialBalance)
       increment.should.be.bignumber.equal(expectedIncrement)
@@ -245,8 +167,22 @@ contract('Cryptofiat Hub', accounts => {
 
       // sell tokens and simulate oraclize callback
       await cryptoFiatHub.sellCryptoDollar(tokens, defaultSellOrder)
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId, exchangeRate.asString, { from: oraclize })
 
-    //  verify account reserved ether
+      // check that callback parameters correspond to initial query
+      let queryParameters = [
+        cryptoFiatHub.callingValue(queryId),
+        cryptoFiatHub.callingAddress(queryId),
+        cryptoFiatHub.callingFee(queryId)
+      ]
+
+      let [ callingValue, callingAddress, callingFee ] = await Promise.all(queryParameters)
+      callingValue.should.be.bignumber.equal(tokens)
+      callingAddress.should.be.equal(wallet)
+      callingFee.should.be.bignumber.equal(oraclizeFee)
+
+      //  verify account reserved ether
       expectedVariation = initialReservedEther.mul(tokens).div(initialTokenBalance).negated()
       reservedEther = await cryptoDollar.reservedEther(wallet)
       variation = reservedEther.minus(initialReservedEther)
@@ -258,11 +194,48 @@ contract('Cryptofiat Hub', accounts => {
       let tokenAmount = tokenBalance.plus(1)
       await expectRevert(cryptoFiatHub.sellCryptoDollar(tokenAmount, defaultSellOrder))
     })
+
+    it('should not allow user to double spend cryptodollar tokens', async() => {
+      let initialTokenBalance = await cryptoDollar.balanceOf(wallet)
+
+      // sell tokens and simulate oraclize callback
+      await cryptoFiatHub.sellCryptoDollar(initialTokenBalance, defaultSellOrder)
+      let { queryId: queryId1 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.sellCryptoDollar(initialTokenBalance, defaultSellOrder)
+      let { queryId: queryId2 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.__callback(queryId1, exchangeRate.asString, { from: oraclize })
+      await expectRevert(cryptoFiatHub.__callback(queryId2, exchangeRate.asString, { from: oraclize }))
+
+      let tokenBalance = await cryptoDollar.balanceOf(wallet)
+      let decrement = tokenBalance.minus(initialTokenBalance)
+      decrement.should.be.bignumber.equal(-initialTokenBalance)
+    })
+
+    it('should not allow user to double spend cryptodollar tokens (unordered oraclize callback)', async() => {
+      let initialTokenBalance = await cryptoDollar.balanceOf(wallet)
+
+      await cryptoFiatHub.sellCryptoDollar(initialTokenBalance, defaultSellOrder)
+      let { queryId: queryId1 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.sellCryptoDollar(initialTokenBalance, defaultSellOrder)
+      let { queryId: queryId2 } = await watchNextEvent(cryptoFiatHub)
+
+      await cryptoFiatHub.__callback(queryId2, exchangeRate.asString, { from: oraclize })
+      await expectRevert(cryptoFiatHub.__callback(queryId1, exchangeRate.asString, { from: oraclize }))
+
+      let tokenBalance = await cryptoDollar.balanceOf(wallet)
+      let decrement = tokenBalance.minus(initialTokenBalance)
+      decrement.should.be.bignumber.equal(-initialTokenBalance)
+    })
   })
 
   describe('Proxy CryptoDollar State and Balances', async () => {
     before(async () => {
       await cryptoFiatHub.buyCryptoDollar(defaultOrder)
+      let { queryId } = await watchNextEvent(cryptoFiatHub)
+      await cryptoFiatHub.__callback(queryId, exchangeRate.asString, { from: oraclize })
     })
 
     it('should correctly proxy the cryptoDollar holder balance', async () => {

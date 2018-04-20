@@ -5,7 +5,7 @@ chai.use(require('chai-bignumber')(web3.BigNumber)).should()
 const Store = artifacts.require('./Store.sol')
 const RewardsStorageProxy = artifacts.require('./RewardsStorageProxy.sol')
 
-contract('RewardsStorageProxy', (accounts) => {
+contract('Rewards Storage Proxy', (accounts) => {
   let store
   let rewardsStorageProxy
 
