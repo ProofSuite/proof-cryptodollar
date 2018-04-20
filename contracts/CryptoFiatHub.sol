@@ -12,7 +12,7 @@ import './utils/usingOraclize.sol';
 import './utils/Logger.sol';
 
 
-contract CryptoFiatHub is usingOraclize, Logger
+contract CryptoFiatHub is usingOraclize
 {
     using SafeMath for uint256;
     using CryptoFiatStorageProxy for address;
@@ -290,7 +290,6 @@ contract CryptoFiatHub is usingOraclize, Logger
 
     function __medianizerCallback(uint256 _exchangeRate, Func _func, address _sender, uint256 _value) internal
     {
-      printNumber("exchangeRate", _exchangeRate);
       if (_func == Func.Buy)
       {
           buyCryptoDollarCallback(0x0, _exchangeRate, _value, _sender, 0);
