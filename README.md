@@ -3,8 +3,8 @@
 Official Repository for the Proof Crypto Fiat project
 
 
-[![Build Status](https://travis-ci.org/ProofSuite/ProofCryptoFiat.svg?branch=develop)](https://travis-ci.org/ProofSuite/ProofCryptoFiat)
-[![Code Coverage](https://codecov.io/gh/ProofSuite/ProofCryptoFiat/branch/develop/graph/badge.svg)](https://codecov.io/gh/ProofSuite/ProofCryptoFiat)
+<!-- [![Build Status](https://travis-ci.org/ProofSuite/ProofCryptoFiat.svg?branch=develop)](https://travis-ci.org/ProofSuite/ProofCryptoFiat) -->
+<!-- [![Code Coverage](https://codecov.io/gh/ProofSuite/ProofCryptoFiat/branch/develop/graph/badge.svg)](https://codecov.io/gh/ProofSuite/ProofCryptoFiat) -->
 
 
 ## Contracts
@@ -207,6 +207,59 @@ truffle compile --all
 truffle migrate --reset --network development_geth
 ```
 
+## Setting up the CryptoDollar smart contracts
+
+Before being able to use the CryptoDollar contracts and have a fully functional buy and sell mechanism, it is necessary to go through a few deployment steps:
+
+1. Set up the Store, CryptoDollar, Rewards, CryptoFiatHub contracts in this order with required arguments
+2. Give storage access rights to the CryptoFiatHub, CryptoDollar and Rewards contracts
+3. Initialize the CryptoDollar system by calling the `initialize` function
+
+You can inspect the deployment process in detail in the 2_deploy_contracts.js file.
+
+## Initialize CryptoDollar smart contracts
+
+First initialize the CryptoFiatHub contract after deployment with the `initialize` function
+
+INITIALIZE
+* (uint256) `Blocks Per Epoch`
+* (string) `Computation Script IPFS Address`
+* (address) `Medianizer Price Feed Address`
+
+The initialize function sets the following key parameters:
+1. `Creation block number`: Block from which the reward epochs will be calculated
+2.  `Blocks per reward epoch`: Duration in blocks of one reward cycle
+3.  `Computation script IPFS address/hash` (only required if you plan to use the Oraclize price mechanism): IPFS address of the price feed aggregration script. This script should be uploaded to IPFS and return a single value that is computed by calculating the mean of the ETH/USD price feed between different exchanges.
+4.  `Medianizer contract address` (only required if you plan to use the Medianizer price mechanism)
+
+## Price Feed mechanism
+
+### with Oraclize
+
+The first method to retrieve the ETH/USD price is to use the Oraclize service as an intermediary which will provide a provable ETH/USD value on chain. To set up the CryptoDollar infrastructure to use this price retrieval method,
+
+#### Example
+```javascript
+cryptoFiatHub = await CryptoFiatHub.deployed()
+await cryptoFiatHub.initialize(20, 0x123ksk1233..., 0x0)
+await cryptoFiatHub.useOraclize(true)
+```
+
+The `useOraclize` function argument should be equal to true, unless you want to run tests with a mocked version of Oraclize. You do not need to provide a Medianizer Price Feed address if you do not intend to use this method for retrieving prices. You can also set it later with the `modifyMedianizerAddress` function.
+
+### with a Medianizer Price Feed
+
+An alternative method to retrieve the ETH/USD price is to use the Maker DAO oracle. While not very decentralized at the time of this writing, this price feed provides a good temporary solution.
+
+#### Example
+
+```javascript
+cryptoFiatHub = await CryptoFiathub.deployed()
+await cryptoFiatHub.initialize(20, '', 0x1234...)
+await cryptoFiatHub.useMedianizer()
+```
+
+You do not need to provide an IPFS hash if do not intend to do so. You can also set it later with the `modifyOraclizeIPFSHash` function
 
 ## Contribution
 
