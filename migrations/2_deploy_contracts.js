@@ -6,15 +6,12 @@ const SafeMath = artifacts.require('./libraries/SafeMath.sol')
 const CryptoDollar = artifacts.require('./CryptoDollar.sol')
 const CryptoFiatHub = artifacts.require('./CryptoFiatHub.sol')
 const ProofToken = artifacts.require('./mocks/ProofToken.sol')
-const Store = artifacts.require("./Store.sol");
+const Store = artifacts.require("./Store.sol")
 const Rewards = artifacts.require("./Rewards.sol")
 
 
 //for some reason async/await makes this file crash
 module.exports = function(deployer) {
-
-  let IPFSHash = config.ipfs.TESTING_SUCCESS
-
   //deploy libraries
   deployer.deploy(SafeMath)
   deployer.deploy(RewardsStorageProxy)
@@ -86,7 +83,6 @@ module.exports = function(deployer) {
      */
     .then(async() => {
       let cryptoFiatHub = await CryptoFiatHub.deployed()
-      await cryptoFiatHub.initialize(20, IPFSHash, 0x0)
-      await cryptoFiatHub.useOraclize()
+      await cryptoFiatHub.initialize(20, 0x0)
     })
 };
