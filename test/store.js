@@ -199,7 +199,7 @@ contract('Store', (accounts) => {
         cryptoDollar.authorizeAccess(cryptoFiatHub.address)
       ])
 
-      cryptoFiatHub.initialize(20, '', 0x0)
+      cryptoFiatHub.initialize(20, 0x0)
     })
 
     it('should not be accesible via cryptoFiatStorageProxy by a non-authorized address', async() => {

@@ -53,10 +53,10 @@ contract('Cryptofiat Hub (with medianizer price feed setup)', (accounts) => {
       // The exchange rate is actually representing ethers to cents
       // The exchange rates are kept in objects that references them both in strings and numbers since the
       // __callback function takes exchanges rate as a string value
-      initialExchangeRate = { asString: '20000', asNumber: 20000 }
-      updatedExchangeRate = { asString: '2000', asNumber: 2000 }
+      initialExchangeRate = 20000
+      updatedExchangeRate = 2000
 
-            // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
+      // Libraries are deployed before the rest of the contracts. In the testing case, we need a clean deployment
       // state for each test so we redeploy all libraries an other contracts every time.
       let deployedLibraries = await Promise.all([
         RewardsStorageProxy.new(),
@@ -89,7 +89,7 @@ contract('Cryptofiat Hub (with medianizer price feed setup)', (accounts) => {
       cryptoDollar = await CryptoDollar.new(store.address)
       rewards = await Rewards.new(store.address, proofToken.address)
       cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
-      medianizer = await Medianizer.new(initialExchangeRate.asNumber)
+      medianizer = await Medianizer.new(initialExchangeRate)
 
       /**
        * allow store access and initialize the cryptofiat system and initialize the CryptoFiatHub
@@ -107,8 +107,7 @@ contract('Cryptofiat Hub (with medianizer price feed setup)', (accounts) => {
       ])
 
       await Promise.all([
-        cryptoFiatHub.initialize(20, '', medianizer.address),
-        cryptoFiatHub.useMedianizer(),
+        cryptoFiatHub.initialize(20, medianizer.address),
         cryptoFiatHub.capitalize({ from: fund, value: collateral })
       ])
 
@@ -118,12 +117,12 @@ contract('Cryptofiat Hub (with medianizer price feed setup)', (accounts) => {
       tokens = await cryptoFiatHub.cryptoDollarBalance(wallet1)
       tokens = tokens.toNumber()
 
-      await medianizer.setExchangeRate(updatedExchangeRate.asNumber)
+      await medianizer.setExchangeRate(updatedExchangeRate)
     })
 
     it('should be in an unpegged state', async () => {
       // the state depends both on the state of the cryptodollar/cryptofiat contract and the pricefeed
-      let currentState = await getState(cryptoFiatHub, updatedExchangeRate.asNumber)
+      let currentState = await getState(cryptoFiatHub, updatedExchangeRate)
       currentState.should.be.equal('UNPEGGED')
     })
 

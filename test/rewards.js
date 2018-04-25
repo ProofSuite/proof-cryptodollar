@@ -91,7 +91,7 @@ contract('Rewards', (accounts) => {
         store.authorizeAccess(cryptoDollar.address),
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-        cryptoFiatHub.initialize(blocksPerEpoch, '', 0x0)
+        cryptoFiatHub.initialize(blocksPerEpoch, 0x0)
       ])
 
       creationBlockNumber = await cryptoFiatStorageProxy.getCreationBlockNumber(store.address)
@@ -128,7 +128,7 @@ contract('Rewards', (accounts) => {
         store.authorizeAccess(cryptoDollar.address),
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-        cryptoFiatHub.initialize(blocksPerEpoch, '', 0x0)
+        cryptoFiatHub.initialize(blocksPerEpoch, 0x0)
       ])
 
       creationBlockNumber = await cryptoFiatStorageProxy.getCreationBlockNumber(store.address)
@@ -172,7 +172,7 @@ contract('Rewards', (accounts) => {
         store.authorizeAccess(cryptoDollar.address),
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-        cryptoFiatHub.initialize(blocksPerEpoch, '', 0x0)
+        cryptoFiatHub.initialize(blocksPerEpoch, 0x0)
       ])
 
       creationBlockNumber = await cryptoFiatStorageProxy.getCreationBlockNumber(store.address)
@@ -253,7 +253,7 @@ contract('Rewards', (accounts) => {
         store.authorizeAccess(cryptoDollar.address),
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-        cryptoFiatHub.initialize(blocksPerEpoch, '', 0x0)
+        cryptoFiatHub.initialize(blocksPerEpoch, 0x0)
       ])
 
       creationBlockNumber = await cryptoFiatStorageProxy.getCreationBlockNumber(store.address)
@@ -437,7 +437,7 @@ contract('Rewards', (accounts) => {
         store.authorizeAccess(cryptoDollar.address),
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-        cryptoFiatHub.initialize(blocksPerEpoch, '', 0x0)
+        cryptoFiatHub.initialize(blocksPerEpoch, 0x0)
       ])
 
       creationBlockNumber = await cryptoFiatStorageProxy.getCreationBlockNumber(store.address)
