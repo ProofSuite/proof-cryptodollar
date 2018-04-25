@@ -33,6 +33,7 @@ contract MedianizerInterface
     function unset(address wat) public;
     function poke() public;
     function poke(bytes32) public;
+    function peek() external view returns (bytes32, bool);
     function compute() public view returns (bytes32, bool);
 
 }

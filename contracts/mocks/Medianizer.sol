@@ -12,8 +12,9 @@ contract Medianizer {
     exchangeRate = _exchangeRate;
   }
 
-  function compute() public view returns(uint256, bool)
+  function peek() public view returns(bytes32, bool)
   {
-      return (exchangeRate, true);
+      bytes32 exchangeRateInBytes = bytes32(exchangeRate);
+      return (exchangeRateInBytes, true);
   }
 }
