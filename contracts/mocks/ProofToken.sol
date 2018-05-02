@@ -6,11 +6,13 @@ import '../utils/ApproveAndCallReceiver.sol';
 import '../interfaces/ProofTokenInterface.sol';
 
 
-contract ProofToken is Controlled {
+contract ProofToken is Controlled
+{
 
   using SafeMath for uint256;
   ProofTokenInterface public parentToken;
 
+  bool public mintingFinished = false;
   string public name;
   string public symbol;
   string public version;
@@ -20,7 +22,8 @@ contract ProofToken is Controlled {
   uint256 public creationBlock;
 
 
-  struct Checkpoint {
+  struct Checkpoint
+  {
     uint128 fromBlock;
     uint128 value;
   }
@@ -29,7 +32,7 @@ contract ProofToken is Controlled {
   mapping(address => Checkpoint[]) balances;
   mapping (address => mapping (address => uint)) allowed;
 
-  bool public mintingFinished = false;
+
 
   uint256 public constant TOTAL_PRESALE_TOKENS = 112386712924725508802400;
 
@@ -43,7 +46,8 @@ contract ProofToken is Controlled {
 
 
 
-  function ProofToken() public {
+  function ProofToken() public
+  {
       parentToken = ProofTokenInterface(0x0);
       parentSnapShotBlock = 0;
       name = "Proof";
@@ -53,7 +57,8 @@ contract ProofToken is Controlled {
       version = "0.1";
   }
 
-  function() public payable {
+  function() public payable
+  {
     revert();
   }
 
@@ -62,7 +67,8 @@ contract ProofToken is Controlled {
   * Returns the total Proof token supply at the current block
   * @return total supply {uint256}
   */
-  function totalSupply() public constant returns (uint256) {
+  function totalSupply() public constant returns (uint256)
+  {
     return totalSupplyAt(block.number);
   }
 
@@ -71,23 +77,25 @@ contract ProofToken is Controlled {
   * @param _blockNumber {uint256}
   * @return total supply {uint256}
   */
-  function totalSupplyAt(uint256 _blockNumber) public constant returns(uint256) {
-    // These next few lines are used when the totalSupply of the token is
-    //  requested before a check point was ever created for this token, it
-    //  requires that the `parentToken.totalSupplyAt` be queried at the
-    //  genesis block for this token as that contains totalSupply of this
-    //  token at this block number.
-    if ((totalSupplyHistory.length == 0) || (totalSupplyHistory[0].fromBlock > _blockNumber)) {
-        if (address(parentToken) != 0) {
-            return parentToken.totalSupplyAt(min(_blockNumber, parentSnapShotBlock));
-        } else {
-            return 0;
-        }
-
-    // This will return the expected totalSupply during normal situations
-    } else {
-        return getValueAt(totalSupplyHistory, _blockNumber);
-    }
+  function totalSupplyAt(uint256 _blockNumber) public constant returns(uint256)
+  {
+      // These next few lines are used when the totalSupply of the token is
+      //  requested before a check point was ever created for this token, it
+      //  requires that the `parentToken.totalSupplyAt` be queried at the
+      //  genesis block for this token as that contains totalSupply of this
+      //  token at this block number.
+      if ((totalSupplyHistory.length == 0) || (totalSupplyHistory[0].fromBlock > _blockNumber))
+      {
+          if (address(parentToken) != 0)
+          {
+              return parentToken.totalSupplyAt(min(_blockNumber, parentSnapShotBlock));
+          } else {
+              return 0;
+          }
+      // This will return the expected totalSupply during normal situations
+      } else {
+          return getValueAt(totalSupplyHistory, _blockNumber);
+      }
   }
 
   /**
@@ -95,8 +103,9 @@ contract ProofToken is Controlled {
   * @param _owner {address}
   * @return balance {uint256}
    */
-  function balanceOf(address _owner) public constant returns (uint256 balance) {
-    return balanceOfAt(_owner, block.number);
+  function balanceOf(address _owner) public constant returns (uint256 balance)
+  {
+      return balanceOfAt(_owner, block.number);
   }
 
   /**
@@ -105,20 +114,21 @@ contract ProofToken is Controlled {
   * @param _blockNumber {uint256}
   * @return balance {uint256}
   */
-  function balanceOfAt(address _owner, uint256 _blockNumber) public constant returns (uint256) {
+  function balanceOfAt(address _owner, uint256 _blockNumber) public constant returns (uint256)
+  {
     // These next few lines are used when the balance of the token is
     //  requested before a check point was ever created for this token, it
     //  requires that the `parentToken.balanceOfAt` be queried at the
     //  genesis block for that token as this contains initial balance of
     //  this token
-    if ((balances[_owner].length == 0) || (balances[_owner][0].fromBlock > _blockNumber)) {
-        if (address(parentToken) != 0) {
+    if ((balances[_owner].length == 0) || (balances[_owner][0].fromBlock > _blockNumber))
+    {
+        if (address(parentToken) != 0)
+        {
             return parentToken.balanceOfAt(_owner, min(_blockNumber, parentSnapShotBlock));
         } else {
-            // Has no parent
-            return 0;
+            return 0; // Has no parent
         }
-
     // This will return the expected balance during normal situations
     } else {
         return getValueAt(balances[_owner], _blockNumber);
@@ -131,8 +141,9 @@ contract ProofToken is Controlled {
   * @param _amount {uint}
   * @return success {bool}
   */
-  function transfer(address _to, uint256 _amount) public returns (bool success) {
-    return doTransfer(msg.sender, _to, _amount);
+  function transfer(address _to, uint256 _amount) public returns (bool success)
+  {
+      return doTransfer(msg.sender, _to, _amount);
   }
 
   /**
@@ -142,10 +153,11 @@ contract ProofToken is Controlled {
   * @param _amount {uint256}
   * @return success {bool}
   */
-  function transferFrom(address _from, address _to, uint256 _amount) public returns (bool success) {
-    require(allowed[_from][msg.sender] >= _amount);
-    allowed[_from][msg.sender] -= _amount;
-    return doTransfer(_from, _to, _amount);
+  function transferFrom(address _from, address _to, uint256 _amount) public returns (bool success)
+  {
+      require(allowed[_from][msg.sender] >= _amount);
+      allowed[_from][msg.sender] -= _amount;
+      return doTransfer(_from, _to, _amount);
   }
 
   /**
@@ -154,14 +166,13 @@ contract ProofToken is Controlled {
   * @param _amount {uint256}
   * @return success {bool}
   */
-  function approve(address _spender, uint256 _amount) public returns (bool success) {
-
+  function approve(address _spender, uint256 _amount) public returns (bool success)
+  {
     //https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-    require((_amount == 0) || (allowed[msg.sender][_spender] == 0));
-
-    allowed[msg.sender][_spender] = _amount;
-    Approval(msg.sender, _spender, _amount);
-    return true;
+      require((_amount == 0) || (allowed[msg.sender][_spender] == 0));
+      allowed[msg.sender][_spender] = _amount;
+      Approval(msg.sender, _spender, _amount);
+      return true;
   }
 
   /**
@@ -170,7 +181,8 @@ contract ProofToken is Controlled {
   * @param _amount {uint256}
   * @return success {bool}
   */
-  function approveAndCall(address _spender, uint256 _amount, bytes _extraData) public returns (bool success) {
+  function approveAndCall(address _spender, uint256 _amount, bytes _extraData) public returns (bool success)
+  {
     approve(_spender, _amount);
 
     ApproveAndCallReceiver(_spender).receiveApproval(
@@ -189,7 +201,8 @@ contract ProofToken is Controlled {
   * @param _spender {address}
   * @return remaining {uint256}
    */
-  function allowance(address _owner, address _spender) public constant returns (uint256 remaining) {
+  function allowance(address _owner, address _spender) public constant returns (uint256 remaining)
+  {
     return allowed[_owner][_spender];
   }
 
@@ -200,7 +213,8 @@ contract ProofToken is Controlled {
   * @param _amount {uint256}
   * @return success {bool}
   */
-  function doTransfer(address _from, address _to, uint256 _amount) internal returns(bool) {
+  function doTransfer(address _from, address _to, uint256 _amount) internal returns(bool)
+  {
     require(_amount > 0);
     require(parentSnapShotBlock < block.number);
     require((_to != 0) && (_to != address(this)));
@@ -232,7 +246,8 @@ contract ProofToken is Controlled {
   * @param _amount {uint256}
   * @return success {bool}
   */
-  function mint(address _owner, uint256 _amount) public onlyController canMint returns (bool) {
+  function mint(address _owner, uint256 _amount) public onlyController canMint returns (bool)
+  {
     uint256 curTotalSupply = totalSupply();
     uint256 previousBalanceTo = balanceOf(_owner);
 
@@ -245,7 +260,8 @@ contract ProofToken is Controlled {
     return true;
   }
 
-  modifier canMint() {
+  modifier canMint()
+  {
     require(!mintingFinished);
     _;
   }
@@ -255,11 +271,12 @@ contract ProofToken is Controlled {
    * @param _checkpoints {Checkpoint[]} List of checkpoints - supply history or balance history
    * @return value {uint256} Value of _checkpoints at _block
   */
-  function getValueAt(Checkpoint[] storage _checkpoints, uint256 _block) constant internal returns (uint256) {
+  function getValueAt(Checkpoint[] storage _checkpoints, uint256 _block) constant internal returns (uint256)
+  {
 
       if (_checkpoints.length == 0)
         return 0;
-      // Shortcut for the actual value
+        // Shortcut for the actual value
       if (_block >= _checkpoints[_checkpoints.length-1].fromBlock)
         return _checkpoints[_checkpoints.length-1].value;
       if (_block < _checkpoints[0].fromBlock)
@@ -268,10 +285,11 @@ contract ProofToken is Controlled {
       // Binary search of the value in the array
       uint256 min = 0;
       uint256 max = _checkpoints.length-1;
-      while (max > min) {
+      while (max > min)
+      {
           uint256 mid = (max + min + 1) / 2;
           if (_checkpoints[mid].fromBlock<=_block) {
-              min = mid;
+               min = mid;
           } else {
               max = mid-1;
           }
@@ -286,14 +304,17 @@ contract ProofToken is Controlled {
   * @return value {uint256} Value to add to the checkpoints ledger
    */
   function updateValueAtNow(Checkpoint[] storage _checkpoints, uint256 _value) internal {
-      if ((_checkpoints.length == 0) || (_checkpoints[_checkpoints.length-1].fromBlock < block.number)) {
-              Checkpoint storage newCheckPoint = _checkpoints[_checkpoints.length++];
-              newCheckPoint.fromBlock = uint128(block.number);
-              newCheckPoint.value = uint128(_value);
-          } else {
-              Checkpoint storage oldCheckPoint = _checkpoints[_checkpoints.length-1];
-              oldCheckPoint.value = uint128(_value);
-          }
+      if ((_checkpoints.length == 0) || (_checkpoints[_checkpoints.length-1].fromBlock < block.number))
+      {
+          Checkpoint storage newCheckPoint = _checkpoints[_checkpoints.length++];
+          newCheckPoint.fromBlock = uint128(block.number);
+          newCheckPoint.value = uint128(_value);
+      }
+      else
+      {
+          Checkpoint storage oldCheckPoint = _checkpoints[_checkpoints.length-1];
+          oldCheckPoint.value = uint128(_value);
+      }
   }
 
 

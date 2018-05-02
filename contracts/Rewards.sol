@@ -14,8 +14,6 @@ contract Rewards {
   address public store;
   ProofTokenInterface public proofToken;
 
-
-
   /**
    * The rewards contracts handles all logic relative to the rewards for Proof Token Holders.
    * The rewards are allocated in different pools that each represent a certain epoch. The first
@@ -26,7 +24,8 @@ contract Rewards {
    * @param _storeAddress {address} - Address of the Proof storage contract
    * @param _PRFTAddress {address} - Address of the Proof token address
    */
-  function Rewards(address _storeAddress, address _PRFTAddress) public {
+  function Rewards(address _storeAddress, address _PRFTAddress) public
+  {
     store = _storeAddress;
     proofToken = ProofTokenInterface(_PRFTAddress);
   }
@@ -34,7 +33,8 @@ contract Rewards {
   /**
   * Simple ether transactions are reverted
   */
-  function () public payable {
+  function () public payable
+  {
     revert();
   }
 
@@ -46,7 +46,8 @@ contract Rewards {
   *
   * @return {uint256} - Current Pool Balance
   */
-  function getCurrentPoolBalance() public constant returns (uint256) {
+  function getCurrentPoolBalance() public constant returns (uint256)
+  {
     return store.getCurrentPoolBalance();
   }
 
@@ -56,7 +57,8 @@ contract Rewards {
   * @param _index {uint256}
   * @return {uint256} - Nth pool balance
   */
-  function getNthPoolBalance(uint256 _index) public constant returns (uint256) {
+  function getNthPoolBalance(uint256 _index) public constant returns (uint256)
+  {
     return store.getNthPoolBalance(_index);
   }
 
@@ -67,13 +69,15 @@ contract Rewards {
   * - the current pool balance is set to 0
   * - the current epoch is incremented
   */
-  function receiveRewards() public payable {
+  function receiveRewards() public payable
+  {
     require(msg.value > 0);
 
     uint256 lastEpoch = store.getCurrentEpoch();
     uint256 currentEpoch = getCurrentEpoch();
 
-    if (currentEpoch > lastEpoch) {
+    if (currentEpoch > lastEpoch)
+    {
       uint256 currentPoolBalance = store.getCurrentPoolBalance();
       store.setNthPoolBalance(lastEpoch, currentPoolBalance);
       store.setCurrentPoolBalance(0);
@@ -102,13 +106,15 @@ contract Rewards {
   * If the rewards request is valid and accepted, the last withdrawal is set to the current epoch
   * and the reward value is sent to the msg.sender
   */
-  function withdrawRewards() public {
+  function withdrawRewards() public
+  {
     require(msg.sender != 0x0);
 
     uint256 lastEpoch = store.getCurrentEpoch();
     uint256 currentEpoch = getCurrentEpoch();
 
-    if (currentEpoch != lastEpoch) {
+    if (currentEpoch != lastEpoch)
+    {
       uint256 currentPoolBalance = store.getCurrentPoolBalance();
       store.setNthPoolBalance(lastEpoch, currentPoolBalance);
       store.setCurrentPoolBalance(0);
@@ -119,7 +125,8 @@ contract Rewards {
     uint256 lastWithdrawal = store.getAccountLastWithdrawal(msg.sender);
     require(lastWithdrawal != currentEpoch);
 
-    for (uint256 i = lastWithdrawal; i < currentEpoch; i++) {
+    for (uint256 i = lastWithdrawal; i < currentEpoch; i++)
+    {
       uint256 blockNumberAtEpochStart = getBlockNumberAtEpochStart(i);
       uint256 balanceAtEpochStart = proofToken.balanceOfAt(msg.sender, blockNumberAtEpochStart);
       uint256 totalSupply = proofToken.totalSupply();
@@ -137,7 +144,8 @@ contract Rewards {
    * Epochs separate the different pools of rewards (see description of withdrawRewards() and receiveRewards())
    * @return currentEpoch {uint256} - Number corresponding to the current epoch
    */
-  function getCurrentEpoch() public view returns(uint256 currentEpoch) {
+  function getCurrentEpoch() public view returns(uint256 currentEpoch)
+  {
     uint256 creationBlockNumber = store.getCreationBlockNumber();
     uint256 blocksPerEpoch = store.getBlocksPerEpoch();
 
@@ -152,7 +160,8 @@ contract Rewards {
    * @param _epoch {uint256}
    * @return blockNumber {uint256}
    */
-  function getBlockNumberAtEpochStart(uint256 _epoch) public view returns(uint256 blockNumber) {
+  function getBlockNumberAtEpochStart(uint256 _epoch) public view returns(uint256 blockNumber)
+  {
     uint256 creationBlockNumber = store.getCreationBlockNumber();
     uint256 blocksPerEpoch = store.getBlocksPerEpoch();
     blockNumber = creationBlockNumber + blocksPerEpoch * _epoch;
@@ -161,7 +170,8 @@ contract Rewards {
   }
 
 
-  function getCurrentPoolIndex() public view returns(uint256 poolIndex) {
+  function getCurrentPoolIndex() public view returns(uint256 poolIndex)
+  {
     return store.getCurrentPoolIndex();
   }
 

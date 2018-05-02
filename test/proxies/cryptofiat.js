@@ -7,7 +7,7 @@ chai.should()
 const Store = artifacts.require('./Store.sol')
 const CryptofiatStorageProxy = artifacts.require('./CryptoFiatStorageProxy.sol')
 
-contract('CryptoFiatStorageProxy', (accounts) => {
+contract('CryptoFiat Storage Proxy', (accounts) => {
   let store
   let cryptofiatStorageProxy
 

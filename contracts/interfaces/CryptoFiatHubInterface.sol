@@ -1,8 +1,8 @@
 pragma solidity 0.4.19;
 
 
-contract CryptoFiatHubInterface {
-
+contract CryptoFiatHubInterface
+{
     function initialize(uint256 _blocksPerEpoch) public;
     function capitalize() public;
     function buyCryptoDollar() public;
@@ -16,5 +16,4 @@ contract CryptoFiatHubInterface {
     function totalOutstanding() public constant returns (uint256);
     function buffer() public constant returns (int256);
     function contractBalance() public constant returns (uint256);
-
 }

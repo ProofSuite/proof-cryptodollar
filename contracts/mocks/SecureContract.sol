@@ -7,15 +7,15 @@ contract SecureContract is Secured {
 
   bool public a;
 
-  function SecureContract() public {
+  function SecureContract() public {}
 
-  }
-
-  function get() public view returns (bool) {
+  function get() public view returns (bool)
+  {
     return a;
   }
 
-  function set(bool _value) public onlyAuthorized {
+  function set(bool _value) public onlyAuthorized
+  {
     a = _value;
   }
 

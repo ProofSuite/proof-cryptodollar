@@ -1,6 +1,7 @@
 pragma solidity 0.4.19;
 
-contract StoreInterface {
+contract StoreInterface
+{
 
     function getAddress(bytes32 _key) external view returns (address);
     function getUint(bytes32 _key) external view returns (uint);

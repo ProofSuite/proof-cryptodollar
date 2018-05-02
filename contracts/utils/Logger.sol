@@ -1,6 +1,7 @@
 pragma solidity ^0.4.19;
 
-contract Logger {
+contract Logger
+{
 
   event PrintNumber(string _message, uint256 _value);
   event PrintAddress(string _message, address _value);
@@ -13,24 +14,26 @@ contract Logger {
    * testing terminal by calling Logger.printNumber(...)
    * You can provide a _message to describe the _value you are logging.
    */
-  function Logger() public {
+  function Logger() public {}
 
+  function printNumber(string _message, uint256 _value) public
+  {
+      PrintNumber(_message, _value);
   }
 
-  function printNumber(string _message, uint256 _value) public {
-    PrintNumber(_message, _value);
+  function printAddress(string _message, address _value) public
+  {
+      PrintAddress(_message, _value);
   }
 
-  function printAddress(string _message, address _value) public {
-    PrintAddress(_message, _value);
+  function printString(string _message, string _value) public
+  {
+      PrintString(_message, _value);
   }
 
-  function printString(string _message, string _value) public {
-    PrintString(_message, _value);
-  }
-
-  function printBoolean(string _message, bool _value) public {
-    PrintBoolean(_message, _value);
+  function printBoolean(string _message, bool _value) public
+  {
+      PrintBoolean(_message, _value);
   }
 
 }

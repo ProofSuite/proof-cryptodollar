@@ -88,8 +88,8 @@ contract('Oraclize', async(accounts) => {
         store.authorizeAccess(cryptoDollar.address),
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-        cryptoFiatHub.initialize(blocksPerEpoch),
-        cryptoFiatHub.initializeOraclize(IPFSHash, true)
+        cryptoFiatHub.initialize(blocksPerEpoch, IPFSHash, 0x0),
+        cryptoFiatHub.useOraclize(false)
       ])
     })
 
@@ -182,8 +182,8 @@ contract('Oraclize', async(accounts) => {
         store.authorizeAccess(cryptoDollar.address),
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-        cryptoFiatHub.initialize(blocksPerEpoch),
-        cryptoFiatHub.initializeOraclize(IPFSHash, true),
+        cryptoFiatHub.initialize(blocksPerEpoch, IPFSHash, 0x0),
+        cryptoFiatHub.useOraclize(false),
         cryptoFiatHub.capitalize({ value: collateral })
       ])
 
@@ -217,7 +217,6 @@ contract('Oraclize', async(accounts) => {
       event2.sender.should.be.equal(sender)
       event2.tokenAmount.should.be.bignumber.equal(tokenAmount)
 
-      // TODO Modify event watcher such that events are automatically encoded to correct type
       let exchangeRate = Number(event2.result)
       let tokenValue = event1.tokenAmount * ether / exchangeRate
       let expectedPaymentValue = tokenValue - event1.oraclizeFee
@@ -273,8 +272,8 @@ contract('Oraclize', async(accounts) => {
         store.authorizeAccess(rewards.address),
         store.authorizeAccess(cryptoDollarStorageProxy.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-        cryptoFiatHub.initialize(20),
-        cryptoFiatHub.initializeOraclize(IPFSHash, true),
+        cryptoFiatHub.initialize(blocksPerEpoch, IPFSHash, 0x0),
+        cryptoFiatHub.useOraclize(false),
         cryptoFiatHub.capitalize({ value: collateral })
       ])
 
@@ -363,8 +362,8 @@ contract('Oraclize', async(accounts) => {
         store.authorizeAccess(cryptoDollar.address),
         store.authorizeAccess(rewards.address),
         cryptoDollar.authorizeAccess(cryptoFiatHub.address),
-        cryptoFiatHub.initialize(blocksPerEpoch),
-        cryptoFiatHub.initializeOraclize(IPFSHash, true)
+        cryptoFiatHub.initialize(blocksPerEpoch, IPFSHash, 0x0),
+        cryptoFiatHub.useOraclize(false)
       ])
     })
 
@@ -376,83 +375,3 @@ contract('Oraclize', async(accounts) => {
     })
   })
 })
-
-  // describe('Oraclize returns a 0-value ', async() => {
-  //   before(async() => {
-  //     rewardsStorageProxy = await RewardsStorageProxy.new()
-  //     cryptoFiatStorageProxy = await CryptoFiatStorageProxy.new()
-  //     cryptoDollarStorageProxy = await CryptoDollarStorageProxy.new()
-  //     safeMath = await SafeMath.new()
-
-  //     // Linking libraries
-  //     await ProofToken.link(SafeMath, safeMath.address)
-  //     await CryptoDollar.link(CryptoDollarStorageProxy, cryptoDollarStorageProxy.address)
-  //     await CryptoDollar.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-  //     await CryptoDollar.link(SafeMath, safeMath.address)
-  //     await CryptoFiatHub.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-  //     await CryptoFiatHub.link(RewardsStorageProxy, rewardsStorageProxy.address)
-  //     await CryptoFiatHub.link(SafeMath, safeMath.address)
-  //     await Rewards.link(CryptoFiatStorageProxy, cryptoFiatStorageProxy.address)
-  //     await Rewards.link(RewardsStorageProxy, rewardsStorageProxy.address)
-  //     await Rewards.link(SafeMath, safeMath.address)
-
-  //     // Deploy CryptoFiat Contracts
-  //     store = await Store.new()
-  //     proofToken = await ProofToken.new()
-  //     cryptoDollar = await CryptoDollar.new(store.address)
-  //     rewards = await Rewards.new(store.address, proofToken.address)
-  //     cryptoFiatHub = await CryptoFiatHub.new(cryptoDollar.address, store.address, proofToken.address, rewards.address)
-
-  //     // CryptoFiat Contract Network Setup
-  //     await store.authorizeAccess(cryptoFiatHub.address)
-  //     await store.authorizeAccess(cryptoDollar.address)
-  //     await store.authorizeAccess(rewards.address)
-  //     await store.authorizeAccess(cryptoDollarStorageProxy.address)
-  //     await cryptoDollar.authorizeAccess(cryptoFiatHub.address)
-  //     await cryptoFiatHub.initialize(20)
-  //     await cryptoFiatHub.initializeOraclize(ipfs.TESTING_FAIL, true)
-
-  //     //We initialize the storage contract with initial CryptoDollar balance for the sender
-  //     totalTokens = 100000
-  //     await cryptoFiatHub.capitalize({ value: collateral })
-  //     await cryptoDollarStorageProxy.incrementBalance(store.address, sender, totalTokens)
-  //     await cryptoDollarStorageProxy.incrementTotalSupply(store.address, totalTokens)
-  //     await cryptoDollarStorageProxy.incrementReservedEther(store.address, sender, 1 * ether)
-  //   })
-
-  //   it('should successfully call the sell cryptodollar callback ', async() => {
-  //     // Currently the person selling cryptoDollar tokens needs to also send the oraclize fee
-  //     // In this test, the caller sells all his tokens
-
-  //     let tokenAmount = totalTokens
-  //     let reservedEther = 1 * ether
-  //     let txn = await cryptoFiatHub.sellUnpeggedCryptoDollar(tokenAmount, { value: oraclizeFee })
-  //     let blockNumber = txn.receipt.blockNumber
-
-  //     watchContract(cryptoFiatHub, blockNumber)
-
-  //     // check that event parameters correspond to caller, function input and oraclize fee
-  //     let event1 = await watchNextEvent(cryptoFiatHub, blockNumber)
-  //     event1.oraclizeFee.should.be.bignumber.equal(oraclizeFee)
-  //     event1.sender.should.be.equal(accounts[0])
-  //     event1.tokenAmount.should.be.bignumber.equal(tokenAmount)
-
-  //     // wait for callback from oraclize and retrieve the callback event
-  //     await new Promise(resolve => setTimeout(resolve, 120000))
-  //     let event2 = await watchNextEvent(cryptoFiatHub, blockNumber + 1)
-
-  //     // check that query parameters correspond to function arguments and exchange rate
-  //     event2.queryId.should.be.equal(event1.queryId)
-  //     event2.result.should.be.equal('87537')
-  //     event2.sender.should.be.equal(sender)
-  //     event2.tokenAmount.should.be.bignumber.equal(tokenAmount)
-
-  //     let expectedPaymentValue = reservedEther - event1.oraclizeFee
-  //     event2.paymentValue.should.be.equal(expectedPaymentValue)
-
-  //     let contractBalance = web3.eth.getBalance(cryptoFiatHub.address)
-  //     let expectedBalance = collateral  + oraclizeFee - expectedPaymentValue
-  //     contractBalance.toNumber().should.be.equal(expectedBalance)
-  //   })
-  // })
-
