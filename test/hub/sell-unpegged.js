@@ -1,9 +1,9 @@
 /* global  artifacts:true, web3: true, contract: true */
 import chaiAsPromised from 'chai-as-promised'
 import chai from 'chai'
-import { ether } from '../../../scripts/constants'
-import { expectRevert } from '../../../scripts/helpers'
-import { getState } from '../../../scripts/cryptoFiatHelpers'
+import { ether } from '../../scripts/constants'
+import { expectRevert } from '../../scripts/helpers'
+import { getState } from '../../scripts/cryptoFiatHelpers'
 
 chai.use(chaiAsPromised)
     .use(require('chai-bignumber')(web3.BigNumber))
